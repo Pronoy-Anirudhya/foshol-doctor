@@ -1,0 +1,19 @@
+{
+  "modelId": "kssrikar4/Rice-Leaf-Disease-Classification",
+  "modelVersion": "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+  "candidates": [
+    {
+      "rawLabel": "Brown Spot",
+      "confidence": 0.91
+    },
+    {
+      "rawLabel": "Leaf Blast",
+      "confidence": 0.04
+    },
+    {
+      "rawLabel": "Healthy",
+      "confidence": 0.02
+    }
+  ],
+  "latencyMs": 12
+}

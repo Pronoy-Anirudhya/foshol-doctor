@@ -1,0 +1,6 @@
+package com.rootcause.foshol.analysis.application.query;
+
+import com.rootcause.foshol.common.Role;
+import java.util.UUID;
+
+public record AnalysisDetailQuery(UUID caseId, UUID callerId, Role role) {}

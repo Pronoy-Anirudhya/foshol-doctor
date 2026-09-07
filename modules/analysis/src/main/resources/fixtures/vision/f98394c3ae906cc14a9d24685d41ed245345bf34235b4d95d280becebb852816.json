@@ -1,0 +1,15 @@
+{
+  "modelId": "kssrikar4/Rice-Leaf-Disease-Classification",
+  "modelVersion": "v-unmapped",
+  "candidates": [
+    {
+      "rawLabel": "unknown_label_alpha",
+      "confidence": 0.7
+    },
+    {
+      "rawLabel": "unknown_label_beta",
+      "confidence": 0.2
+    }
+  ],
+  "latencyMs": 9
+}
