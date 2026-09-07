@@ -1,0 +1,15 @@
+{
+  "modelId": "Daksh159/plant-disease-mobilenetv2",
+  "modelVersion": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "candidates": [
+    {
+      "rawLabel": "Tomato___Early_blight",
+      "confidence": 0.86
+    },
+    {
+      "rawLabel": "Tomato___healthy",
+      "confidence": 0.06
+    }
+  ],
+  "latencyMs": 12
+}

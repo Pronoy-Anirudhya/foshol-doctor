@@ -1,0 +1,15 @@
+{
+  "mode": "LIVE",
+  "model_id": "ashrafulparan/whisper-small-bangla",
+  "model_version": "25c88973563146654493b97882fb2806d2fdeaaa",
+  "audio_sha256": "7ffa3a2425f9a5b10c28e3b103736febbcdbc2fda243ed59f1da90b3d3524e68",
+  "language": "bn",
+  "duration_ms": 1200,
+  "sample_rate_hz": 16000,
+  "speech_detected": true,
+  "transcript": "\u09a7\u09be\u09a8\u09c7\u09b0 \u09aa\u09be\u09a4\u09be\u09af\u09bc \u09ac\u09be\u09a6\u09be\u09ae\u09bf \u0997\u09cb\u09b2 \u09a6\u09be\u0997 \u09a6\u09c7\u0996\u09be \u09af\u09be\u099a\u09cd\u099b\u09c7 \u0986\u09b0 \u09aa\u09be\u09a4\u09be \u09b9\u09b2\u09c1\u09a6 \u09b9\u09af\u09bc\u09c7 \u09af\u09be\u099a\u09cd\u099b\u09c7",
+  "confidence": 0.91,
+  "segments": [],
+  "inference_ms": 40,
+  "correlation_id": "demo"
+}

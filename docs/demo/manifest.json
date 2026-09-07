@@ -1,0 +1,24 @@
+{
+  "disclaimer": "DEMO ONLY. Remedies, PHI and dosages are not production advice.",
+  "transcript_bn": "ধানের পাতায় বাদামি গোল দাগ দেখা যাচ্ছে আর পাতা হলুদ হয়ে যাচ্ছে",
+  "photo_credits": {
+    "01-rice-blast-primary.jpg": "Wikimedia Commons File:Rice_blast_symptoms.jpg — Donald Groth, LSU AgCenter / Bugwood.org",
+    "02-rice-brown-spot-ambiguous.jpg": "Wikimedia Commons File:Helminthosporium_oryzae_at_Oryza_sativa_(01).jpg — William M. Brown Jr., Bugwood.org (horizontally flipped)",
+    "03-rice-brown-spot-primary.jpg": "Wikimedia Commons File:Helminthosporium_oryzae_at_Oryza_sativa_(01).jpg — William M. Brown Jr., Bugwood.org",
+    "04-tomato-early-blight.jpg": "Wikimedia Commons File:Early_blight_on_tomato_leaves_(7871930010).jpg — Dwight Sipler",
+    "05-potato-late-blight.jpg": "Wikimedia Commons File:Phytophthora_infestans_on_potato_leaf.jpg — Mary Ann Hansen, Virginia Tech",
+    "06-rice-healthy.jpg": "Wikimedia Commons File:Oryza_sativa.jpg",
+    "07-blurry-reject.jpg": "Downscaled then upscaled copy of the rice-blast photo so the local quality gate rejects it"
+  },
+  "files": {
+    "01-rice-blast-primary.jpg": "e33c67cdb8132995a330b1df145529af9cbbad9bc59724d4028ee30f6339a59a",
+    "02-rice-brown-spot-ambiguous.jpg": "5c96c604bc82f79ba57835bd2ce1e28de0211a58bc1ac9002e9be4bcb57fc41b",
+    "03-rice-brown-spot-primary.jpg": "102a5ac283a47f57a5ff25affef238a4aa2e262bea9960f50526866d05eca51b",
+    "04-tomato-early-blight.jpg": "fb4148c706e84e2f589541832ae41ced55e25e12478212654be5766c003b3eeb",
+    "05-potato-late-blight.jpg": "b071b0f888a2274bf0915ec252b28f166a44f88a3a68102abd1e447defb93a68",
+    "06-rice-healthy.jpg": "ec23a9575e8e4b25f75d167a5a0be56f44e1796d368250c625ca85f71f3c9e4e",
+    "07-blurry-reject.jpg": "9adaed1c6d1638392c69644ca3232b8142e14f4d43bc57daeb7c40368f0b3e89",
+    "secondary-brown-spot.wav": "7ffa3a2425f9a5b10c28e3b103736febbcdbc2fda243ed59f1da90b3d3524e68",
+    "embed_transcript_sha": "456632ebcb06e30252d035cc21f3a6a156ac40fdec7b0f3874895c0e462e9238"
+  }
+}
