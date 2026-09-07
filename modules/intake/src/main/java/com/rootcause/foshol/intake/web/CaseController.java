@@ -5,14 +5,11 @@ import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.application.query.CaseAudioUrlQuery;
-import com.rootcause.foshol.intake.application.query.CaseAudioUrlQueryHandler;
 import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
-import com.rootcause.foshol.intake.application.query.CaseDetailQueryHandler;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;
 import com.rootcause.foshol.intake.application.query.CaseImageUrlQuery;
-import com.rootcause.foshol.intake.application.query.CaseImageUrlQueryHandler;
 import com.rootcause.foshol.intake.application.query.FarmerCaseListQuery;
-import com.rootcause.foshol.intake.application.query.FarmerCaseListQueryHandler;
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;
 import com.rootcause.foshol.intake.application.query.PresignedUrlView;
@@ -42,22 +39,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class CaseController {
 
     private final WebIntakeAdapter intake;
-    private final FarmerCaseListQueryHandler listCases;
-    private final CaseDetailQueryHandler caseDetail;
-    private final CaseImageUrlQueryHandler imageUrls;
-    private final CaseAudioUrlQueryHandler audioUrls;
+    private final QueryBus queries;
 
-    public CaseController(
-            WebIntakeAdapter intake,
-            FarmerCaseListQueryHandler listCases,
-            CaseDetailQueryHandler caseDetail,
-            CaseImageUrlQueryHandler imageUrls,
-            CaseAudioUrlQueryHandler audioUrls) {
+    public CaseController(WebIntakeAdapter intake, QueryBus queries) {
         this.intake = intake;
-        this.listCases = listCases;
-        this.caseDetail = caseDetail;
-        this.imageUrls = imageUrls;
-        this.audioUrls = audioUrls;
+        this.queries = queries;
     }
 
     @PostMapping
@@ -95,13 +81,13 @@ public class CaseController {
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return listCases.handle(new FarmerCaseListQuery(UUID.fromString(authentication.getName()), page, size));
+        return queries.handle(new FarmerCaseListQuery(UUID.fromString(authentication.getName()), page, size));
     }
 
     @GetMapping("/{caseId}")
     @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public CaseDetailView get(Authentication authentication, @PathVariable UUID caseId) {
-        return caseDetail.handle(
+        return queries.handle(
                 new CaseDetailQuery(caseId, UUID.fromString(authentication.getName()), roleOf(authentication)));
     }
 
@@ -113,7 +99,7 @@ public class CaseController {
             @PathVariable UUID imageId,
             @RequestParam(defaultValue = "DERIVATIVE") String variant) {
         boolean derivative = !"ORIGINAL".equalsIgnoreCase(variant);
-        PresignedUrlView view = imageUrls.handle(new CaseImageUrlQuery(
+        PresignedUrlView view = queries.handle(new CaseImageUrlQuery(
                 caseId, imageId, UUID.fromString(authentication.getName()), roleOf(authentication), derivative));
         return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION, view.url()).build();
     }
@@ -126,14 +112,14 @@ public class CaseController {
             @PathVariable UUID imageId,
             @RequestParam(defaultValue = "original") String variant) {
         boolean derivative = "derivative".equalsIgnoreCase(variant);
-        return imageUrls.handle(new CaseImageUrlQuery(
+        return queries.handle(new CaseImageUrlQuery(
                 caseId, imageId, UUID.fromString(authentication.getName()), roleOf(authentication), derivative));
     }
 
     @GetMapping("/{caseId}/audio/content")
     @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public ResponseEntity<Void> audioContent(Authentication authentication, @PathVariable UUID caseId) {
-        PresignedUrlView view = audioUrls.handle(
+        PresignedUrlView view = queries.handle(
                 new CaseAudioUrlQuery(caseId, UUID.fromString(authentication.getName()), roleOf(authentication)));
         return ResponseEntity.status(HttpStatus.FOUND).header(HttpHeaders.LOCATION, view.url()).build();
     }
@@ -141,7 +127,7 @@ public class CaseController {
     @GetMapping("/{caseId}/audio/url")
     @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public PresignedUrlView audioUrl(Authentication authentication, @PathVariable UUID caseId) {
-        return audioUrls.handle(
+        return queries.handle(
                 new CaseAudioUrlQuery(caseId, UUID.fromString(authentication.getName()), roleOf(authentication)));
     }
 

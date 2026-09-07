@@ -3,9 +3,9 @@ package com.rootcause.foshol.notification.infrastructure;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.AdvisoryRevised;
 import com.rootcause.foshol.common.events.CaseRejected;
-import com.rootcause.foshol.notification.application.command.HandleAdvisoryApproved;
-import com.rootcause.foshol.notification.application.command.HandleAdvisoryRevised;
-import com.rootcause.foshol.notification.application.command.HandleCaseRejected;
+import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryApproved;
+import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryRevised;
+import com.rootcause.foshol.notification.application.command.handler.HandleCaseRejected;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 

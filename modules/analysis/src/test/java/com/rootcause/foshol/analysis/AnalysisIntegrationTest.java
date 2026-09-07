@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
-import com.rootcause.foshol.analysis.application.command.RunAnalysisCommandHandler;
+import com.rootcause.foshol.analysis.application.command.handler.RunAnalysisCommandHandler;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.CandidateSource;
@@ -19,6 +19,11 @@ import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.RemedyType;
 import com.rootcause.foshol.common.Severity;
 import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.common.cqrs.CommandBus;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+import com.rootcause.foshol.common.cqrs.CqrsBuses;
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
@@ -48,6 +53,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -356,5 +362,16 @@ class AnalysisIntegrationTest {
     }
 
     @SpringBootApplication(scanBasePackages = "com.rootcause.foshol.analysis")
-    static class AnalysisTestApplication {}
+    static class AnalysisTestApplication {
+
+        @Bean
+        CommandBus commandBus(ObjectProvider<CommandHandler<?, ?>> handlers) {
+            return CqrsBuses.commandBus(handlers.orderedStream().toList());
+        }
+
+        @Bean
+        QueryBus queryBus(ObjectProvider<QueryHandler<?, ?>> handlers) {
+            return CqrsBuses.queryBus(handlers.orderedStream().toList());
+        }
+    }
 }

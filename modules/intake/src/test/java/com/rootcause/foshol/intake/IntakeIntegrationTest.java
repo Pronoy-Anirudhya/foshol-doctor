@@ -9,12 +9,17 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.cqrs.CommandBus;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+import com.rootcause.foshol.common.cqrs.CqrsBuses;
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.intake.api.IntakeImage;
 import com.rootcause.foshol.intake.api.IntakeRequest;
 import com.rootcause.foshol.intake.application.IntakeException;
-import com.rootcause.foshol.intake.application.command.SubmitCaseCommandHandler;
+import com.rootcause.foshol.intake.application.command.handler.SubmitCaseCommandHandler;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.infrastructure.InMemoryObjectStore;
 import com.rootcause.foshol.knowledge.api.CropView;
@@ -29,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -198,6 +204,16 @@ class IntakeIntegrationTest {
             return http.csrf(AbstractHttpConfigurer::disable)
                     .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                     .build();
+        }
+
+        @Bean
+        CommandBus commandBus(ObjectProvider<CommandHandler<?, ?>> handlers) {
+            return CqrsBuses.commandBus(handlers.orderedStream().toList());
+        }
+
+        @Bean
+        QueryBus queryBus(ObjectProvider<QueryHandler<?, ?>> handlers) {
+            return CqrsBuses.queryBus(handlers.orderedStream().toList());
         }
     }
 }

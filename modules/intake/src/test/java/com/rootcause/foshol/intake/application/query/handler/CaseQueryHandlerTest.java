@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.query;
+package com.rootcause.foshol.intake.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,16 +9,25 @@ import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.port.ImageStorePort;
+import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
+import com.rootcause.foshol.intake.application.query.CaseDetailView;
+import com.rootcause.foshol.intake.application.query.CaseImageUrlQuery;
+import com.rootcause.foshol.intake.application.query.FarmerCaseListQuery;
+import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
+import com.rootcause.foshol.intake.application.query.PageResult;
+import com.rootcause.foshol.intake.application.query.PresignedUrlView;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class CaseQueryHandlerTest {

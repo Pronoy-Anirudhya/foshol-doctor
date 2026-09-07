@@ -1,12 +1,13 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.common.events.CaseRejected;
+import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.review.api.RejectionView;
+import com.rootcause.foshol.review.application.command.RejectCaseCommand;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.CaseRejectionRepository;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
@@ -14,17 +15,25 @@ import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.CaseRejection;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RejectCaseCommandHandler {
+public class RejectCaseCommandHandler implements CommandHandler<RejectCaseCommand, RejectionView> {
+
+    @Override
+    public Class<RejectCaseCommand> commandType() {
+        return RejectCaseCommand.class;
+    }
 
     private final ReviewTaskRepository tasks;
     private final CaseRejectionRepository rejections;
@@ -58,6 +67,7 @@ public class RejectCaseCommandHandler {
     }
 
     @Transactional
+    @Override
     public RejectionView handle(RejectCaseCommand command) {
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         Instant now = clock.instant();

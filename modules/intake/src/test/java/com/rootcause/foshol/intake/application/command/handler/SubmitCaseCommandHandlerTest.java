@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.command;
+package com.rootcause.foshol.intake.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,9 +13,11 @@ import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.events.CaseSubmitted;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.identity.api.FarmerView;
-import com.rootcause.foshol.intake.IntakeFixtures;
 import com.rootcause.foshol.intake.api.IntakeAudio;
 import com.rootcause.foshol.intake.api.IntakeImage;
+import com.rootcause.foshol.intake.application.command.CaseSubmissionWriter;
+import com.rootcause.foshol.intake.application.command.SubmitCaseCommand;
+import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.application.port.IdempotencyRepository;
@@ -25,8 +27,10 @@ import com.rootcause.foshol.intake.application.port.ObjectStorePort;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.IdempotencyRecord;
 import com.rootcause.foshol.intake.infrastructure.ImageMetricsCalculator;
+import com.rootcause.foshol.intake.IntakeFixtures;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,12 +38,13 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)

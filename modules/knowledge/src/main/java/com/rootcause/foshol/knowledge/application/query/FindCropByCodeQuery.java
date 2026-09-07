@@ -1,3 +1,5 @@
 package com.rootcause.foshol.knowledge.application.query;
 
-public record FindCropByCodeQuery(String code) {}
+import com.rootcause.foshol.common.cqrs.Query;
+
+public record FindCropByCodeQuery(String code) implements Query {}

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;

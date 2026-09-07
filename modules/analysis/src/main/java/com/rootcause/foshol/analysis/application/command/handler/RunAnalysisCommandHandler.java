@@ -1,6 +1,7 @@
-package com.rootcause.foshol.analysis.application.command;
+package com.rootcause.foshol.analysis.application.command.handler;
 
 import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisEventPort;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
 import com.rootcause.foshol.analysis.application.port.EmbeddingRequest;
@@ -38,14 +39,14 @@ import com.rootcause.foshol.common.CandidateSource;
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.SymptomSource;
-import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.common.events.SymptomView;
+import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
@@ -55,7 +56,8 @@ import com.rootcause.foshol.knowledge.api.ScoredDisease;
 import com.rootcause.foshol.knowledge.api.SymptomMatchApi;
 import com.rootcause.foshol.knowledge.api.SymptomMatchRequest;
 import com.rootcause.foshol.knowledge.api.SymptomMatchResult;
-import io.micrometer.core.instrument.MeterRegistry;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -63,6 +65,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -71,17 +78,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 @Component
-public class RunAnalysisCommandHandler {
+public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisCommand, Void> {
+
+    @Override
+    public Class<RunAnalysisCommand> commandType() {
+        return RunAnalysisCommand.class;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(RunAnalysisCommandHandler.class);
     private static final String CONTENT_TYPE_PNG = "image/png";
@@ -129,12 +139,13 @@ public class RunAnalysisCommandHandler {
         this.meters = meters;
     }
 
-    public void handle(RunAnalysisCommand command) {
+    @Override
+    public Void handle(RunAnalysisCommand command) {
         CorrelationId.set(command.correlationId());
         Instant start = Instant.now();
         try {
             if (persistence.hasCompletedRun(command.caseId())) {
-                return;
+                return null;
             }
             Optional<CaseSummary> loaded = intake.findById(command.caseId());
             if (loaded.isEmpty()) {
@@ -144,7 +155,7 @@ public class RunAnalysisCommandHandler {
                         ErrorCodes.ERR_CASE_NOT_FOUND,
                         command.correlationId(),
                         Instant.now()));
-                return;
+                return null;
             }
             CaseSummary summary = loaded.get();
             Assembled assembled = orchestrate(command, summary, start);
@@ -177,7 +188,9 @@ public class RunAnalysisCommandHandler {
         } finally {
             CorrelationId.clear();
         }
-    }
+        return null;
+    
+}
 
     Assembled orchestrate(RunAnalysisCommand command, CaseSummary summary, Instant start) {
         Duration deadline = settings.deadline();

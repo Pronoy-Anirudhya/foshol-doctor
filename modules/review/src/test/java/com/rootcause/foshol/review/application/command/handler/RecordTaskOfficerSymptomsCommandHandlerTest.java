@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,21 +11,24 @@ import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
-import com.rootcause.foshol.review.ReviewFixtures;
+import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.review.ReviewFixtures;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class RecordTaskOfficerSymptomsCommandHandlerTest {

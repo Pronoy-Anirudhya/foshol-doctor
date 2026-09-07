@@ -1,5 +1,6 @@
-package com.rootcause.foshol.analysis.application.command;
+package com.rootcause.foshol.analysis.application.command.handler;
 
+import com.rootcause.foshol.analysis.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
 import com.rootcause.foshol.analysis.domain.AnalysisNotFoundException;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
@@ -7,16 +8,24 @@ import com.rootcause.foshol.analysis.domain.UnknownSymptomException;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class RecordOfficerSymptomsCommandHandler {
+public class RecordOfficerSymptomsCommandHandler implements CommandHandler<RecordOfficerSymptomsCommand, Void> {
+
+    @Override
+    public Class<RecordOfficerSymptomsCommand> commandType() {
+        return RecordOfficerSymptomsCommand.class;
+    }
 
     private final AnalysisPersistencePort persistence;
     private final KnowledgeQueryApi knowledge;
@@ -28,7 +37,8 @@ public class RecordOfficerSymptomsCommandHandler {
     }
 
     @Transactional
-    public void handle(RecordOfficerSymptomsCommand command) {
+    @Override
+    public Void handle(RecordOfficerSymptomsCommand command) {
         if (!persistence.hasCompletedRun(command.caseId())) {
             throw new AnalysisNotFoundException(ErrorCodes.ERR_ANALYSIS_NOT_FOUND);
         }
@@ -48,5 +58,6 @@ public class RecordOfficerSymptomsCommandHandler {
             }
         }
         persistence.addOfficerSymptoms(command.caseId(), toInsert);
+        return null;
     }
 }

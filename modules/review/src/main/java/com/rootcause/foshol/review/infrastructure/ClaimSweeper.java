@@ -1,7 +1,7 @@
 package com.rootcause.foshol.review.infrastructure;
 
 import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.review.application.command.SweepExpiredClaimsCommandHandler;
+import com.rootcause.foshol.review.application.command.handler.SweepExpiredClaimsCommandHandler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

@@ -1,3 +1,5 @@
 package com.rootcause.foshol.review.application.command;
 
-public record SweepExpiredClaimsCommand() {}
+import com.rootcause.foshol.common.cqrs.Command;
+
+public record SweepExpiredClaimsCommand() implements Command {}

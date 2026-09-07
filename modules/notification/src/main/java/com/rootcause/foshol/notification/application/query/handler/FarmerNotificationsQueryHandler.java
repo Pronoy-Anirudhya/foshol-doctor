@@ -1,12 +1,22 @@
-package com.rootcause.foshol.notification.application.query;
+package com.rootcause.foshol.notification.application.query.handler;
 
 import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.notification.application.query.FarmerNotificationRow;
+import com.rootcause.foshol.notification.application.query.FarmerNotificationsPage;
+import com.rootcause.foshol.notification.application.query.FarmerNotificationsQuery;
 import com.rootcause.foshol.notification.domain.Notification;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FarmerNotificationsQueryHandler {
+public class FarmerNotificationsQueryHandler implements QueryHandler<FarmerNotificationsQuery, FarmerNotificationsPage> {
+
+    @Override
+    public Class<FarmerNotificationsQuery> queryType() {
+        return FarmerNotificationsQuery.class;
+    }
 
     private final NotificationRepository notifications;
 
@@ -15,6 +25,7 @@ public class FarmerNotificationsQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public FarmerNotificationsPage handle(FarmerNotificationsQuery query) {
         int size = query.size() <= 0 ? 20 : Math.min(query.size(), 100);
         int page = Math.max(query.page(), 0);

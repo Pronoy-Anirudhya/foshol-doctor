@@ -1,9 +1,9 @@
 package com.rootcause.foshol.intake.infrastructure;
 
+import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.intake.application.command.RecordTranscriptCommand;
-import com.rootcause.foshol.intake.application.command.RecordTranscriptCommandHandler;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -15,11 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CaseIntakeApiAdapter implements CaseIntakeApi {
 
     private final CaseQueryPort queries;
-    private final RecordTranscriptCommandHandler transcripts;
+    private final CommandBus commands;
 
-    public CaseIntakeApiAdapter(CaseQueryPort queries, RecordTranscriptCommandHandler transcripts) {
+    public CaseIntakeApiAdapter(CaseQueryPort queries, CommandBus commands) {
         this.queries = queries;
-        this.transcripts = transcripts;
+        this.commands = commands;
     }
 
     @Override
@@ -36,6 +36,6 @@ public class CaseIntakeApiAdapter implements CaseIntakeApi {
 
     @Override
     public void recordTranscript(UUID caseId, String transcriptBn, BigDecimal asrConfidence) {
-        transcripts.handle(new RecordTranscriptCommand(caseId, transcriptBn, asrConfidence));
+        commands.handle(new RecordTranscriptCommand(caseId, transcriptBn, asrConfidence));
     }
 }

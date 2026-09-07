@@ -1,5 +1,4 @@
-package com.rootcause.foshol.review.application.query;
-
+package com.rootcause.foshol.review.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
@@ -12,15 +11,18 @@ import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
+import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
 import com.rootcause.foshol.review.domain.ReviewException;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewTaskDetailQueryHandlerTest {

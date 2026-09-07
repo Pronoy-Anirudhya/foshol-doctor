@@ -1,17 +1,27 @@
-package com.rootcause.foshol.review.application.query;
+package com.rootcause.foshol.review.application.query.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
+import com.rootcause.foshol.review.application.query.AdminStatsQuery;
+import com.rootcause.foshol.review.application.query.AdminStatsView;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AdminStatsQueryHandler {
+public class AdminStatsQueryHandler implements QueryHandler<AdminStatsQuery, AdminStatsView> {
+
+    @Override
+    public Class<AdminStatsQuery> queryType() {
+        return AdminStatsQuery.class;
+    }
 
     private final ReviewQueryPort reads;
     private final Clock clock;
@@ -33,6 +43,7 @@ public class AdminStatsQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public AdminStatsView handle(AdminStatsQuery query) {
         var start = LocalDate.now(clock.withZone(displayZone)).atStartOfDay(displayZone).toInstant();
         return reads.loadStats(start, confidenceHigh, confidenceLow);

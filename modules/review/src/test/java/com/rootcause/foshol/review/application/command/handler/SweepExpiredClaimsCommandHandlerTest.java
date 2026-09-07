@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;

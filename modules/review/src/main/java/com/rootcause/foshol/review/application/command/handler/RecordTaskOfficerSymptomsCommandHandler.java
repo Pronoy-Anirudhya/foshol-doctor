@@ -1,23 +1,32 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
+import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RecordTaskOfficerSymptomsCommandHandler {
+public class RecordTaskOfficerSymptomsCommandHandler implements CommandHandler<RecordOfficerSymptomsCommand, Void> {
+
+    @Override
+    public Class<RecordOfficerSymptomsCommand> commandType() {
+        return RecordOfficerSymptomsCommand.class;
+    }
 
     private final ReviewTaskRepository tasks;
     private final AnalysisApi analysisApi;
@@ -39,7 +48,8 @@ public class RecordTaskOfficerSymptomsCommandHandler {
     }
 
     @Transactional
-    public void handle(RecordOfficerSymptomsCommand command) {
+    @Override
+    public Void handle(RecordOfficerSymptomsCommand command) {
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         task.requireLiveClaim(command.officerId(), clock.instant(), claimTtl);
         Set<UUID> known = knowledge.listSymptoms().stream().map(SymptomRefView::id).collect(Collectors.toSet());
@@ -49,5 +59,6 @@ public class RecordTaskOfficerSymptomsCommandHandler {
             }
         }
         analysisApi.recordOfficerSymptoms(task.caseId(), command.symptomIds());
+        return null;
     }
 }

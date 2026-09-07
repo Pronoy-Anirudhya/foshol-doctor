@@ -1,4 +1,4 @@
-package com.rootcause.foshol.notification.application.command;
+package com.rootcause.foshol.notification.application.command.handler;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

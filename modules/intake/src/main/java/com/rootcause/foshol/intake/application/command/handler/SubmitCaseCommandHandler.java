@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.command;
+package com.rootcause.foshol.intake.application.command.handler;
 
 import com.rootcause.foshol.common.BanglaNormalizer;
 import com.rootcause.foshol.common.ConfigKeys;
@@ -12,6 +12,9 @@ import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.intake.api.IntakeAudio;
 import com.rootcause.foshol.intake.api.IntakeImage;
 import com.rootcause.foshol.intake.api.IntakeRequest;
+import com.rootcause.foshol.intake.application.command.CaseSubmissionWriter;
+import com.rootcause.foshol.intake.application.command.SubmitCaseCommand;
+import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.application.port.DuplicateIdempotencyKeyException;
@@ -38,6 +41,8 @@ import com.rootcause.foshol.intake.domain.vo.RequestFingerprint;
 import com.rootcause.foshol.intake.domain.vo.Sha256;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -49,15 +54,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SubmitCaseCommandHandler {
+public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseCommand, SubmitCaseResult> {
+
+    @Override
+    public Class<SubmitCaseCommand> commandType() {
+        return SubmitCaseCommand.class;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SubmitCaseCommandHandler.class);
     static final String ENDPOINT = "POST /api/v1/cases";
@@ -133,6 +144,7 @@ public class SubmitCaseCommandHandler {
         return handle(SubmitCaseCommand.from(request));
     }
 
+    @Override
     public SubmitCaseResult handle(SubmitCaseCommand command) {
         Instant now = clock.instant();
         cases.deleteExpiredIdempotency(now);

@@ -1,28 +1,38 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.common.events.AdvisoryRevised;
+import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.AdvisoryViewMapper;
+import com.rootcause.foshol.review.application.command.ApproveCaseResult;
+import com.rootcause.foshol.review.application.command.ReviseAdvisoryCommand;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.Advisory;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ReviseAdvisoryCommandHandler {
+public class ReviseAdvisoryCommandHandler implements CommandHandler<ReviseAdvisoryCommand, ApproveCaseResult> {
+
+    @Override
+    public Class<ReviseAdvisoryCommand> commandType() {
+        return ReviseAdvisoryCommand.class;
+    }
 
     private final ReviewTaskRepository tasks;
     private final AdvisoryRepository advisories;
@@ -56,6 +66,7 @@ public class ReviseAdvisoryCommandHandler {
     }
 
     @Transactional
+    @Override
     public ApproveCaseResult handle(ReviseAdvisoryCommand command) {
         Advisory current = advisories.findById(command.advisoryId()).orElseThrow(ReviewException::advisoryNotFound);
         Advisory published = advisories

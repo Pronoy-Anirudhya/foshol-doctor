@@ -1,16 +1,17 @@
-package com.rootcause.foshol.review.application.query;
-
+package com.rootcause.foshol.review.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
+import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.domain.ReviewException;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class OfficerQueueQueryHandlerTest {

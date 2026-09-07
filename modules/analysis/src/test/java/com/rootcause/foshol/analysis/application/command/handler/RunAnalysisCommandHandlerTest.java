@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.application.command;
+package com.rootcause.foshol.analysis.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisEventPort;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
 import com.rootcause.foshol.analysis.application.port.EmbeddingResult;
@@ -25,12 +26,12 @@ import com.rootcause.foshol.analysis.domain.CaseSymptom;
 import com.rootcause.foshol.common.CandidateSource;
 import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Severity;
-import com.rootcause.foshol.common.SymptomSource;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
+import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.SymptomSource;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
@@ -40,19 +41,22 @@ import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.knowledge.api.ScoredDisease;
 import com.rootcause.foshol.knowledge.api.SymptomMatchApi;
 import com.rootcause.foshol.knowledge.api.SymptomMatchResult;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 @ExtendWith(MockitoExtension.class)
 class RunAnalysisCommandHandlerTest {

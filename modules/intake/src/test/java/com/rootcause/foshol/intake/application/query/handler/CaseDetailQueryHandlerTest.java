@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.query;
+package com.rootcause.foshol.intake.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,14 +9,18 @@ import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
+import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
+import com.rootcause.foshol.intake.application.query.CaseDetailView;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class CaseDetailQueryHandlerTest {

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.knowledge.application.query;
+package com.rootcause.foshol.knowledge.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,11 +17,14 @@ import com.rootcause.foshol.knowledge.application.port.DiseaseScoringPort;
 import com.rootcause.foshol.knowledge.application.port.PhraseIndex;
 import com.rootcause.foshol.knowledge.application.port.SymptomCatalog;
 import com.rootcause.foshol.knowledge.application.port.SymptomPhraseVectorPort;
+import com.rootcause.foshol.knowledge.application.query.SymptomMatchQuery;
 import com.rootcause.foshol.knowledge.domain.KnowledgeException;
 import com.rootcause.foshol.knowledge.domain.KnowledgeTaxonomy;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,3 +1,5 @@
 package com.rootcause.foshol.knowledge.application.query;
 
-public record ListCropsQuery() {}
+import com.rootcause.foshol.common.cqrs.Query;
+
+public record ListCropsQuery() implements Query {}

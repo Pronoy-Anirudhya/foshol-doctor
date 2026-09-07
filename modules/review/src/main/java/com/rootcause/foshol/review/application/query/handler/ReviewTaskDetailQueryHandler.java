@@ -1,12 +1,12 @@
-package com.rootcause.foshol.review.application.query;
+package com.rootcause.foshol.review.application.query.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.common.events.CandidateView;
+import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
@@ -14,21 +14,31 @@ import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.RemedyRefView;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
-import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort.QueueTaskRow;
+import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
+import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
+import com.rootcause.foshol.review.application.query.ReviewTaskDetailView;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ReviewTaskDetailQueryHandler {
+public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDetailQuery, ReviewTaskDetailView> {
+
+    @Override
+    public Class<ReviewTaskDetailQuery> queryType() {
+        return ReviewTaskDetailQuery.class;
+    }
 
     private final ReviewQueryPort reads;
     private final ReviewTaskRepository tasks;
@@ -62,6 +72,7 @@ public class ReviewTaskDetailQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public ReviewTaskDetailView handle(ReviewTaskDetailQuery query) {
         QueueTaskRow row = reads.findQueueRow(query.taskId()).orElseThrow(ReviewException::taskNotFound);
         ReviewTask task = tasks.findById(query.taskId()).orElseThrow(ReviewException::taskNotFound);

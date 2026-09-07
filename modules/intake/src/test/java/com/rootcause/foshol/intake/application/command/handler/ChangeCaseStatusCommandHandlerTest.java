@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.command;
+package com.rootcause.foshol.intake.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.CaseStatus;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
+import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.domain.CaseImage;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
@@ -14,6 +15,7 @@ import com.rootcause.foshol.intake.domain.vo.ImageId;
 import com.rootcause.foshol.intake.domain.vo.ImageQuality;
 import com.rootcause.foshol.intake.domain.vo.ObjectKey;
 import com.rootcause.foshol.intake.domain.vo.Sha256;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -21,11 +23,12 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)

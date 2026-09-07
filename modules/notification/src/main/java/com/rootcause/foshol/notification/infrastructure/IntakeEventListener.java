@@ -1,7 +1,7 @@
 package com.rootcause.foshol.notification.infrastructure;
 
 import com.rootcause.foshol.common.events.CaseStatusChanged;
-import com.rootcause.foshol.notification.application.command.HandleCaseStatusChanged;
+import com.rootcause.foshol.notification.application.command.handler.HandleCaseStatusChanged;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 

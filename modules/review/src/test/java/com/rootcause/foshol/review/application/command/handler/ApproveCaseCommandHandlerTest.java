@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,25 +15,29 @@ import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
-import com.rootcause.foshol.review.ReviewFixtures;
+import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
+import com.rootcause.foshol.review.application.command.ApproveCaseResult;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.Advisory;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.review.ReviewFixtures;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)

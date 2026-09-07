@@ -2,7 +2,7 @@ package com.rootcause.foshol.intake.infrastructure;
 
 import com.rootcause.foshol.intake.api.CaseIntakeChannel;
 import com.rootcause.foshol.intake.api.IntakeRequest;
-import com.rootcause.foshol.intake.application.command.SubmitCaseCommandHandler;
+import com.rootcause.foshol.intake.application.command.handler.SubmitCaseCommandHandler;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import java.util.UUID;
 import org.springframework.stereotype.Service;

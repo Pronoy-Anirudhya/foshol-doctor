@@ -1,8 +1,10 @@
-package com.rootcause.foshol.identity.application.command;
+package com.rootcause.foshol.identity.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.identity.application.command.RequestOtpCommand;
+import com.rootcause.foshol.identity.application.command.RequestOtpResult;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.domain.OtpCodeHash;
 import com.rootcause.foshol.identity.domain.PhoneHash;
@@ -10,16 +12,24 @@ import com.rootcause.foshol.identity.domain.PhoneNumber;
 import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RequestOtpCommandHandler {
+public class RequestOtpCommandHandler implements CommandHandler<RequestOtpCommand, RequestOtpResult> {
+
+    @Override
+    public Class<RequestOtpCommand> commandType() {
+        return RequestOtpCommand.class;
+    }
 
     private final FarmerJpaRepository farmers;
     private final OtpChallengeJpaRepository challenges;
@@ -50,6 +60,7 @@ public class RequestOtpCommandHandler {
     }
 
     @Transactional
+    @Override
     public RequestOtpResult handle(RequestOtpCommand command) {
         if (!otpEnabled) {
             throw new IdentityException(ErrorCodes.ERR_OTP_DISABLED, 503, "One-time codes are disabled.");

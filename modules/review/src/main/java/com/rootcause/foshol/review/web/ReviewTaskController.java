@@ -1,20 +1,17 @@
 package com.rootcause.foshol.review.web;
 
+import com.rootcause.foshol.common.cqrs.CommandBus;
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.RejectionView;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
-import com.rootcause.foshol.review.application.command.ApproveCaseCommandHandler;
+import com.rootcause.foshol.review.application.command.ApproveCaseResult;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
-import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommandHandler;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
-import com.rootcause.foshol.review.application.command.RecordTaskOfficerSymptomsCommandHandler;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
-import com.rootcause.foshol.review.application.command.RejectCaseCommandHandler;
 import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
-import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommandHandler;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
-import com.rootcause.foshol.review.application.query.ReviewTaskDetailQueryHandler;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailView;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -37,42 +34,28 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
 public class ReviewTaskController {
 
-    private final ReviewTaskDetailQueryHandler detailQuery;
-    private final ClaimReviewTaskCommandHandler claim;
-    private final ReleaseReviewTaskCommandHandler release;
-    private final ApproveCaseCommandHandler approve;
-    private final RejectCaseCommandHandler reject;
-    private final RecordTaskOfficerSymptomsCommandHandler symptoms;
+    private final QueryBus queries;
+    private final CommandBus commands;
 
-    public ReviewTaskController(
-            ReviewTaskDetailQueryHandler detailQuery,
-            ClaimReviewTaskCommandHandler claim,
-            ReleaseReviewTaskCommandHandler release,
-            ApproveCaseCommandHandler approve,
-            RejectCaseCommandHandler reject,
-            RecordTaskOfficerSymptomsCommandHandler symptoms) {
-        this.detailQuery = detailQuery;
-        this.claim = claim;
-        this.release = release;
-        this.approve = approve;
-        this.reject = reject;
-        this.symptoms = symptoms;
+    public ReviewTaskController(QueryBus queries, CommandBus commands) {
+        this.queries = queries;
+        this.commands = commands;
     }
 
     @GetMapping("/{taskId}")
     public ReviewTaskDetailView get(@PathVariable UUID taskId) {
-        return detailQuery.handle(new ReviewTaskDetailQuery(taskId));
+        return queries.handle(new ReviewTaskDetailQuery(taskId));
     }
 
     @PostMapping("/{taskId}/claim")
     public ClaimReviewTaskResult claim(@PathVariable UUID taskId, Authentication authentication) {
-        return claim.handle(new ClaimReviewTaskCommand(taskId, ReviewAuth.subjectId(authentication)));
+        return commands.handle(new ClaimReviewTaskCommand(taskId, ReviewAuth.subjectId(authentication)));
     }
 
     @PostMapping("/{taskId}/release")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void release(@PathVariable UUID taskId, Authentication authentication) {
-        release.handle(new ReleaseReviewTaskCommand(taskId, ReviewAuth.subjectId(authentication)));
+        commands.handle(new ReleaseReviewTaskCommand(taskId, ReviewAuth.subjectId(authentication)));
     }
 
     @PostMapping("/{taskId}/approve")
@@ -80,13 +63,13 @@ public class ReviewTaskController {
             @PathVariable UUID taskId,
             @RequestBody PublishAdvisoryRequest request,
             Authentication authentication) {
-        AdvisoryView view = approve.handle(new ApproveCaseCommand(
-                        taskId,
-                        ReviewAuth.subjectId(authentication),
-                        request.diseaseId(),
-                        request.remedyIds() == null ? List.of() : request.remedyIds(),
-                        request.officerNoteBn()))
-                .advisory();
+        ApproveCaseResult result = commands.handle(new ApproveCaseCommand(
+                taskId,
+                ReviewAuth.subjectId(authentication),
+                request.diseaseId(),
+                request.remedyIds() == null ? List.of() : request.remedyIds(),
+                request.officerNoteBn()));
+        AdvisoryView view = result.advisory();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .location(URI.create("/api/v1/cases/" + view.caseId() + "/advisory"))
                 .body(view);
@@ -97,7 +80,7 @@ public class ReviewTaskController {
             @PathVariable UUID taskId,
             @Valid @RequestBody RejectCaseRequest request,
             Authentication authentication) {
-        return reject.handle(new RejectCaseCommand(
+        return commands.handle(new RejectCaseCommand(
                 taskId,
                 ReviewAuth.subjectId(authentication),
                 request.reasonCode(),
@@ -110,7 +93,7 @@ public class ReviewTaskController {
             @PathVariable UUID taskId,
             @RequestBody RecordSymptomsRequest request,
             Authentication authentication) {
-        symptoms.handle(new RecordOfficerSymptomsCommand(
+        commands.handle(new RecordOfficerSymptomsCommand(
                 taskId,
                 ReviewAuth.subjectId(authentication),
                 request.symptomIds() == null ? List.of() : request.symptomIds()));

@@ -1,13 +1,17 @@
-package com.rootcause.foshol.intake.application.command;
+package com.rootcause.foshol.intake.application.command.handler;
 
 import com.rootcause.foshol.common.CaseStatus;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
+import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.domain.CaseNotFoundException;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.IllegalCaseTransitionException;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,7 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ChangeCaseStatusCommandHandler {
+public class ChangeCaseStatusCommandHandler implements CommandHandler<ChangeCaseStatusCommand, Void> {
+
+    @Override
+    public Class<ChangeCaseStatusCommand> commandType() {
+        return ChangeCaseStatusCommand.class;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(ChangeCaseStatusCommandHandler.class);
 
@@ -32,12 +41,14 @@ public class ChangeCaseStatusCommandHandler {
     }
 
     @Transactional
-    public void handle(ChangeCaseStatusCommand command) {
+    @Override
+    public Void handle(ChangeCaseStatusCommand command) {
         try {
             doHandle(command);
         } catch (ObjectOptimisticLockingFailureException ex) {
             doHandle(command);
         }
+        return null;
     }
 
     private void doHandle(ChangeCaseStatusCommand command) {

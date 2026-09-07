@@ -1,3 +1,5 @@
 package com.rootcause.foshol.knowledge.application.query;
 
-public record ListSymptomsQuery() {}
+import com.rootcause.foshol.common.cqrs.Query;
+
+public record ListSymptomsQuery() implements Query {}

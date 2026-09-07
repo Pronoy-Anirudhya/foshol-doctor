@@ -1,4 +1,4 @@
-package com.rootcause.foshol.notification.application.command;
+package com.rootcause.foshol.notification.application.command.handler;
 
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.NotificationType;

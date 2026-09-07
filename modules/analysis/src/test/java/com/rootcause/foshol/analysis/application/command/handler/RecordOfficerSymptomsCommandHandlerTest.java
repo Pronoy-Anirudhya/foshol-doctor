@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.application.command;
+package com.rootcause.foshol.analysis.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.rootcause.foshol.analysis.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
 import com.rootcause.foshol.analysis.domain.AnalysisNotFoundException;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
@@ -13,14 +14,16 @@ import com.rootcause.foshol.analysis.domain.UnknownSymptomException;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
+
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class RecordOfficerSymptomsCommandHandlerTest {

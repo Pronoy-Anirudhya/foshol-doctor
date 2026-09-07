@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-final class AdvisoryActionDeriver {
+public final class AdvisoryActionDeriver {
 
     private AdvisoryActionDeriver() {}
 
-    static AdvisoryAction derive(
+    public static AdvisoryAction derive(
             UUID submittedDiseaseId,
             List<UUID> submittedRemedyIds,
             String officerNoteBn,

@@ -1,18 +1,28 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
+import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.review.domain.ReviewTask;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ReleaseReviewTaskCommandHandler {
+public class ReleaseReviewTaskCommandHandler implements CommandHandler<ReleaseReviewTaskCommand, ClaimReviewTaskResult> {
+
+    @Override
+    public Class<ReleaseReviewTaskCommand> commandType() {
+        return ReleaseReviewTaskCommand.class;
+    }
 
     private final ReviewTaskRepository tasks;
     private final OfficerQueueProjectionPort queue;
@@ -31,6 +41,7 @@ public class ReleaseReviewTaskCommandHandler {
     }
 
     @Transactional
+    @Override
     public ClaimReviewTaskResult handle(ReleaseReviewTaskCommand command) {
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         task.release(command.officerId(), clock.instant(), claimTtl);

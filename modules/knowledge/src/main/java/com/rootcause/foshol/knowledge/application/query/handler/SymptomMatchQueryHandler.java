@@ -1,4 +1,4 @@
-package com.rootcause.foshol.knowledge.application.query;
+package com.rootcause.foshol.knowledge.application.query.handler;
 
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.ErrorCodes;
@@ -13,6 +13,7 @@ import com.rootcause.foshol.knowledge.application.port.KnnHit;
 import com.rootcause.foshol.knowledge.application.port.PhraseIndex;
 import com.rootcause.foshol.knowledge.application.port.SymptomCatalog;
 import com.rootcause.foshol.knowledge.application.port.SymptomPhraseVectorPort;
+import com.rootcause.foshol.knowledge.application.query.SymptomMatchQuery;
 import com.rootcause.foshol.knowledge.domain.DiseaseScore;
 import com.rootcause.foshol.knowledge.domain.FuzzyHitSpec;
 import com.rootcause.foshol.knowledge.domain.FuzzyOverlap;
@@ -26,17 +27,25 @@ import com.rootcause.foshol.knowledge.domain.SymptomDeduplicator;
 import com.rootcause.foshol.knowledge.domain.SymptomMatch;
 import com.rootcause.foshol.knowledge.domain.SymptomRef;
 import com.rootcause.foshol.knowledge.domain.VectorHitSpec;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SymptomMatchQueryHandler {
+public class SymptomMatchQueryHandler implements QueryHandler<SymptomMatchQuery, SymptomMatchResult> {
+
+    @Override
+    public Class<SymptomMatchQuery> queryType() {
+        return SymptomMatchQuery.class;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SymptomMatchQueryHandler.class);
 
@@ -63,6 +72,7 @@ public class SymptomMatchQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public SymptomMatchResult handle(SymptomMatchQuery query) {
         SymptomMatchRequest request = query.request();
         if (request.cropId() == null || !cropIds.existsLive(request.cropId())) {

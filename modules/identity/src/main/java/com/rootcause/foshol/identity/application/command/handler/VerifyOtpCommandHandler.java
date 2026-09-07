@@ -1,8 +1,10 @@
-package com.rootcause.foshol.identity.application.command;
+package com.rootcause.foshol.identity.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.identity.application.command.AuthTokenResult;
+import com.rootcause.foshol.identity.application.command.VerifyOtpCommand;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.domain.OtpChallenge;
 import com.rootcause.foshol.identity.domain.OtpCodeHash;
@@ -12,14 +14,22 @@ import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
 import com.rootcause.foshol.identity.infrastructure.JwtService;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Instant;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class VerifyOtpCommandHandler {
+public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand, AuthTokenResult> {
+
+    @Override
+    public Class<VerifyOtpCommand> commandType() {
+        return VerifyOtpCommand.class;
+    }
 
     private final FarmerJpaRepository farmers;
     private final OtpChallengeJpaRepository challenges;
@@ -44,6 +54,7 @@ public class VerifyOtpCommandHandler {
     }
 
     @Transactional
+    @Override
     public AuthTokenResult handle(VerifyOtpCommand command) {
         if (!otpEnabled) {
             throw new IdentityException(ErrorCodes.ERR_OTP_DISABLED, 503, "One-time codes are disabled.");

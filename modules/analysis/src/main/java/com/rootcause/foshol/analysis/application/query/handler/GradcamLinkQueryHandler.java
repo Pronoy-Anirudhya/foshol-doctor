@@ -1,18 +1,29 @@
-package com.rootcause.foshol.analysis.application.query;
+package com.rootcause.foshol.analysis.application.query.handler;
 
 import com.rootcause.foshol.analysis.application.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.PresignedUrl;
+import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
+import com.rootcause.foshol.analysis.application.query.GradcamLink;
+import com.rootcause.foshol.analysis.application.query.GradcamLinkQuery;
 import com.rootcause.foshol.analysis.domain.AnalysisException;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 @Component
-public class GradcamLinkQueryHandler {
+public class GradcamLinkQueryHandler implements QueryHandler<GradcamLinkQuery, Optional<GradcamLink>> {
+
+    @Override
+    public Class<GradcamLinkQuery> queryType() {
+        return GradcamLinkQuery.class;
+    }
 
     private final AnalysisReadRepository reads;
     private final ObjectStorePort objectStore;
@@ -30,6 +41,7 @@ public class GradcamLinkQueryHandler {
         this.settings = settings;
     }
 
+    @Override
     public Optional<GradcamLink> handle(GradcamLinkQuery query) {
         if (!visible(query.caseId(), query.callerId(), query.role())) {
             return Optional.empty();

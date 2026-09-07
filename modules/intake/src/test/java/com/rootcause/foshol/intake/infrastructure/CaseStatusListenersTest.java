@@ -3,13 +3,13 @@ package com.rootcause.foshol.intake.infrastructure;
 import static org.mockito.Mockito.verify;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.cqrs.CommandBus;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.common.events.CaseSubmitted;
 import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
-import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommandHandler;
-import com.rootcause.foshol.intake.application.command.RecordAnalysisOutcomeCommandHandler;
+import com.rootcause.foshol.intake.application.command.RecordAnalysisOutcomeCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
-import java.time.Instant;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -22,10 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class CaseStatusListenersTest {
 
     @Mock
-    private ChangeCaseStatusCommandHandler statusHandler;
+    private CommandHandler<ChangeCaseStatusCommand, Void> statusHandler;
 
     @Mock
-    private RecordAnalysisOutcomeCommandHandler analysisHandler;
+    private CommandHandler<RecordAnalysisOutcomeCommand, Void> analysisHandler;
 
     @Mock
     private DiagnosisCaseRepository cases;
@@ -36,8 +36,10 @@ class CaseStatusListenersTest {
     @Test
     void submittedMovesCaseToAnalysing() {
         UUID caseId = UUID.randomUUID();
-        CaseStatusListeners listeners =
-                new CaseStatusListeners(statusHandler, analysisHandler, cases, knowledge);
+        CommandBus commands = new CommandBus();
+        commands.register(ChangeCaseStatusCommand.class, statusHandler);
+        commands.register(RecordAnalysisOutcomeCommand.class, analysisHandler);
+        CaseStatusListeners listeners = new CaseStatusListeners(commands, cases, knowledge);
         listeners.onSubmitted(new CaseSubmitted(
                 caseId,
                 UUID.randomUUID(),

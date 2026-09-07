@@ -17,13 +17,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class DiagnosisCaseJpaAdapter implements DiagnosisCaseRepository, IdempotencyRepository {
+public class DiagnosisCasePersistenceAdapter implements DiagnosisCaseRepository, IdempotencyRepository {
 
     private final DiagnosisCaseJpaRepository cases;
     private final IdempotencyKeyJpaRepository keys;
     private final JdbcClient jdbc;
 
-    public DiagnosisCaseJpaAdapter(
+    public DiagnosisCasePersistenceAdapter(
             DiagnosisCaseJpaRepository cases, IdempotencyKeyJpaRepository keys, JdbcClient jdbc) {
         this.cases = cases;
         this.keys = keys;

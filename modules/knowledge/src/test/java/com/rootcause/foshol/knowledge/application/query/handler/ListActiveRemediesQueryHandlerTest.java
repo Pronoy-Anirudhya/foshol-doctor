@@ -1,4 +1,4 @@
-package com.rootcause.foshol.knowledge.application.query;
+package com.rootcause.foshol.knowledge.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -6,8 +6,12 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.RemedyType;
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
+import com.rootcause.foshol.knowledge.application.query.ListActiveRemediesQuery;
+import com.rootcause.foshol.knowledge.application.query.RemedyReadModel;
+
 import java.util.List;
 import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 
 class ListActiveRemediesQueryHandlerTest {

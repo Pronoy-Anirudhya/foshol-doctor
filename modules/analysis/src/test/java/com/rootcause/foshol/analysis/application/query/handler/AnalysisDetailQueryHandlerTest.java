@@ -1,21 +1,24 @@
-package com.rootcause.foshol.analysis.application.query;
-
+package com.rootcause.foshol.analysis.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
+import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
+import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class AnalysisDetailQueryHandlerTest {

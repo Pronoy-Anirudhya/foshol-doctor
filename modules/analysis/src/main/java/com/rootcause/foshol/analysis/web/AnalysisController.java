@@ -3,14 +3,14 @@ package com.rootcause.foshol.analysis.web;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
-import com.rootcause.foshol.analysis.application.query.AnalysisDetailQueryHandler;
 import com.rootcause.foshol.analysis.application.query.GradcamLink;
 import com.rootcause.foshol.analysis.application.query.GradcamLinkQuery;
-import com.rootcause.foshol.analysis.application.query.GradcamLinkQueryHandler;
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,16 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/cases")
 public class AnalysisController {
 
-    private final AnalysisDetailQueryHandler details;
-    private final GradcamLinkQueryHandler gradcam;
+    private final QueryBus queries;
     private final AnalysisSettings settings;
 
-    public AnalysisController(
-            AnalysisDetailQueryHandler details,
-            GradcamLinkQueryHandler gradcam,
-            AnalysisSettings settings) {
-        this.details = details;
-        this.gradcam = gradcam;
+    public AnalysisController(QueryBus queries, AnalysisSettings settings) {
+        this.queries = queries;
         this.settings = settings;
     }
 
@@ -44,9 +39,9 @@ public class AnalysisController {
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return details.handle(new AnalysisDetailQuery(caseId, caller.id(), caller.role()))
-                .map(view -> ResponseEntity.ok(toBody(view)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<AnalysisView> view =
+                queries.handle(new AnalysisDetailQuery(caseId, caller.id(), caller.role()));
+        return view.map(v -> ResponseEntity.ok(toBody(v))).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{caseId}/gradcam")
@@ -55,9 +50,8 @@ public class AnalysisController {
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return gradcam.handle(new GradcamLinkQuery(caseId, caller.id(), caller.role()))
-                .map(this::redirect)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<GradcamLink> link = queries.handle(new GradcamLinkQuery(caseId, caller.id(), caller.role()));
+        return link.map(this::redirect).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private Map<String, Object> toBody(AnalysisView view) {

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application.query;
+package com.rootcause.foshol.intake.application.query.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
@@ -6,14 +6,24 @@ import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.port.ImageStorePort;
+import com.rootcause.foshol.intake.application.query.CaseImageUrlQuery;
+import com.rootcause.foshol.intake.application.query.PresignedUrlView;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.time.Clock;
 import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CaseImageUrlQueryHandler {
+public class CaseImageUrlQueryHandler implements QueryHandler<CaseImageUrlQuery, PresignedUrlView> {
+
+    @Override
+    public Class<CaseImageUrlQuery> queryType() {
+        return CaseImageUrlQuery.class;
+    }
 
     private final CaseQueryPort queries;
     private final ImageStorePort store;
@@ -32,6 +42,7 @@ public class CaseImageUrlQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public PresignedUrlView handle(CaseImageUrlQuery query) {
         java.util.UUID owner = queries
                 .findFarmerId(query.caseId())

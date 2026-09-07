@@ -1,20 +1,23 @@
-package com.rootcause.foshol.notification.application.query;
-
+package com.rootcause.foshol.notification.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.NotificationType;
 import com.rootcause.foshol.common.Uuid7;
-import com.rootcause.foshol.notification.NotifyFixtures;
 import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.notification.application.query.FarmerNotificationsPage;
+import com.rootcause.foshol.notification.application.query.FarmerNotificationsQuery;
 import com.rootcause.foshol.notification.domain.DeliveryState;
 import com.rootcause.foshol.notification.domain.Notification;
+import com.rootcause.foshol.notification.NotifyFixtures;
+
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class FarmerNotificationsQueryHandlerTest {

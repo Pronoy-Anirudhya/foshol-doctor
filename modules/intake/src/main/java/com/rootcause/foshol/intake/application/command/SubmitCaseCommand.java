@@ -1,5 +1,6 @@
 package com.rootcause.foshol.intake.application.command;
 
+import com.rootcause.foshol.common.cqrs.Command;
 import com.rootcause.foshol.intake.api.IntakeAudio;
 import com.rootcause.foshol.intake.api.IntakeImage;
 import com.rootcause.foshol.intake.api.IntakeRequest;
@@ -13,7 +14,7 @@ public record SubmitCaseCommand(
         UUID parentCaseId,
         List<IntakeImage> images,
         IntakeAudio audio,
-        UUID idempotencyKey) {
+        UUID idempotencyKey) implements Command {
 
     public static SubmitCaseCommand from(IntakeRequest request) {
         return new SubmitCaseCommand(

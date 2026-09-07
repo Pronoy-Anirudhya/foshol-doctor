@@ -1,14 +1,24 @@
-package com.rootcause.foshol.analysis.application.query;
+package com.rootcause.foshol.analysis.application.query.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
+import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
+import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 @Component
-public class AnalysisDetailQueryHandler {
+public class AnalysisDetailQueryHandler implements QueryHandler<AnalysisDetailQuery, Optional<AnalysisView>> {
+
+    @Override
+    public Class<AnalysisDetailQuery> queryType() {
+        return AnalysisDetailQuery.class;
+    }
 
     private final AnalysisReadRepository reads;
     private final CaseIntakeApi intake;
@@ -18,6 +28,7 @@ public class AnalysisDetailQueryHandler {
         this.intake = intake;
     }
 
+    @Override
     public Optional<AnalysisView> handle(AnalysisDetailQuery query) {
         if (!visible(query.caseId(), query.callerId(), query.role())) {
             return Optional.empty();

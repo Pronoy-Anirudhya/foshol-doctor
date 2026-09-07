@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.query;
+package com.rootcause.foshol.review.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,16 +15,20 @@ import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.Actor;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.CaseRejectionRepository;
+import com.rootcause.foshol.review.application.query.CaseAdvisoryQuery;
+import com.rootcause.foshol.review.application.query.CaseAdvisoryResult;
 import com.rootcause.foshol.review.domain.CaseRejection;
 import com.rootcause.foshol.review.domain.ReviewException;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 @ExtendWith(MockitoExtension.class)
 class CaseAdvisoryQueryHandlerTest {

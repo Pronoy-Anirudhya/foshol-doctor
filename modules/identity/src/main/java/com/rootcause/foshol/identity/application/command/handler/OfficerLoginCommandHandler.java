@@ -1,18 +1,28 @@
-package com.rootcause.foshol.identity.application.command;
+package com.rootcause.foshol.identity.application.command.handler;
 
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.identity.application.command.AuthTokenResult;
+import com.rootcause.foshol.identity.application.command.OfficerLoginCommand;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.infrastructure.FieldOfficerEntity;
 import com.rootcause.foshol.identity.infrastructure.FieldOfficerJpaRepository;
 import com.rootcause.foshol.identity.infrastructure.JwtService;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class OfficerLoginCommandHandler {
+public class OfficerLoginCommandHandler implements CommandHandler<OfficerLoginCommand, AuthTokenResult> {
+
+    @Override
+    public Class<OfficerLoginCommand> commandType() {
+        return OfficerLoginCommand.class;
+    }
 
     private static final String DUMMY_HASH = "$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG";
 
@@ -33,6 +43,7 @@ public class OfficerLoginCommandHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public AuthTokenResult handle(OfficerLoginCommand command) {
         FieldOfficerEntity officer = officers.findByUsername(command.username()).orElse(null);
         if (officer == null) {

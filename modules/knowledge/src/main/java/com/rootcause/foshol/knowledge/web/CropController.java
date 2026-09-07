@@ -1,9 +1,10 @@
 package com.rootcause.foshol.knowledge.web;
 
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.knowledge.application.query.CropReadModel;
+import com.rootcause.foshol.knowledge.application.query.DiseaseReadModel;
 import com.rootcause.foshol.knowledge.application.query.GetCropDiseasesQuery;
-import com.rootcause.foshol.knowledge.application.query.GetCropDiseasesQueryHandler;
 import com.rootcause.foshol.knowledge.application.query.ListCropsQuery;
-import com.rootcause.foshol.knowledge.application.query.ListCropsQueryHandler;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,25 +16,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/crops")
 public class CropController {
 
-    private final ListCropsQueryHandler listCrops;
-    private final GetCropDiseasesQueryHandler cropDiseases;
+    private final QueryBus queries;
 
-    public CropController(ListCropsQueryHandler listCrops, GetCropDiseasesQueryHandler cropDiseases) {
-        this.listCrops = listCrops;
-        this.cropDiseases = cropDiseases;
+    public CropController(QueryBus queries) {
+        this.queries = queries;
     }
 
     @GetMapping
     public List<CropResponse> list() {
-        return listCrops.handle(new ListCropsQuery()).stream()
-                .map(KnowledgeWebMapper::toCropResponse)
-                .toList();
+        List<CropReadModel> crops = queries.handle(new ListCropsQuery());
+        return crops.stream().map(KnowledgeWebMapper::toCropResponse).toList();
     }
 
     @GetMapping("/{cropId}/diseases")
     public List<DiseaseResponse> diseases(@PathVariable UUID cropId) {
-        return cropDiseases.handle(new GetCropDiseasesQuery(cropId)).stream()
-                .map(KnowledgeWebMapper::toDiseaseResponse)
-                .toList();
+        List<DiseaseReadModel> diseases = queries.handle(new GetCropDiseasesQuery(cropId));
+        return diseases.stream().map(KnowledgeWebMapper::toDiseaseResponse).toList();
     }
 }

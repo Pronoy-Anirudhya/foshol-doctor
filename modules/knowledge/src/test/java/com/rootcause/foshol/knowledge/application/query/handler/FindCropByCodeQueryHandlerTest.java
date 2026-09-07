@@ -1,10 +1,12 @@
-package com.rootcause.foshol.knowledge.application.query;
+package com.rootcause.foshol.knowledge.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
+import com.rootcause.foshol.knowledge.application.query.FindCropByCodeQuery;
+
 import org.junit.jupiter.api.Test;
 
 class FindCropByCodeQueryHandlerTest {

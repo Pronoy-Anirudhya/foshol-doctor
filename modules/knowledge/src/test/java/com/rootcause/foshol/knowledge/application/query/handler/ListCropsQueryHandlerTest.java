@@ -1,13 +1,17 @@
-package com.rootcause.foshol.knowledge.application.query;
+package com.rootcause.foshol.knowledge.application.query.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
+import com.rootcause.foshol.knowledge.application.query.CropReadModel;
+import com.rootcause.foshol.knowledge.application.query.ListCropsQuery;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 
 class ListCropsQueryHandlerTest {

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.review.application.query;
+package com.rootcause.foshol.review.application.query.handler;
 
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
@@ -10,15 +10,25 @@ import com.rootcause.foshol.review.api.RejectionView;
 import com.rootcause.foshol.review.application.AdvisoryViewMapper;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.CaseRejectionRepository;
+import com.rootcause.foshol.review.application.query.CaseAdvisoryQuery;
+import com.rootcause.foshol.review.application.query.CaseAdvisoryResult;
 import com.rootcause.foshol.review.domain.Advisory;
 import com.rootcause.foshol.review.domain.CaseRejection;
 import com.rootcause.foshol.review.domain.ReviewException;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
+
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CaseAdvisoryQueryHandler {
+public class CaseAdvisoryQueryHandler implements QueryHandler<CaseAdvisoryQuery, CaseAdvisoryResult> {
+
+    @Override
+    public Class<CaseAdvisoryQuery> queryType() {
+        return CaseAdvisoryQuery.class;
+    }
 
     private final AdvisoryRepository advisories;
     private final CaseRejectionRepository rejections;
@@ -40,6 +50,7 @@ public class CaseAdvisoryQueryHandler {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public CaseAdvisoryResult handle(CaseAdvisoryQuery query) {
         if (query.actor().role() == Role.FARMER && !cases.isOwnedBy(query.caseId(), query.actor().id())) {
             throw new ReviewException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case not found.");

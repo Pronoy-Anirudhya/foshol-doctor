@@ -1,18 +1,21 @@
-package com.rootcause.foshol.review.application.command;
+package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.common.AdvisoryAction;
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.CandidateView;
+import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.review.application.AdvisoryViewMapper;
+import com.rootcause.foshol.review.application.command.AdvisoryActionDeriver;
+import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
+import com.rootcause.foshol.review.application.command.ApproveCaseResult;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
@@ -23,19 +26,27 @@ import com.rootcause.foshol.review.domain.ReviewTask;
 import com.rootcause.foshol.review.domain.spec.AdvisoryHasRequiredRemedy;
 import com.rootcause.foshol.review.domain.spec.ChemicalRemedyHasPhi;
 import com.rootcause.foshol.review.domain.spec.RemediesBelongToDisease;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ApproveCaseCommandHandler {
+public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseCommand, ApproveCaseResult> {
+
+    @Override
+    public Class<ApproveCaseCommand> commandType() {
+        return ApproveCaseCommand.class;
+    }
 
     private final ReviewTaskRepository tasks;
     private final AdvisoryRepository advisories;
@@ -72,6 +83,7 @@ public class ApproveCaseCommandHandler {
     }
 
     @Transactional
+    @Override
     public ApproveCaseResult handle(ApproveCaseCommand command) {
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         Instant now = clock.instant();
