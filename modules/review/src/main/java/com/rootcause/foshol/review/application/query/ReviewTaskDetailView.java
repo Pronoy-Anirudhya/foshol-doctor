@@ -1,0 +1,52 @@
+package com.rootcause.foshol.review.application.query;
+
+import com.rootcause.foshol.common.AiMode;
+import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.events.CandidateView;
+import com.rootcause.foshol.common.events.CaseAudioRef;
+import com.rootcause.foshol.common.events.CaseImageRef;
+import com.rootcause.foshol.common.events.SymptomView;
+import com.rootcause.foshol.review.api.AdvisoryView;
+import com.rootcause.foshol.review.api.RemedyRefView;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+public record ReviewTaskDetailView(
+        UUID caseId,
+        UUID reviewTaskId,
+        String farmerName,
+        String cropCode,
+        String cropNameBn,
+        String districtCode,
+        DecisionPath decisionPath,
+        UUID topDiseaseId,
+        String topDiseaseNameBn,
+        BigDecimal topConfidence,
+        int imageCount,
+        boolean hasAudio,
+        AiMode analysisMode,
+        ReviewState state,
+        UUID officerId,
+        boolean isResubmission,
+        short requeueCount,
+        Instant submittedAt,
+        Instant slaDueAt,
+        BigDecimal top1Confidence,
+        BigDecimal top2Confidence,
+        BigDecimal margin,
+        List<CandidateView> candidates,
+        List<SymptomView> symptoms,
+        String transcriptBn,
+        BigDecimal asrConfidence,
+        String gradcamObjectKey,
+        List<CaseImageRef> images,
+        CaseAudioRef audio,
+        UUID parentCaseId,
+        List<RemedyRefView> suggestedRemedies,
+        UUID claimedBy,
+        Instant claimExpiresAt,
+        AdvisoryView publishedAdvisory,
+        int version) {}
