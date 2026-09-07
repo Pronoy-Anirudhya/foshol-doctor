@@ -39,7 +39,7 @@ import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.application.query.OfficerQueueQueryHandler;
 import com.rootcause.foshol.review.application.query.OfficerQueueRow;
 import com.rootcause.foshol.review.domain.ReviewException;
-import com.rootcause.foshol.review.infrastructure.AnalysisEventListener;
+import com.rootcause.foshol.review.infrastructure.CreateReviewTaskOnAnalysisListener;
 import com.rootcause.foshol.common.RejectionReason;
 import com.rootcause.foshol.common.RemedyType;
 import com.rootcause.foshol.common.Severity;
@@ -107,7 +107,7 @@ class ReviewTaskUniversalityIT {
     }
 
     @Autowired
-    private AnalysisEventListener listener;
+    private CreateReviewTaskOnAnalysisListener listener;
 
     @Autowired
     private ReviewTaskRepository tasks;

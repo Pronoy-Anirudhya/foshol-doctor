@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class RecordOfficerSymptomsCommandHandlerTest {
+class RecordTaskOfficerSymptomsCommandHandlerTest {
 
     @Mock
     private ReviewTaskRepository tasks;
@@ -66,8 +66,8 @@ class RecordOfficerSymptomsCommandHandlerTest {
         verify(analysisApi, never()).recordOfficerSymptoms(any(), any());
     }
 
-    private RecordOfficerSymptomsCommandHandler handler() {
-        return new RecordOfficerSymptomsCommandHandler(
+    private RecordTaskOfficerSymptomsCommandHandler handler() {
+        return new RecordTaskOfficerSymptomsCommandHandler(
                 tasks,
                 analysisApi,
                 knowledge,

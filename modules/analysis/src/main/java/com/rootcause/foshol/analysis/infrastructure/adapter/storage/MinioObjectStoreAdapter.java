@@ -30,6 +30,7 @@ class MinioConfiguration {
         return MinioClient.builder()
                 .endpoint(settings.storageEndpoint())
                 .credentials(settings.storageAccessKey(), settings.storageSecretKey())
+                .region("us-east-1")
                 .build();
     }
 }

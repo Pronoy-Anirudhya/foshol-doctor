@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RecordOfficerSymptomsCommandHandler {
+public class RecordTaskOfficerSymptomsCommandHandler {
 
     private final ReviewTaskRepository tasks;
     private final AnalysisApi analysisApi;
@@ -25,7 +25,7 @@ public class RecordOfficerSymptomsCommandHandler {
     private final Clock clock;
     private final Duration claimTtl;
 
-    public RecordOfficerSymptomsCommandHandler(
+    public RecordTaskOfficerSymptomsCommandHandler(
             ReviewTaskRepository tasks,
             AnalysisApi analysisApi,
             KnowledgeQueryApi knowledge,

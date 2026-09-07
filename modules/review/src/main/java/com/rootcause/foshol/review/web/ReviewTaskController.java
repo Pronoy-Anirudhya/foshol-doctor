@@ -8,7 +8,7 @@ import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommandHandler;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
-import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommandHandler;
+import com.rootcause.foshol.review.application.command.RecordTaskOfficerSymptomsCommandHandler;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
 import com.rootcause.foshol.review.application.command.RejectCaseCommandHandler;
 import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
@@ -42,7 +42,7 @@ public class ReviewTaskController {
     private final ReleaseReviewTaskCommandHandler release;
     private final ApproveCaseCommandHandler approve;
     private final RejectCaseCommandHandler reject;
-    private final RecordOfficerSymptomsCommandHandler symptoms;
+    private final RecordTaskOfficerSymptomsCommandHandler symptoms;
 
     public ReviewTaskController(
             ReviewTaskDetailQueryHandler detailQuery,
@@ -50,7 +50,7 @@ public class ReviewTaskController {
             ReleaseReviewTaskCommandHandler release,
             ApproveCaseCommandHandler approve,
             RejectCaseCommandHandler reject,
-            RecordOfficerSymptomsCommandHandler symptoms) {
+            RecordTaskOfficerSymptomsCommandHandler symptoms) {
         this.detailQuery = detailQuery;
         this.claim = claim;
         this.release = release;

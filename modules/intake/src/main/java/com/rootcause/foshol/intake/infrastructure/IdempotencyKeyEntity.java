@@ -22,6 +22,7 @@ public class IdempotencyKeyEntity {
     @Column(nullable = false, length = 80)
     private String endpoint;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "request_hash", nullable = false, length = 64)
     private String requestHash;
 

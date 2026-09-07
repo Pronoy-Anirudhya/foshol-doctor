@@ -16,6 +16,8 @@ import io.minio.http.Method;
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,8 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnExpression("!'memory'.equals('${foshol.storage.endpoint:}')")
 public class MinioObjectStore implements ObjectStorePort, ImageStorePort {
+
+    private static final Logger log = LoggerFactory.getLogger(MinioObjectStore.class);
 
     private final MinioClient client;
     private final String bucket;
@@ -33,7 +37,11 @@ public class MinioObjectStore implements ObjectStorePort, ImageStorePort {
             @Value("${" + ConfigKeys.STORAGE_SECRET_KEY + "}") String secretKey,
             @Value("${" + ConfigKeys.STORAGE_BUCKET + "}") String bucket) {
         this.bucket = bucket;
-        this.client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+        this.client = MinioClient.builder()
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .region("us-east-1")
+                .build();
         if (!"memory".equals(endpoint)) {
             ensureBucket();
         }
@@ -45,6 +53,7 @@ public class MinioObjectStore implements ObjectStorePort, ImageStorePort {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
             }
         } catch (Exception ex) {
+            log.warn("MinIO bucket check failed bucket={}", bucket, ex);
             throw new IntakeException(ErrorCodes.ERR_STORAGE_UNAVAILABLE, 503, "Object storage is unavailable.");
         }
     }
@@ -59,6 +68,7 @@ public class MinioObjectStore implements ObjectStorePort, ImageStorePort {
                     .contentType(contentType)
                     .build());
         } catch (Exception ex) {
+            log.warn("MinIO put failed bucket={} key={}", bucket, objectKey, ex);
             throw new IntakeException(ErrorCodes.ERR_STORAGE_UNAVAILABLE, 503, "Object storage is unavailable.");
         }
     }
@@ -98,6 +108,7 @@ public class MinioObjectStore implements ObjectStorePort, ImageStorePort {
                     .expiry((int) Math.max(1, ttl.toSeconds()), TimeUnit.SECONDS)
                     .build());
         } catch (Exception ex) {
+            log.warn("MinIO presign failed bucket={} key={}", bucket, objectKey, ex);
             throw new IntakeException(ErrorCodes.ERR_STORAGE_UNAVAILABLE, 503, "Object storage is unavailable.");
         }
     }

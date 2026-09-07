@@ -205,7 +205,7 @@ public class SubmitCaseCommandHandler {
             if (ex instanceof IntakeException intake) {
                 throw intake;
             }
-            log.warn("storage unavailable correlationId={}", CorrelationId.current(), ex);
+            log.warn("case submit failed after object-store writes correlationId={}", CorrelationId.current(), ex);
             throw new IntakeException(ErrorCodes.ERR_STORAGE_UNAVAILABLE, 503, "Object storage is unavailable.");
         }
     }

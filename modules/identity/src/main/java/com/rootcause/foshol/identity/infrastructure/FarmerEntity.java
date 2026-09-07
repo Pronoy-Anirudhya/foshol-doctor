@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "farmer")
@@ -17,6 +19,7 @@ public class FarmerEntity {
     @Column(nullable = false)
     private String name;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "phone_hash", nullable = false, length = 64)
     private String phoneHash;
 
@@ -26,6 +29,7 @@ public class FarmerEntity {
     @Column(name = "district_code", nullable = false, length = 8)
     private String districtCode;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "preferred_language", nullable = false, length = 2)
     private String preferredLanguage;
 
