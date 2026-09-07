@@ -89,14 +89,21 @@ Flyway; later boots are faster.
 If MinIO was created with different keys than `.env`, the script resets `./.data/minio` and
 recreates the `foshol-cases` bucket.
 
-Live sidecar instead of replay fixtures:
+Live sidecar instead of replay fixtures (API client **and** Angular UI):
 
 ```bash
+docker compose --profile ai up -d sidecar
 FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
 ```
 
-(`application-local` sets `foshol.ai.mode=live`; you still need the sidecar if you want real
-inference.)
+`application-local` sets `foshol.ai.mode=live` and still loads `db/seed` (farmer / officer / admin).
+Do **not** combine with the `demo` profile: `demo` sets `foshol.ai.mode=replay` and would win.
+
+**Angular / WEB-FR-112.** The farmer UI re-encodes every photo (GPS strip). Replay keys vision by
+SHA-256 of the **uploaded** bytes, so a browser capture of `docs/demo/images/01-rice-blast-primary.jpg`
+will miss the fixture and land `UNDETERMINED` (still queued for an officer — demo beat 8). Byte-exact
+uploads from `./tools/call-api.sh` on the default `local,demo` stack still hit PRIMARY in replay.
+For PRIMARY (or SECONDARY) **from the UI**, run live sidecar as above.
 
 ### 2. Open the API client
 

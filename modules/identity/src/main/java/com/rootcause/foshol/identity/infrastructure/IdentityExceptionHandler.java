@@ -4,6 +4,8 @@ import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import java.net.URI;
 import java.util.Map;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class IdentityExceptionHandler {
 
     @ExceptionHandler(IdentityException.class)

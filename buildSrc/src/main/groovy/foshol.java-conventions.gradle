@@ -33,3 +33,7 @@ tasks.register('integrationTest', Test) {
     classpath = sourceSets.test.runtimeClasspath
     shouldRunAfter test
 }
+
+tasks.withType(Test).configureEach {
+    jvmArgs('-Djava.awt.headless=true', '-Xshare:off')
+}
