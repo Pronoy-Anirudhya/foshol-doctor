@@ -1,0 +1,15 @@
+{
+  "mode": "LIVE",
+  "model_id": "ashrafulparan/whisper-small-bangla",
+  "model_version": "25c88973563146654493b97882fb2806d2fdeaaa",
+  "audio_sha256": "9a2bb97bf4897b1e5b2594a43f579bad4f084e6a7654dba1517a2ed330cf9e7d",
+  "language": "bn",
+  "duration_ms": 50,
+  "sample_rate_hz": 16000,
+  "speech_detected": false,
+  "transcript": "",
+  "confidence": 0.0,
+  "segments": [],
+  "inference_ms": 1,
+  "correlation_id": "fixture"
+}
