@@ -115,7 +115,7 @@ off the critical path entirely:
 - **the frozen `api` packages** — every published interface and every event record from
   `00-common.ears.md` §6, compiling, with no implementation
 - `ModularityTests` and `ArchitectureTests`, both passing against the empty skeleton
-- `[PLACEHOLDER-ANGULAR-VERSION]` resolved and pinned (`COMMON-NFR-003`)
+- `22.1.5` resolved and pinned (`COMMON-NFR-003`)
 
 **Exit criterion:** `./gradlew build` green, `docker compose up` healthy, `api` packages frozen.
 

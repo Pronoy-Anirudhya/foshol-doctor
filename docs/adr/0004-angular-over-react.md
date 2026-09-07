@@ -23,7 +23,7 @@ to make inconsistently across three surfaces.
 **Angular, standalone components, pinned to an exact version.** No `^` or `~` on any `@angular/*`
 package. The exact version is resolved by `ng version` at kickoff and written into
 `00-common.ears.md` §2.3 by the platform agent (`COMMON-NFR-003`); until then the document carries the
-token `[PLACEHOLDER-ANGULAR-VERSION]`, and `COMMON-NFR-004` requires A6 to treat itself as blocked
+token `22.1.5`, and `COMMON-NFR-004` requires A6 to treat itself as blocked
 while that token is still present. An agent guessing a version number is a build break on Day 2.
 
 **State: Angular signals. No NgRx, no RxJS store, no third-party state library.** The application's

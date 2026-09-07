@@ -6,7 +6,7 @@
 > sufficient to build the frontend. Traces to plan §8 and the demo script in plan §11. Requirements
 > marked `[DERIVED]` extend the plan and carry inline reasoning.
 
-**Blocking precondition.** The Angular version is pinned as `[PLACEHOLDER-ANGULAR-VERSION]` in
+**Blocking precondition.** The Angular version is pinned as `22.1.5` in
 `00-common.ears.md` §2.3. Per `COMMON-NFR-003` agent A1 replaces that token at kickoff; per
 `COMMON-NFR-004` **A6 is blocked and SHALL NOT begin implementation while the token is still
 present.** Do not guess a version.
@@ -51,7 +51,7 @@ the one on screen is then a lie about the one in the database.)*
 ### 2.1 Technology, pinned
 
 Restated from `00-common.ears.md` §2.2 — reference only, do not vary: **Angular
-`[PLACEHOLDER-ANGULAR-VERSION]`** with standalone components and an exact pin (no `^`, no `~`) ·
+`22.1.5`** with standalone components and an exact pin (no `^`, no `~`) ·
 **Angular signals** for state · Tailwind CSS 4.x · **ngx-translate** · **`ng-openapi-gen`** ·
 Angular CLI (esbuild) · no charting library, confidence bars are CSS.
 
@@ -884,7 +884,7 @@ One scenario per load-bearing requirement, written to map onto a single test met
 
 | # | Given / When / Then | Covers |
 |---|---|---|
-| AC-01 | Given the token `[PLACEHOLDER-ANGULAR-VERSION]` is still present, when A6 starts, then it records a blocker and writes no code | `COMMON-NFR-004` |
+| AC-01 | Given the token `22.1.5` is still present, when A6 starts, then it records a blocker and writes no code | `COMMON-NFR-004` |
 | AC-02 | Given the capture screen, when it renders, then crops appear as icon tiles and no `<select>` element exists | `WEB-FR-100` |
 | AC-03 | Given a 12 MP JPEG, when chosen, then a preview renders before any request and the uploaded blob is ≤ `foshol.intake.max-image-bytes` with longest edge ≤ `capture.maxEdgePx` | `WEB-FR-111`, `WEB-FR-112` |
 | AC-04 | Given an image below `capture.blurVarianceMin`, when chosen, then the Bangla re-capture prompt is visible and zero upload requests were issued | `WEB-FR-122`, `WEB-FR-123` |
@@ -917,7 +917,7 @@ One scenario per load-bearing requirement, written to map onto a single test met
 
 ## 8. Test requirements
 
-The runner is the one the Angular CLI scaffolds for `[PLACEHOLDER-ANGULAR-VERSION]`.
+The runner is the one the Angular CLI scaffolds for `22.1.5`.
 
 `WEB-NFR-020` **THE frontend SHALL add no testing framework beyond the CLI-scaffolded one** and SHALL
 NOT introduce Playwright, Cypress, Selenium or a visual-regression tool (`WEB-NFR-007`).
@@ -998,7 +998,7 @@ Stated honestly, because an untested area nobody named is an untested area nobod
 
 ### 9.1 Preconditions
 
-1. `[PLACEHOLDER-ANGULAR-VERSION]` is resolved (`COMMON-NFR-003`). **Until then, stop.**
+1. `22.1.5` is resolved (`COMMON-NFR-003`). **Until then, stop.**
 2. `docs/openapi/foshol-api.yaml` exists and is frozen.
 3. Both confidence thresholds are reachable from an endpoint the `OFFICER` role may call
    (`WEB-NFR-011`) — otherwise raise the blocker before building the confidence bar.
