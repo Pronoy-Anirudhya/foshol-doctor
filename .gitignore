@@ -35,3 +35,15 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.env
+*.log
+deploy/certs/*.pem
+sidecar/__pycache__/
+sidecar/.venv/
+**/bin/
+app/build/
+common/build/
+modules/*/build/
+buildSrc/build/
+.DS_Store
