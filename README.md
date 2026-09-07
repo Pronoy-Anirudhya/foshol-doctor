@@ -4,9 +4,9 @@ AI-triaged crop-disease diagnosis from photographs and Bangla speech. The produc
 human-in-the-loop: **every case is approved by a field officer before any advice reaches the
 farmer.** The model only accelerates triage.
 
-Three crops (rice, tomato, potato), a Spring Modulith API, a Python inference sidecar, and an
-Angular app under `web/` (owned separately; pin **22.1.5**). This README is for running the **API
-and data plane locally**, without the frontend.
+Three crops (rice, tomato, potato), a Spring Modulith API, a Python inference sidecar, and a
+separate Angular frontend (not in this repository; pin **22.1.5**). This README is for running the
+**API and data plane locally**.
 
 The sentence the system exists to make true:
 
@@ -27,7 +27,7 @@ Remedy rows in the database are labelled **DEMO ONLY**. They are not production 
 Postgres and MinIO persist under `./.data/` on the host. `docker compose down` and `docker compose
 down -v` do **not** wipe that directory.
 
-`./start-stack.sh` is the supported local path: it starts Postgres and MinIO, creates `.env` if
+`./tools/start-stack.sh` is the supported local path: it starts Postgres and MinIO, creates `.env` if
 missing, boots Spring with profiles `local,demo`, and waits until `/actuator/health` is UP.
 
 ## Prerequisites
@@ -35,7 +35,7 @@ missing, boots Spring with profiles `local,demo`, and waits until `/actuator/hea
 - Docker Desktop (or equivalent) running
 - JDK 25 (same as `./gradlew`)
 - `curl` (used by the stack script and the API client)
-- macOS / zsh: always invoke scripts with `./` (`./start-stack.sh`, not `start-stack.sh`)
+- macOS / zsh: always invoke scripts with `./` (`./tools/start-stack.sh`, not `start-stack.sh`)
 
 ## Seed data
 
@@ -55,7 +55,7 @@ Flyway runs on first boot of an empty `./.data/postgres`.
 | `V100__seed_demo_identities.sql` | Fictional farmer, officer and admin. Not agronomic content. |
 | `V101__seed_historical_cases.sql` | Placeholder (`SELECT 1`). Historical case rows are not loaded yet. |
 
-`start-stack.sh` uses `local,demo`, so V100 runs. Login as:
+`./tools/start-stack.sh` uses `local,demo`, so V100 runs. Login as:
 
 | Role | How |
 |---|---|
@@ -68,7 +68,7 @@ migration, wipe data (see below) and start again. Do not hand-edit Flyway’s sc
 
 ## Guided usage — test locally with the scripts
 
-The API client (`./call-api.sh`) is a numbered menu. After each call it stays open (Enter returns
+The API client (`./tools/call-api.sh`) is a numbered menu. After each call it stays open (Enter returns
 to the menu; `q` quits). It remembers tokens and IDs in `tools/.run/api-session.json`. Auth calls
 1–4 need no bearer; later calls attach the token harvested from login.
 
@@ -76,7 +76,7 @@ to the menu; `q` quits). It remembers tokens and IDs in `tools/.run/api-session.
 
 ```bash
 cd /path/to/foshol-doctor
-./start-stack.sh
+./tools/start-stack.sh
 ```
 
 Leave this terminal running. It tails `tools/.run/app.log`. **Ctrl-C detaches** (Docker and the
@@ -92,7 +92,7 @@ recreates the `foshol-cases` bucket.
 Live sidecar instead of replay fixtures:
 
 ```bash
-FOSHOL_SPRING_PROFILES=local ./start-stack.sh
+FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
 ```
 
 (`application-local` sets `foshol.ai.mode=live`; you still need the sidecar if you want real
@@ -103,10 +103,10 @@ inference.)
 In another terminal, same directory:
 
 ```bash
-./call-api.sh
+./tools/call-api.sh
 ```
 
-(`bash tools/call-api.sh` is equivalent.) Quit only with `q`.
+Quit only with `q`.
 
 ### 3. Smoke path (auth, knowledge, submit a case)
 
@@ -159,7 +159,7 @@ docker compose --profile ai up -d sidecar
 
 ## Secrets and wipe
 
-`start-stack.sh` writes `.env` on first run (`FOSHOL_JWT_SECRET`, `FOSHOL_PHONE_KEY`,
+`./tools/start-stack.sh` writes `.env` on first run (`FOSHOL_JWT_SECRET`, `FOSHOL_PHONE_KEY`,
 `FOSHOL_DB_PASSWORD`, MinIO keys). You can instead `cp .env.example .env` and fill values. Do not
 commit `.env`.
 
@@ -170,7 +170,7 @@ docker compose down
 rm -rf .data
 ```
 
-Then `./start-stack.sh` again so Flyway and the `foshol-cases` bucket are recreated.
+Then `./tools/start-stack.sh` again so Flyway and the `foshol-cases` bucket are recreated.
 
 ## HTTPS for phones (`COMMON-SEC-019`)
 
