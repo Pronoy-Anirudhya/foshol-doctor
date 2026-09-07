@@ -30,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AnalysisEventListenerTest {
+class CreateReviewTaskOnAnalysisListenerTest {
 
     @Mock
     private ReviewTaskRepository tasks;
@@ -47,11 +47,11 @@ class AnalysisEventListenerTest {
     @Mock
     private KnowledgeQueryApi knowledge;
 
-    private AnalysisEventListener listener;
+    private CreateReviewTaskOnAnalysisListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new AnalysisEventListener(
+        listener = new CreateReviewTaskOnAnalysisListener(
                 tasks,
                 queue,
                 cases,

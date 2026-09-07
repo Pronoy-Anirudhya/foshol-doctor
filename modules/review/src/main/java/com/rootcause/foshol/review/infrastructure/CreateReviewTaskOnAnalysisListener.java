@@ -31,12 +31,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class AnalysisEventListener {
+public class CreateReviewTaskOnAnalysisListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AnalysisEventListener.class);
+    private static final Logger log = LoggerFactory.getLogger(CreateReviewTaskOnAnalysisListener.class);
 
     private final ReviewTaskRepository tasks;
     private final OfficerQueueProjectionPort queue;
@@ -46,7 +47,7 @@ public class AnalysisEventListener {
     private final Clock clock;
     private final Duration sla;
 
-    public AnalysisEventListener(
+    public CreateReviewTaskOnAnalysisListener(
             ReviewTaskRepository tasks,
             OfficerQueueProjectionPort queue,
             CaseIntakeApi cases,
@@ -64,7 +65,7 @@ public class AnalysisEventListener {
     }
 
     @ApplicationModuleListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onCompleted(AnalysisCompleted event) {
         if (tasks.findByCaseId(event.caseId()).isPresent()) {
             return;
@@ -93,7 +94,7 @@ public class AnalysisEventListener {
     }
 
     @ApplicationModuleListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onFailed(AnalysisFailed event) {
         if (tasks.findByCaseId(event.caseId()).isPresent()) {
             return;
