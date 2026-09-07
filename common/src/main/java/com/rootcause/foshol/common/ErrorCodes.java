@@ -4,6 +4,8 @@ public final class ErrorCodes {
 
     private ErrorCodes() {}
 
+    public static final String ERR_INTERNAL = "ERR_INTERNAL";
+    public static final String ERR_BAD_REQUEST = "ERR_BAD_REQUEST";
     public static final String ERR_CASE_NOT_FOUND = "ERR_CASE_NOT_FOUND";
     public static final String ERR_DEV_OTP_IN_NON_DEV_PROFILE = "ERR_DEV_OTP_IN_NON_DEV_PROFILE";
     public static final String ERR_MODEL_LABEL_MAP_INVALID = "ERR_MODEL_LABEL_MAP_INVALID";

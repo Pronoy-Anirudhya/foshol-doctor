@@ -1,10 +1,11 @@
 package com.rootcause.foshol;
 
-import com.rootcause.foshol.common.CorrelationId;
-import java.net.URI;
-import java.util.LinkedHashMap;
+import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.ProblemResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,20 +13,21 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Order(0)
 public class ValidationExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handle(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handle(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> Map.of("field", err.getField(), "message", String.valueOf(err.getDefaultMessage())))
                 .toList();
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("type", URI.create("https://foshol.local/problems/bad-request"));
-        body.put("title", "Bad Request");
-        body.put("status", 400);
-        body.put("detail", "The request is not valid.");
-        body.put("correlationId", CorrelationId.current());
-        body.put("errors", errors);
+        Map<String, Object> body = ProblemResponses.problem(
+                400,
+                ErrorCodes.ERR_BAD_REQUEST,
+                "The request is not valid.",
+                request == null ? null : request.getRequestURI(),
+                errors);
         return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_PROBLEM_JSON).body(body);
     }
 }
