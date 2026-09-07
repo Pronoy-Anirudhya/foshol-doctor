@@ -1,7 +1,9 @@
 package com.rootcause.foshol.notification.application.command.handler;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -81,6 +83,17 @@ class HandleCaseStatusChangedTest {
         handler.handle(event(CaseStatus.ANALYSING, CaseStatus.ANALYSED));
         verify(delivery, never()).deliver(any());
         verify(nudge).emitQueue(NotifyFixtures.CASE, "ANALYSED", NotifyFixtures.CORRELATION);
+    }
+
+    @Test
+    void stillNudgesOfficersWhenFarmerDeliveryThrows() {
+        when(farmers.findById(NotifyFixtures.FARMER)).thenReturn(Optional.of(NotifyFixtures.farmer()));
+        when(notifications.findDuplicate(any(), any(), eq(NotificationType.CASE_STATUS_CHANGED), any()))
+                .thenReturn(Optional.empty());
+        doThrow(new IllegalStateException("delivery failed")).when(delivery).deliver(any(Notification.class));
+        assertThatThrownBy(() -> handler.handle(event(CaseStatus.ANALYSING, CaseStatus.ANALYSED)))
+                .isInstanceOf(IllegalStateException.class);
+        verify(nudge).emitQueue(NotifyFixtures.CASE, CaseStatus.ANALYSED.name(), NotifyFixtures.CORRELATION);
     }
 
     private static CaseStatusChanged event(CaseStatus from, CaseStatus to) {

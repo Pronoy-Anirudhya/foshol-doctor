@@ -48,37 +48,38 @@ public class HandleCaseStatusChanged {
 
     public void handle(CaseStatusChanged event) {
         CorrelationId.set(event.correlationId());
-        Optional<FarmerView> farmer = farmers.findById(event.farmerId());
-        if (farmer.isEmpty()) {
-            log.warn("Unknown farmer on CaseStatusChanged correlationId={}", event.correlationId());
+        try {
+            Optional<FarmerView> farmer = farmers.findById(event.farmerId());
+            if (farmer.isEmpty()) {
+                log.warn("Unknown farmer on CaseStatusChanged correlationId={}", event.correlationId());
+                return;
+            }
+            if (notifications
+                    .findDuplicate(
+                            event.farmerId(),
+                            event.caseId(),
+                            NotificationType.CASE_STATUS_CHANGED,
+                            event.toStatus().name())
+                    .isPresent()) {
+                return;
+            }
+            var content = assembler.assembleStatus(event.fromStatus().name(), event.toStatus().name(), farmer.get());
+            Map<String, String> payload = new LinkedHashMap<>();
+            payload.put("correlationId", event.correlationId());
+            payload.put("fromStatus", event.fromStatus().name());
+            payload.put("toStatus", event.toStatus().name());
+            delivery.deliver(Notification.pending(
+                    Uuid7.create(),
+                    event.farmerId(),
+                    event.caseId(),
+                    null,
+                    NotificationType.CASE_STATUS_CHANGED,
+                    content.titleBn(),
+                    content.bodyBn(),
+                    payload,
+                    clock.instant()));
+        } finally {
             nudge.emitQueue(event.caseId(), event.toStatus().name(), event.correlationId());
-            return;
         }
-        if (notifications
-                .findDuplicate(
-                        event.farmerId(),
-                        event.caseId(),
-                        NotificationType.CASE_STATUS_CHANGED,
-                        event.toStatus().name())
-                .isPresent()) {
-            nudge.emitQueue(event.caseId(), event.toStatus().name(), event.correlationId());
-            return;
-        }
-        var content = assembler.assembleStatus(event.fromStatus().name(), event.toStatus().name(), farmer.get());
-        Map<String, String> payload = new LinkedHashMap<>();
-        payload.put("correlationId", event.correlationId());
-        payload.put("fromStatus", event.fromStatus().name());
-        payload.put("toStatus", event.toStatus().name());
-        delivery.deliver(Notification.pending(
-                Uuid7.create(),
-                event.farmerId(),
-                event.caseId(),
-                null,
-                NotificationType.CASE_STATUS_CHANGED,
-                content.titleBn(),
-                content.bodyBn(),
-                payload,
-                clock.instant()));
-        nudge.emitQueue(event.caseId(), event.toStatus().name(), event.correlationId());
     }
 }
