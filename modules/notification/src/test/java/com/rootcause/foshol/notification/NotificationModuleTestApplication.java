@@ -6,6 +6,7 @@ import com.rootcause.foshol.common.cqrs.CqrsBuses;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -21,12 +22,24 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public class NotificationModuleTestApplication {
 
     @Bean
-    CommandBus commandBus(ObjectProvider<CommandHandler<?, ?>> handlers) {
-        return CqrsBuses.commandBus(handlers.orderedStream().toList());
+    CommandBus commandBus() {
+        return new CommandBus();
     }
 
     @Bean
-    QueryBus queryBus(ObjectProvider<QueryHandler<?, ?>> handlers) {
-        return CqrsBuses.queryBus(handlers.orderedStream().toList());
+    QueryBus queryBus() {
+        return new QueryBus();
+    }
+
+    @Bean
+    ApplicationRunner registerCqrsHandlers(
+            CommandBus commands,
+            QueryBus queries,
+            ObjectProvider<CommandHandler<?, ?>> commandHandlers,
+            ObjectProvider<QueryHandler<?, ?>> queryHandlers) {
+        return args -> {
+            CqrsBuses.registerCommands(commands, commandHandlers.orderedStream().toList());
+            CqrsBuses.registerQueries(queries, queryHandlers.orderedStream().toList());
+        };
     }
 }

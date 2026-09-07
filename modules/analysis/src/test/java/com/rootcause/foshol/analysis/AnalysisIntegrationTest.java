@@ -54,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -365,13 +366,25 @@ class AnalysisIntegrationTest {
     static class AnalysisTestApplication {
 
         @Bean
-        CommandBus commandBus(ObjectProvider<CommandHandler<?, ?>> handlers) {
-            return CqrsBuses.commandBus(handlers.orderedStream().toList());
+        CommandBus commandBus() {
+            return new CommandBus();
         }
 
         @Bean
-        QueryBus queryBus(ObjectProvider<QueryHandler<?, ?>> handlers) {
-            return CqrsBuses.queryBus(handlers.orderedStream().toList());
+        QueryBus queryBus() {
+            return new QueryBus();
+        }
+
+        @Bean
+        ApplicationRunner registerCqrsHandlers(
+                CommandBus commands,
+                QueryBus queries,
+                ObjectProvider<CommandHandler<?, ?>> commandHandlers,
+                ObjectProvider<QueryHandler<?, ?>> queryHandlers) {
+            return args -> {
+                CqrsBuses.registerCommands(commands, commandHandlers.orderedStream().toList());
+                CqrsBuses.registerQueries(queries, queryHandlers.orderedStream().toList());
+            };
         }
     }
 }
