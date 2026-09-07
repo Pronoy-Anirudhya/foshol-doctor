@@ -1,1 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'foshol-doctor'
+
+include 'common'
+include 'app'
+include 'modules:identity'
+include 'modules:intake'
+include 'modules:analysis'
+include 'modules:knowledge'
+include 'modules:review'
+include 'modules:notification'

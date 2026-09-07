@@ -148,14 +148,14 @@ is a preview API on JDK 25 — see `ANALYSIS-FR-020` for the required concurrenc
 > **Deviation from the plan, recorded deliberately.** Plan §8 specifies React + Vite. The project
 > uses **Angular** by user decision (ADR-0004).
 
-### 2.3 `[PLACEHOLDER-ANGULAR-VERSION]`
+### 2.3 `22.1.5`
 
 `COMMON-NFR-003` **WHEN agent A1 initialises the frontend project, THE platform agent SHALL replace
-every occurrence of the token `[PLACEHOLDER-ANGULAR-VERSION]` in this document with the exact Angular
+every occurrence of the token `22.1.5` in this document with the exact Angular
 version resolved by `ng version`, and SHALL pin that version in `web/package.json` with no `^` or
 `~` range prefix on any `@angular/*` package.**
 
-`COMMON-NFR-004` **IF the token `[PLACEHOLDER-ANGULAR-VERSION]` still appears in this document, THEN
+`COMMON-NFR-004` **IF the token `22.1.5` still appears in this document, THEN
 THE frontend agent (A6) SHALL treat itself as blocked and SHALL NOT begin implementation.**
 
 ### 2.4 Inference sidecar and models
@@ -1519,15 +1519,15 @@ foshol.ai.mode=replay
 foshol.ai.base-url=http://localhost:8000
 foshol.ai.timeout=PT8S
 foshol.ai.vision.rice.model-id=kssrikar4/Rice-Leaf-Disease-Classification
-foshol.ai.vision.rice.model-revision=${FOSHOL_RICE_MODEL_REVISION}
+foshol.ai.vision.rice.model-revision=02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26
 foshol.ai.vision.rice.fallback-model-id=prithivMLmods/Rice-Leaf-Disease
-foshol.ai.vision.rice.fallback-model-revision=${FOSHOL_RICE_FALLBACK_MODEL_REVISION}
+foshol.ai.vision.rice.fallback-model-revision=170d10e070c308e0e5337690d67371825591f35b
 foshol.ai.vision.solanaceae.model-id=Daksh159/plant-disease-mobilenetv2
-foshol.ai.vision.solanaceae.model-revision=${FOSHOL_SOLANACEAE_MODEL_REVISION}
+foshol.ai.vision.solanaceae.model-revision=d3fb2afc90da83086eff06e9088a889b6c43d4a6
 foshol.ai.asr.model-id=ashrafulparan/whisper-small-bangla
-foshol.ai.asr.model-revision=${FOSHOL_ASR_MODEL_REVISION}
+foshol.ai.asr.model-revision=25c88973563146654493b97882fb2806d2fdeaaa
 foshol.ai.embed.model-id=sentence-transformers/LaBSE
-foshol.ai.embed.model-revision=${FOSHOL_EMBED_MODEL_REVISION}
+foshol.ai.embed.model-revision=836121a0533e5664b21c7aacc5d22951f2b8b25b
 
 # ── knowledge ───────────────────────────────────────────────────────────────
 foshol.knowledge.match.vector-threshold=0.72

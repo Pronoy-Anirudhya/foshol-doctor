@@ -1,0 +1,21 @@
+plugins {
+    id 'foshol.module-conventions'
+}
+
+dependencies {
+    implementation project(':modules:intake')
+    implementation project(':modules:knowledge')
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.micrometer:micrometer-core'
+    implementation libs.minio
+    implementation libs.resilience4j.spring.boot3
+    testImplementation libs.archunit.junit5
+    testImplementation 'org.flywaydb:flyway-core'
+    testImplementation 'org.flywaydb:flyway-database-postgresql'
+    testRuntimeOnly 'org.postgresql:postgresql'
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'foshol.flyway.dir',
+            rootProject.layout.projectDirectory.dir('app/src/main/resources/db/migration').asFile.absolutePath
+}

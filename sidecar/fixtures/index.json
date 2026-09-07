@@ -1,0 +1,26 @@
+{
+  "6a4eacfe6779a092ba5834e3c0fdd7715ef441cc546de602908f0dd07cb3fe0f": {
+    "endpoint": "/v1/vision/classify",
+    "model_id": "kssrikar4/Rice-Leaf-Disease-Classification",
+    "model_version": "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+    "source": "synthetic-rice.png",
+    "recorded_at": "2026-09-07T10:29:56Z",
+    "note": "synthetic 1x1 PNG; not a field photograph; EXIF-free"
+  },
+  "1b585e4d3c8d6da3f8227c322426021c60a7767094a76645596d129ef4c5888c": {
+    "endpoint": "/v1/vision/classify",
+    "model_id": "Daksh159/plant-disease-mobilenetv2",
+    "model_version": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+    "source": "synthetic-tomato.png",
+    "recorded_at": "2026-09-07T10:29:56Z",
+    "note": "synthetic 1x2 PNG; not a field photograph; EXIF-free"
+  },
+  "9a2bb97bf4897b1e5b2594a43f579bad4f084e6a7654dba1517a2ed330cf9e7d": {
+    "endpoint": "/v1/asr/transcribe",
+    "model_id": "ashrafulparan/whisper-small-bangla",
+    "model_version": "25c88973563146654493b97882fb2806d2fdeaaa",
+    "source": "synthetic-silent.wav",
+    "recorded_at": "2026-09-07T10:29:56Z",
+    "note": "synthetic silent PCM WAV; not a person's voice"
+  }
+}

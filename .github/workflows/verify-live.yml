@@ -1,0 +1,29 @@
+name: verify-live
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache Hugging Face weights
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-weights-${{ hashFiles('sidecar/requirements.txt') }}
+      - name: Live-mode end-to-end
+        env:
+          FOSHOL_AI_MODE: live
+        run: ./gradlew integrationTest -Dfoshol.ai.mode=live

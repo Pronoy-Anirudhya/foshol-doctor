@@ -1,0 +1,15 @@
+plugins {
+    id 'foshol.java-conventions'
+    id 'java-library'
+}
+
+dependencies {
+    api libs.uuid.creator
+    api libs.slf4j.api
+    api platform(libs.spring.modulith.bom)
+    api 'org.springframework.modulith:spring-modulith-api'
+    testImplementation platform(libs.spring.boot.dependencies)
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}

@@ -1,0 +1,30 @@
+{
+  "mode": "LIVE",
+  "crop_code": "rice",
+  "model_id": "kssrikar4/Rice-Leaf-Disease-Classification",
+  "model_version": "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+  "model_role": "primary",
+  "fallback_used": false,
+  "fallback_reason": null,
+  "architecture": "swin",
+  "image_sha256": "6a4eacfe6779a092ba5834e3c0fdd7715ef441cc546de602908f0dd07cb3fe0f",
+  "predictions": [
+    {
+      "raw_label": "class_0",
+      "confidence": 0.8123,
+      "rank": 1
+    },
+    {
+      "raw_label": "class_1",
+      "confidence": 0.1204,
+      "rank": 2
+    },
+    {
+      "raw_label": "class_2",
+      "confidence": 0.0673,
+      "rank": 3
+    }
+  ],
+  "inference_ms": 1,
+  "correlation_id": "fixture"
+}

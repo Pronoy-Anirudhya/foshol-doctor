@@ -1,0 +1,25 @@
+{
+  "mode": "LIVE",
+  "crop_code": "tomato",
+  "model_id": "Daksh159/plant-disease-mobilenetv2",
+  "model_version": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "model_role": "primary",
+  "fallback_used": false,
+  "fallback_reason": null,
+  "architecture": "mobilenetv2",
+  "image_sha256": "1b585e4d3c8d6da3f8227c322426021c60a7767094a76645596d129ef4c5888c",
+  "predictions": [
+    {
+      "raw_label": "class_0",
+      "confidence": 0.6401,
+      "rank": 1
+    },
+    {
+      "raw_label": "class_1",
+      "confidence": 0.21,
+      "rank": 2
+    }
+  ],
+  "inference_ms": 1,
+  "correlation_id": "fixture"
+}

@@ -1,0 +1,9 @@
+{
+  "model_id": "test-vision",
+  "model_version": "v1",
+  "predictions": [
+    { "raw_label": "brown_spot", "confidence": 0.6000 },
+    { "raw_label": "blast", "confidence": 0.2000 }
+  ],
+  "inference_ms": 11
+}

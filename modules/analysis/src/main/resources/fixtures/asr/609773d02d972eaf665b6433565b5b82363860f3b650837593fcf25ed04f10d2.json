@@ -1,0 +1,6 @@
+{
+  "modelId": "ashrafulparan/whisper-small-bangla",
+  "transcriptBn": "TODO(content-owner)",
+  "asrConfidence": 0.91,
+  "latencyMs": 20
+}
