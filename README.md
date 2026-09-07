@@ -1,91 +1,197 @@
-# foshol-doctor
+# Foshol Doctor
 
-AI-triaged crop-disease diagnosis from photographs and Bangla speech. Every case is approved by a
-human field officer before any advice reaches the farmer.
+AI-triaged crop-disease diagnosis from photographs and Bangla speech. The product is the
+human-in-the-loop: **every case is approved by a field officer before any advice reaches the
+farmer.** The model only accelerates triage.
 
-## One-command startup
+Three crops (rice, tomato, potato), a Spring Modulith API, a Python inference sidecar, and an
+Angular app under `web/` (owned separately; pin **22.1.5**). This README is for running the **API
+and data plane locally**, without the frontend.
 
-```bash
-cp .env.example .env   # fill secrets
-docker compose up -d postgres minio caddy
-./gradlew :app:bootRun --args='--spring.profiles.active=local'
-```
+The sentence the system exists to make true:
 
-First boot applies Flyway `V1`–`V18` (schema + DEMO knowledge base) and, on `local` and `demo`, the V100 farmer/officer personas. If this machine already applied V1–V17 against `./.data/postgres`, reset once so `V18` can run:
+> No farmer in this system has ever received unverified pesticide advice.
 
-```bash
-docker compose down
-rm -rf .data
-docker compose up -d postgres minio caddy
-```
+Remedy rows in the database are labelled **DEMO ONLY**. They are not production agronomy.
 
-Postgres and MinIO write to `./.data/` on the host (not Docker named volumes). Cases, Flyway history and uploaded objects survive `docker compose stop`, `docker compose down`, `docker compose down -v`, and quitting Docker Desktop. To wipe and start empty:
+## What you run
 
-```bash
-docker compose down
-rm -rf .data
-```
-
-## Demo (replay, dress rehearsal)
-
-Replay mode does not need the sidecar. Use the `demo` profile:
-
-```bash
-./gradlew :app:bootRun --args='--spring.profiles.active=demo'
-```
-
-Capture files for the eight-beat script are under `docs/demo/`:
-
-| Beat | File | Expected path |
+| Piece | Role | Default local address |
 |---|---|---|
-| 1 PRIMARY rice blast | `docs/demo/images/01-rice-blast-primary.jpg` | top-1 ≥ 0.75, Grad-CAM fixture, brown-spot/blast remedies prefilled |
-| 2 SECONDARY | `docs/demo/images/02-rice-brown-spot-ambiguous.jpg` plus `docs/demo/audio/secondary-brown-spot.wav` | top-1 in `[0.45, 0.75)`; transcript matches brown-spot phrases |
-| 3 quality gate | `docs/demo/images/07-blurry-reject.jpg` | `422` QualityGateProblem, nothing in MinIO |
-| extras | `03` brown spot PRIMARY, `04` tomato early blight, `05` potato late blight, `06` rice healthy | routing coverage |
+| Postgres 17 + pgvector | Cases, knowledge, identities, Flyway | host **5433** → container 5432 |
+| MinIO | Case photos and audio (`foshol-cases`) | **9000** (API), **9001** (console) |
+| Spring Boot (`:app:bootRun`) | HTTP API | **8080** |
+| Inference sidecar | Optional live vision / ASR / embeddings | **8000** (`docker compose --profile ai`) |
+| Caddy | Optional HTTPS for phones | **80** / **443** |
 
-The WAV is a 16 kHz tone; replay ASR substitutes the Bangla transcript in `docs/demo/manifest.json`. Photographs are Wikimedia Commons stills (USDA-ARS / Bugwood / CC-licensed field photos), resized for the repo. **Every remedy row is labelled DEMO ONLY** — not production advice.
+Postgres and MinIO persist under `./.data/` on the host. `docker compose down` and `docker compose
+down -v` do **not** wipe that directory.
 
-Credentials (also seeded on `local`):
+`./start-stack.sh` is the supported local path: it starts Postgres and MinIO, creates `.env` if
+missing, boots Spring with profiles `local,demo`, and waits until `/actuator/health` is UP.
 
-- Farmer phone `+8801711111111`, OTP `123456` (`foshol.auth.otp.dev-code`)
-- Officer username `officer`, password `password`
-- Admin username `admin`, password `password`
+## Prerequisites
 
-Replay-mode sidecar (optional; Spring `demo` profile already replays from classpath fixtures):
+- Docker Desktop (or equivalent) running
+- JDK 25 (same as `./gradlew`)
+- `curl` (used by the stack script and the API client)
+- macOS / zsh: always invoke scripts with `./` (`./start-stack.sh`, not `start-stack.sh`)
+
+## Seed data
+
+Flyway runs on first boot of an empty `./.data/postgres`.
+
+**Always applied** (`classpath:db/migration`):
+
+- Schema for identity, intake, analysis, knowledge, review and notification
+- Reference knowledge: three crops, 14 disease classes, symptoms, phrases, weights, remedies, label
+  map (`V10`–`V18`)
+- Modulith `event_publication` tables (`V102`)
+
+**Applied on `local` and `demo` only** (`classpath:db/seed`):
+
+| Migration | What it is |
+|---|---|
+| `V100__seed_demo_identities.sql` | Fictional farmer, officer and admin. Not agronomic content. |
+| `V101__seed_historical_cases.sql` | Placeholder (`SELECT 1`). Historical case rows are not loaded yet. |
+
+`start-stack.sh` uses `local,demo`, so V100 runs. Login as:
+
+| Role | How |
+|---|---|
+| Farmer | Phone `+8801711111111`, OTP `123456` (`foshol.auth.otp.dev-code`) |
+| Officer | Username `officer`, password `password` |
+| Admin | Username `admin`, password `password` |
+
+If this machine already has an older Flyway history in `./.data/postgres` that cannot apply a new
+migration, wipe data (see below) and start again. Do not hand-edit Flyway’s schema history.
+
+## Guided usage — test locally with the scripts
+
+The API client (`./call-api.sh`) is a numbered menu. After each call it stays open (Enter returns
+to the menu; `q` quits). It remembers tokens and IDs in `tools/.run/api-session.json`. Auth calls
+1–4 need no bearer; later calls attach the token harvested from login.
+
+### 1. Start the stack
+
+```bash
+cd /path/to/foshol-doctor
+./start-stack.sh
+```
+
+Leave this terminal running. It tails `tools/.run/app.log`. **Ctrl-C detaches** (Docker and the
+Java process keep running). To stop the API later: `kill $(cat tools/.run/app.pid)` (or the
+`FosholDoctorApplication` process).
+
+Wait until you see `stack is up` and `{"status":"UP"}`. First boot compiles Gradle and applies
+Flyway; later boots are faster.
+
+If MinIO was created with different keys than `.env`, the script resets `./.data/minio` and
+recreates the `foshol-cases` bucket.
+
+Live sidecar instead of replay fixtures:
+
+```bash
+FOSHOL_SPRING_PROFILES=local ./start-stack.sh
+```
+
+(`application-local` sets `foshol.ai.mode=live`; you still need the sidecar if you want real
+inference.)
+
+### 2. Open the API client
+
+In another terminal, same directory:
+
+```bash
+./call-api.sh
+```
+
+(`bash tools/call-api.sh` is equivalent.) Quit only with `q`.
+
+### 3. Smoke path (auth, knowledge, submit a case)
+
+Run in order. Empty Enter after each result.
+
+| Step | Menu | What you should see |
+|---|---|---|
+| OTP | **1** | HTTP **202**, `DEV_FIXED` |
+| Verify | **2** | HTTP **200**, farmer JWT stored |
+| Crops | **7** | HTTP **200**, rice / tomato / potato |
+| Submit | **12** | HTTP **202**, `status: SUBMITTED`, a `caseId` |
+
+**12** uploads `docs/demo/images/01-rice-blast-primary.jpg` for the seeded rice crop with a fresh
+`Idempotency-Key`.
+
+Analysis is asynchronous. After **12**, wait a few seconds (watch `tools/.run/app.log`) before the
+review queue fills.
+
+### 4. Officer path (optional, full loop)
+
+Suggested continuation:
+
+**3** (officer login) → **16** (case detail) → **21** (analysis) → **23** (queue) → **25** (claim) →
+**28** (approve) → **30** (advisory as farmer).
+
+Use **13** for photo + audio, **14** for the blurry image (expect **422**, nothing stored). **36**
+is `/actuator/health` with no auth.
+
+If **21** or **23** is empty, analysis has not finished or failed; check the log rather than
+retrying **12** blindly (each **12** is a new case).
+
+## Demo capture files
+
+Under `docs/demo/` for the dress-rehearsal beats. Replay ASR uses the Bangla transcript in
+`docs/demo/manifest.json` (the WAV is a 16 kHz tone). Photographs are Wikimedia Commons stills,
+resized for the repo.
+
+| Beat | Files | Intended behaviour |
+|---|---|---|
+| PRIMARY | `images/01-rice-blast-primary.jpg` | High-confidence rice-blast path (menu **12**) |
+| SECONDARY | `images/02-rice-brown-spot-ambiguous.jpg`, `audio/secondary-brown-spot.wav` | Ambiguous photo + speech (menu **13**) |
+| Quality gate | `images/07-blurry-reject.jpg` | Rejected before storage (menu **14**) |
+| Extras | `03`–`06` | Other crops / healthy / brown-spot coverage |
+
+Optional replay sidecar (Spring `demo` already replays from classpath fixtures):
 
 ```bash
 docker compose --profile ai up -d sidecar
 ```
+
+## Secrets and wipe
+
+`start-stack.sh` writes `.env` on first run (`FOSHOL_JWT_SECRET`, `FOSHOL_PHONE_KEY`,
+`FOSHOL_DB_PASSWORD`, MinIO keys). You can instead `cp .env.example .env` and fill values. Do not
+commit `.env`.
+
+Wipe Postgres + MinIO on disk:
+
+```bash
+docker compose down
+rm -rf .data
+```
+
+Then `./start-stack.sh` again so Flyway and the `foshol-cases` bucket are recreated.
 
 ## HTTPS for phones (`COMMON-SEC-019`)
 
 1. Install [mkcert](https://github.com/FiloSottile/mkcert) and run `mkcert -install`.
 2. `mkdir -p deploy/certs && mkcert -cert-file deploy/certs/local.pem -key-file deploy/certs/local-key.pem "$(hostname).local" 192.168.x.x localhost`
 3. Install the mkcert CA on the demo phone.
-4. Open `https://<lan-ip>/`.
+4. `docker compose up -d caddy` and open `https://<lan-ip>/`.
 
-If the venue Wi-Fi isolates clients, fall back to a tunnel (`cloudflared` or `ngrok`).
+If venue Wi-Fi isolates clients, use a tunnel (`cloudflared` or `ngrok`).
 
 ## Build
 
 ```bash
 ./gradlew clean build
-docker compose down && rm -rf .data && docker compose up -d && ./gradlew integrationTest
 ```
 
-Do not rely on `docker compose down -v` to reset this stack: bind mounts are not Compose volumes, so `-v` will not delete `./.data`.
-
-## Terminal E2E (no frontend)
+Integration tests need Postgres and MinIO (and a wipe if schema is stale):
 
 ```bash
-cd /path/to/foshol-doctor
-./start-stack.sh                # docker postgres+minio, then Spring on :8080
-# another terminal, same directory:
-./call-api.sh                   # numbered menu; POSTs send predefined demo JSON
+docker compose down
+rm -rf .data
+docker compose up -d postgres minio
+./gradlew integrationTest
 ```
-
-macOS zsh does not search the current folder. Use `./start-stack.sh`, not `start-stack.sh`. `bash tools/start-stack.sh` also works.
-
-`start-stack.sh` uses profiles `local,demo` (replay, seeded farmer/officer). Live sidecar: `FOSHOL_SPRING_PROFILES=local ./start-stack.sh`.
-
-Suggested `call-api.sh` order: 1 → 2 → 3 → 4 → 7 → 12 → 16 → 21 → 23 → 25 → 28 → 30.
