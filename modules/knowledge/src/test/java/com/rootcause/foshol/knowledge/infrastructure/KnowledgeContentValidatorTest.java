@@ -48,6 +48,11 @@ class KnowledgeContentValidatorTest {
                 ErrorCodes.ERR_MODEL_LABEL_MAP_INVALID);
     }
 
+    @Test
+    void populatedSnapshotPasses() {
+        KnowledgeContentValidator.validateStrict(populated().build());
+    }
+
     private static void assertCode(Fixture fixture, String code) {
         assertThatThrownBy(() -> KnowledgeContentValidator.validateStrict(fixture.build()))
                 .isInstanceOf(KnowledgeException.class)
