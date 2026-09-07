@@ -37,6 +37,7 @@ out/
 .vscode/
 
 .env
+.data/
 *.log
 deploy/certs/*.pem
 sidecar/__pycache__/
