@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "otp_challenge")
@@ -14,9 +16,11 @@ public class OtpChallengeEntity {
     @Id
     private UUID id;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "phone_hash", nullable = false, length = 64)
     private String phoneHash;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "code_hash", nullable = false, length = 64)
     private String codeHash;
 
