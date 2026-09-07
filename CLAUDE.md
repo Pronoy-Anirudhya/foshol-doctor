@@ -33,7 +33,7 @@ The human-in-the-loop approval workflow is the product. The AI is a triage accel
 | `docs/adr/` | Why each contested decision went the way it did. |
 | `docs/openapi/foshol-api.yaml` | **FROZEN.** The API contract the frontend generates from. |
 
-`docs/fasol-doctor-plan-v2-revised-scope.md` is the historical input plan. It is **superseded** on
+`docs/requirements/fasol-doctor-plan-v2-revised-scope.md` is the historical input plan. It is **superseded** on
 naming (Fasol → Foshol), frontend (React → Angular), build (Kotlin DSL → Groovy DSL) and, most
 importantly, on machine learning. Use it for background only.
 

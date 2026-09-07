@@ -324,7 +324,7 @@ Roles: **BE1** = intake, review, notification, platform · **BE2** = analysis, k
 ## 10. Agentic AI workflow
 
 - **Day 1, first 90 minutes:** convert this plan into `docs/requirements.ears.md` in EARS format with IDs. Every generated artifact traces to a requirement ID; no requirement, no code. This is the same discipline as your `bits-ddd` skill and it is what makes parallel agents safe.
-- `CLAUDE.md` at root: module map, the dependency rule, published-API-only imports, records over classes, imports not FQNs, constants not literals (event names, error messages, config keys), never invent business rules, DoD = `./gradlew build` clean then tests green.
+- `../../CLAUDE.md` at root: module map, the dependency rule, published-API-only imports, records over classes, imports not FQNs, constants not literals (event names, error messages, config keys), never invent business rules, DoD = `./gradlew build` clean then tests green.
 - **Freeze the module `api` packages — interfaces and event records — before any agent writes a handler.** This is the single highest-value gate: with contracts frozen, agents in separate git worktrees cannot break each other.
 - Fan out one agent per module after the domain layer lands. Verification gate per run: compile → unit tests → `ApplicationModules.verify()` → ArchUnit → Testcontainers integration test.
 - **Humans own:** the remedy content, dosages, PHI values, Bangla symptom phrases, and both confidence thresholds. Agents may not author agronomic data. Say this on stage — "we used AI aggressively to build the system and not at all to author the agricultural advice" is a strong, honest line.
@@ -364,5 +364,5 @@ Roles: **BE1** = intake, review, notification, platform · **BE2** = analysis, k
 2. Write `docs/requirements.ears.md`.
 3. Lock the 14 disease classes and name the KB content owner.
 4. Record 20 Bangla clips and start the ASR bake-off — this has the longest lead time and the most uncertainty.
-5. Scaffold the repo, `CLAUDE.md`, ADR-0001 (Modulith over microservices), ADR-0002 (in-process events over a broker, with the migration path), ADR-0003 (human approval mandatory for all advisories).
+5. Scaffold the repo, `../../CLAUDE.md`, ADR-0001 (Modulith over microservices), ADR-0002 (in-process events over a broker, with the migration path), ADR-0003 (human approval mandatory for all advisories).
 6. Freeze the module `api` packages before any agent starts.
