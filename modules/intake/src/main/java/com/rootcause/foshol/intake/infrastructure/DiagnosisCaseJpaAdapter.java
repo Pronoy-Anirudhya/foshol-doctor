@@ -7,6 +7,7 @@ import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.IdempotencyRecord;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
 import com.rootcause.foshol.intake.domain.vo.Sha256;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,8 +132,8 @@ public class DiagnosisCaseJpaAdapter implements DiagnosisCaseRepository, Idempot
                 .param("status", diagnosisCase.status().name())
                 .param("path", diagnosisCase.decisionPath() == null ? null : diagnosisCase.decisionPath().name())
                 .param("thumb", thumbnailKey)
-                .param("submitted", diagnosisCase.createdAt())
-                .param("updated", diagnosisCase.updatedAt())
+                .param("submitted", timestamp(diagnosisCase.createdAt()))
+                .param("updated", timestamp(diagnosisCase.updatedAt()))
                 .update();
     }
 
@@ -160,7 +161,7 @@ public class DiagnosisCaseJpaAdapter implements DiagnosisCaseRepository, Idempot
                 .param("version", advisoryVersion)
                 .param("disease", diseaseNameBn)
                 .param("officer", officerName)
-                .param("published", publishedAt)
+                .param("published", timestamp(publishedAt))
                 .param("caseId", caseId)
                 .update();
     }
@@ -178,6 +179,10 @@ public class DiagnosisCaseJpaAdapter implements DiagnosisCaseRepository, Idempot
                 .param("message", rejectionMessageBn)
                 .param("caseId", caseId)
                 .update();
+    }
+
+    private static Timestamp timestamp(Instant instant) {
+        return instant == null ? null : Timestamp.from(instant);
     }
 
     private static Optional<IdempotencyRecord> toRecord(Optional<IdempotencyKeyEntity> row) {
