@@ -22,5 +22,47 @@
     "source": "synthetic-silent.wav",
     "recorded_at": "2026-09-07T10:29:56Z",
     "note": "synthetic silent PCM WAV; not a person's voice"
+  },
+  "7ffa3a2425f9a5b10c28e3b103736febbcdbc2fda243ed59f1da90b3d3524e68": {
+    "endpoint": "/v1/asr/transcribe",
+    "source": "secondary-brown-spot.wav",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO 16 kHz tone; paired with a Bangla symptom transcript fixture"
+  },
+  "e33c67cdb8132995a330b1df145529af9cbbad9bc59724d4028ee30f6339a59a": {
+    "endpoint": "/v1/vision/classify",
+    "source": "01-rice-blast-primary.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+  },
+  "5c96c604bc82f79ba57835bd2ce1e28de0211a58bc1ac9002e9be4bcb57fc41b": {
+    "endpoint": "/v1/vision/classify",
+    "source": "02-rice-brown-spot-ambiguous.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+  },
+  "102a5ac283a47f57a5ff25affef238a4aa2e262bea9960f50526866d05eca51b": {
+    "endpoint": "/v1/vision/classify",
+    "source": "03-rice-brown-spot-primary.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+  },
+  "fb4148c706e84e2f589541832ae41ced55e25e12478212654be5766c003b3eeb": {
+    "endpoint": "/v1/vision/classify",
+    "source": "04-tomato-early-blight.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+  },
+  "b071b0f888a2274bf0915ec252b28f166a44f88a3a68102abd1e447defb93a68": {
+    "endpoint": "/v1/vision/classify",
+    "source": "05-potato-late-blight.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+  },
+  "ec23a9575e8e4b25f75d167a5a0be56f44e1796d368250c625ca85f71f3c9e4e": {
+    "endpoint": "/v1/vision/classify",
+    "source": "06-rice-healthy.jpg",
+    "recorded_at": "2026-09-07T20:00:00Z",
+    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
   }
 }

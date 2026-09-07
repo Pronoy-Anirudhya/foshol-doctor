@@ -89,28 +89,45 @@ class KnowledgeIntegrationTest {
     DataSource dataSource;
 
     @Test
-    void seededTaxonomyAndEmptyMatcher() {
+    void seededTaxonomyMatcherAndLabelMap() {
         assertThat(knowledgeQueryApi.listCrops()).hasSize(3);
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         Integer diseases = jdbc.queryForObject("select count(*) from disease where deleted_at is null", Integer.class);
         assertThat(diseases).isEqualTo(KnowledgeTaxonomy.DISEASE_CLASS_COUNT);
+        Integer remedies = jdbc.queryForObject(
+                "select count(*) from remedy where deleted_at is null and active = true", Integer.class);
+        assertThat(remedies).isGreaterThanOrEqualTo(11);
 
         List<NormalisedPhrase> phrases = jdbc.query(
                 "select phrase_bn, normalised_bn from symptom_phrase where deleted_at is null",
                 (rs, rowNum) -> new NormalisedPhrase(rs.getString("phrase_bn"), rs.getString("normalised_bn")));
+        assertThat(phrases).isNotEmpty();
         for (NormalisedPhrase phrase : phrases) {
             assertThat(phrase.normalisedBn()).isEqualTo(BanglaTextNormaliser.normalise(phrase.phraseBn()));
         }
 
-        SymptomMatchResult empty = symptomMatchApi.match(new SymptomMatchRequest(RICE, "পাতা", null, List.of()));
+        SymptomMatchResult empty = symptomMatchApi.match(
+                new SymptomMatchRequest(RICE, "zxqvwm no such symptom tokens", null, List.of()));
         assertThat(empty.inconclusive()).isTrue();
         assertThat(empty.symptoms()).isEmpty();
         assertThat(empty.diseases()).isEmpty();
 
-        SymptomMatchResult again = symptomMatchApi.match(new SymptomMatchRequest(RICE, "পাতা", null, List.of()));
+        SymptomMatchResult again = symptomMatchApi.match(
+                new SymptomMatchRequest(RICE, "zxqvwm no such symptom tokens", null, List.of()));
         assertThat(again).isEqualTo(empty);
 
+        SymptomMatchResult brownSpot = symptomMatchApi.match(new SymptomMatchRequest(
+                RICE, "ধানের পাতায় বাদামি গোল দাগ দেখা যাচ্ছে", null, List.of()));
+        assertThat(brownSpot.inconclusive()).isFalse();
+        assertThat(brownSpot.symptoms()).isNotEmpty();
+        assertThat(brownSpot.diseases()).isNotEmpty();
+
         assertThat(knowledgeQueryApi.resolveModelLabel("any", "1", "Leaf_Blast")).isEmpty();
+        assertThat(knowledgeQueryApi.resolveModelLabel(
+                        "kssrikar4/Rice-Leaf-Disease-Classification",
+                        "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+                        "Brown Spot"))
+                .contains(UUID.fromString("01800000-0000-7000-8000-000000000101"));
         assertThatThrownBy(() -> symptomMatchApi.match(
                         new SymptomMatchRequest(UUID.fromString("01800000-0000-7000-8000-000000000099"), null, null, List.of())))
                 .isInstanceOf(KnowledgeException.class)

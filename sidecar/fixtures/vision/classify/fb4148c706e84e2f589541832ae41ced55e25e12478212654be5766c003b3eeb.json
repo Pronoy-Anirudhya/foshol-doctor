@@ -1,0 +1,25 @@
+{
+  "mode": "LIVE",
+  "crop_code": "tomato",
+  "model_id": "Daksh159/plant-disease-mobilenetv2",
+  "model_version": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "model_role": "primary",
+  "fallback_used": false,
+  "fallback_reason": null,
+  "architecture": "mobilenetv2",
+  "image_sha256": "fb4148c706e84e2f589541832ae41ced55e25e12478212654be5766c003b3eeb",
+  "predictions": [
+    {
+      "raw_label": "Tomato___Early_blight",
+      "confidence": 0.86,
+      "rank": 1
+    },
+    {
+      "raw_label": "Tomato___healthy",
+      "confidence": 0.06,
+      "rank": 2
+    }
+  ],
+  "inference_ms": 12,
+  "correlation_id": "demo"
+}

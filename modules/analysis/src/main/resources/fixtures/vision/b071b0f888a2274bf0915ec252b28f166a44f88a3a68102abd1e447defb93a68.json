@@ -1,0 +1,15 @@
+{
+  "modelId": "Daksh159/plant-disease-mobilenetv2",
+  "modelVersion": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "candidates": [
+    {
+      "rawLabel": "Potato___Late_blight",
+      "confidence": 0.84
+    },
+    {
+      "rawLabel": "Potato___Early_blight",
+      "confidence": 0.09
+    }
+  ],
+  "latencyMs": 12
+}

@@ -1,0 +1,25 @@
+{
+  "mode": "LIVE",
+  "crop_code": "rice",
+  "model_id": "kssrikar4/Rice-Leaf-Disease-Classification",
+  "model_version": "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+  "model_role": "primary",
+  "fallback_used": false,
+  "fallback_reason": null,
+  "architecture": "swin",
+  "image_sha256": "e33c67cdb8132995a330b1df145529af9cbbad9bc59724d4028ee30f6339a59a",
+  "predictions": [
+    {
+      "raw_label": "Leaf Blast",
+      "confidence": 0.91,
+      "rank": 1
+    },
+    {
+      "raw_label": "Brown Spot",
+      "confidence": 0.04,
+      "rank": 2
+    }
+  ],
+  "inference_ms": 12,
+  "correlation_id": "demo"
+}
