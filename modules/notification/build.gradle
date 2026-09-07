@@ -1,0 +1,20 @@
+plugins {
+    id 'foshol.module-conventions'
+}
+
+dependencies {
+    implementation project(':modules:identity')
+    implementation project(':modules:review')
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway'
+    testRuntimeOnly 'org.flywaydb:flyway-database-postgresql'
+    testRuntimeOnly 'org.postgresql:postgresql'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
+
+processTestResources {
+    from(project(':app').file('src/main/resources/db')) {
+        into 'db'
+    }
+}
