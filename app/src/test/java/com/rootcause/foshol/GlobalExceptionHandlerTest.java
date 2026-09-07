@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.review.domain.ReviewException;
+import com.rootcause.foshol.review.infrastructure.ReviewExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,11 +33,41 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.status").value(500));
     }
 
+    @Test
+    void reviewExceptionKeepsStatusWhenGlobalAdviceIsAlsoRegistered() throws Exception {
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new ReviewStubController())
+                .setControllerAdvice(new GlobalExceptionHandler(), new ReviewExceptionHandler())
+                .build();
+        mvc.perform(get("/advisory-missing"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value(ErrorCodes.ERR_ADVISORY_NOT_FOUND))
+                .andExpect(jsonPath("$.status").value(404));
+        mvc.perform(get("/remedy-mismatch"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value(ErrorCodes.ERR_REMEDY_DISEASE_MISMATCH))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
     @RestController
     static class BoomController {
         @GetMapping("/boom")
         void boom() {
             throw new RuntimeException("secret-stack leaked");
+        }
+    }
+
+    @RestController
+    static class ReviewStubController {
+        @GetMapping("/advisory-missing")
+        void missingAdvisory() {
+            throw new ReviewException(ErrorCodes.ERR_ADVISORY_NOT_FOUND, 404, "No advisory for this case.");
+        }
+
+        @GetMapping("/remedy-mismatch")
+        void remedyMismatch() {
+            throw ReviewException.remedyDiseaseMismatch();
         }
     }
 }
