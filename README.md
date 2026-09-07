@@ -75,4 +75,17 @@ docker compose down && rm -rf .data && docker compose up -d && ./gradlew integra
 
 Do not rely on `docker compose down -v` to reset this stack: bind mounts are not Compose volumes, so `-v` will not delete `./.data`.
 
-Angular is a separate app under `web/`, owned by the frontend engineer. Pin: **22.1.5**.
+## Terminal E2E (no frontend)
+
+```bash
+cd /path/to/foshol-doctor
+./start-stack.sh                # docker postgres+minio, then Spring on :8080
+# another terminal, same directory:
+./call-api.sh                   # numbered menu; POSTs send predefined demo JSON
+```
+
+macOS zsh does not search the current folder. Use `./start-stack.sh`, not `start-stack.sh`. `bash tools/start-stack.sh` also works.
+
+`start-stack.sh` uses profiles `local,demo` (replay, seeded farmer/officer). Live sidecar: `FOSHOL_SPRING_PROFILES=local ./start-stack.sh`.
+
+Suggested `call-api.sh` order: 1 → 2 → 3 → 4 → 7 → 12 → 16 → 21 → 23 → 25 → 28 → 30.
