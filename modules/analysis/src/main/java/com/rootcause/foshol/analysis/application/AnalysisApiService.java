@@ -3,8 +3,8 @@ package com.rootcause.foshol.analysis.application;
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.command.RecordOfficerSymptomsCommand;
-import com.rootcause.foshol.analysis.application.command.RecordOfficerSymptomsCommandHandler;
 import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
+import com.rootcause.foshol.common.cqrs.CommandBus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,12 +14,11 @@ import org.springframework.stereotype.Service;
 public class AnalysisApiService implements AnalysisApi {
 
     private final AnalysisReadRepository reads;
-    private final RecordOfficerSymptomsCommandHandler officerSymptoms;
+    private final CommandBus commands;
 
-    public AnalysisApiService(
-            AnalysisReadRepository reads, RecordOfficerSymptomsCommandHandler officerSymptoms) {
+    public AnalysisApiService(AnalysisReadRepository reads, CommandBus commands) {
         this.reads = reads;
-        this.officerSymptoms = officerSymptoms;
+        this.commands = commands;
     }
 
     @Override
@@ -29,6 +28,6 @@ public class AnalysisApiService implements AnalysisApi {
 
     @Override
     public void recordOfficerSymptoms(UUID caseId, List<UUID> symptomIds) {
-        officerSymptoms.handle(new RecordOfficerSymptomsCommand(caseId, symptomIds));
+        commands.handle(new RecordOfficerSymptomsCommand(caseId, symptomIds));
     }
 }

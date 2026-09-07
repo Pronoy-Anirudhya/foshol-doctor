@@ -1,9 +1,10 @@
 package com.rootcause.foshol.knowledge.web;
 
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.knowledge.application.query.DiseaseReadModel;
 import com.rootcause.foshol.knowledge.application.query.GetDiseaseQuery;
-import com.rootcause.foshol.knowledge.application.query.GetDiseaseQueryHandler;
 import com.rootcause.foshol.knowledge.application.query.GetDiseaseRemediesQuery;
-import com.rootcause.foshol.knowledge.application.query.GetDiseaseRemediesQueryHandler;
+import com.rootcause.foshol.knowledge.application.query.RemedyReadModel;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,23 +16,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/diseases")
 public class DiseaseController {
 
-    private final GetDiseaseQueryHandler findDisease;
-    private final GetDiseaseRemediesQueryHandler listRemedies;
+    private final QueryBus queries;
 
-    public DiseaseController(GetDiseaseQueryHandler findDisease, GetDiseaseRemediesQueryHandler listRemedies) {
-        this.findDisease = findDisease;
-        this.listRemedies = listRemedies;
+    public DiseaseController(QueryBus queries) {
+        this.queries = queries;
     }
 
     @GetMapping("/{diseaseId}")
     public DiseaseResponse get(@PathVariable UUID diseaseId) {
-        return KnowledgeWebMapper.toDiseaseResponse(findDisease.handle(new GetDiseaseQuery(diseaseId)));
+        DiseaseReadModel disease = queries.handle(new GetDiseaseQuery(diseaseId));
+        return KnowledgeWebMapper.toDiseaseResponse(disease);
     }
 
     @GetMapping("/{diseaseId}/remedies")
     public List<RemedyResponse> remedies(@PathVariable UUID diseaseId) {
-        return listRemedies.handle(new GetDiseaseRemediesQuery(diseaseId)).stream()
-                .map(KnowledgeWebMapper::toRemedyResponse)
-                .toList();
+        List<RemedyReadModel> remedies = queries.handle(new GetDiseaseRemediesQuery(diseaseId));
+        return remedies.stream().map(KnowledgeWebMapper::toRemedyResponse).toList();
     }
 }

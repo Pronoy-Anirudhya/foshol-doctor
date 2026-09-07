@@ -6,6 +6,8 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.RemedyType;
 import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
@@ -24,35 +26,37 @@ class KnowledgeQueryApiAdapterTest {
     private static final UUID REMEDY = UUID.fromString("01800000-0000-7000-8000-000000000701");
     private static final UUID SYMPTOM = UUID.fromString("01800000-0000-7000-8000-000000000501");
 
-    private ListCropsQueryHandler listCrops;
-    private FindCropByIdQueryHandler findCropById;
-    private FindCropByCodeQueryHandler findCropByCode;
-    private FindDiseaseByIdQueryHandler findDiseaseById;
-    private ListDiseasesByCropQueryHandler listDiseasesByCrop;
-    private ListActiveRemediesQueryHandler listActiveRemedies;
-    private ListSymptomsQueryHandler listSymptoms;
-    private ResolveModelLabelQueryHandler resolveModelLabel;
+    private QueryHandler<ListCropsQuery, List<CropReadModel>> listCrops;
+    private QueryHandler<FindCropByIdQuery, Optional<CropReadModel>> findCropById;
+    private QueryHandler<FindCropByCodeQuery, Optional<CropReadModel>> findCropByCode;
+    private QueryHandler<FindDiseaseByIdQuery, Optional<DiseaseReadModel>> findDiseaseById;
+    private QueryHandler<ListDiseasesByCropQuery, List<DiseaseReadModel>> listDiseasesByCrop;
+    private QueryHandler<ListActiveRemediesQuery, List<RemedyReadModel>> listActiveRemedies;
+    private QueryHandler<ListSymptomsQuery, List<SymptomReadModel>> listSymptoms;
+    private QueryHandler<ResolveModelLabelQuery, Optional<UUID>> resolveModelLabel;
     private KnowledgeQueryApi api;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
-        listCrops = mock(ListCropsQueryHandler.class);
-        findCropById = mock(FindCropByIdQueryHandler.class);
-        findCropByCode = mock(FindCropByCodeQueryHandler.class);
-        findDiseaseById = mock(FindDiseaseByIdQueryHandler.class);
-        listDiseasesByCrop = mock(ListDiseasesByCropQueryHandler.class);
-        listActiveRemedies = mock(ListActiveRemediesQueryHandler.class);
-        listSymptoms = mock(ListSymptomsQueryHandler.class);
-        resolveModelLabel = mock(ResolveModelLabelQueryHandler.class);
-        api = new KnowledgeQueryApiAdapter(
-                listCrops,
-                findCropById,
-                findCropByCode,
-                findDiseaseById,
-                listDiseasesByCrop,
-                listActiveRemedies,
-                listSymptoms,
-                resolveModelLabel);
+        listCrops = mock(QueryHandler.class);
+        findCropById = mock(QueryHandler.class);
+        findCropByCode = mock(QueryHandler.class);
+        findDiseaseById = mock(QueryHandler.class);
+        listDiseasesByCrop = mock(QueryHandler.class);
+        listActiveRemedies = mock(QueryHandler.class);
+        listSymptoms = mock(QueryHandler.class);
+        resolveModelLabel = mock(QueryHandler.class);
+        QueryBus queries = new QueryBus();
+        queries.register(ListCropsQuery.class, listCrops);
+        queries.register(FindCropByIdQuery.class, findCropById);
+        queries.register(FindCropByCodeQuery.class, findCropByCode);
+        queries.register(FindDiseaseByIdQuery.class, findDiseaseById);
+        queries.register(ListDiseasesByCropQuery.class, listDiseasesByCrop);
+        queries.register(ListActiveRemediesQuery.class, listActiveRemedies);
+        queries.register(ListSymptomsQuery.class, listSymptoms);
+        queries.register(ResolveModelLabelQuery.class, resolveModelLabel);
+        api = new KnowledgeQueryApiAdapter(queries);
     }
 
     @Test
@@ -67,8 +71,7 @@ class KnowledgeQueryApiAdapterTest {
     void mapsNullEnglishVerbatimOnApiView() {
         when(findCropById.handle(new FindCropByIdQuery(RICE)))
                 .thenReturn(Optional.of(new CropReadModel(RICE, "rice", "ধান", null, "crop-rice", 1)));
-        assertThat(api.findCropById(RICE))
-                .contains(new CropView(RICE, "rice", "ধান", null, "crop-rice"));
+        assertThat(api.findCropById(RICE)).contains(new CropView(RICE, "rice", "ধান", null, "crop-rice"));
     }
 
     @Test

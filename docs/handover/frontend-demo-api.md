@@ -1,11 +1,12 @@
 # Frontend handover — APIs for a demo-capable UI
 
-**Audience:** Angular (`web/`, agent A6). **Purpose:** build the farmer app, officer console and
-read-only admin stats page so a local demo works end to end **without inventing endpoints**.
+**Audience:** Angular frontend (separate application). **Purpose:** build the farmer app, officer
+console and read-only admin stats page so a local demo works end to end **without inventing
+endpoints**.
 
 This file is self-contained for day-to-day UI work. The frozen contract remains
 [`docs/openapi/foshol-api.yaml`](../openapi/foshol-api.yaml). Generate the HTTP client with
-`ng-openapi-gen` into `web/src/app/generated/` and **regenerate rather than hand-edit**
+`ng-openapi-gen` into the frontend's generated client folder and **regenerate rather than hand-edit**
 (`WEB-NFR-005`). If a field you need is missing from that file, raise a blocker — do not invent a
 URL (`WEB-NFR-006`).
 
@@ -37,7 +38,7 @@ Public (no bearer): `POST /api/v1/auth/otp/request`, `POST /api/v1/auth/otp/veri
 Exposed response headers you may read: `Location`, `Idempotency-Replayed`, `X-Correlation-Id`,
 `Retry-After`.
 
-Start the API with `./start-stack.sh` (profiles `local,demo`). See the repo `README.md`.
+Start the API with `./tools/start-stack.sh` (profiles `local,demo`). See the repo `README.md`.
 
 ---
 
@@ -529,9 +530,10 @@ OpenAPI body `PublishAdvisoryRequest`:
 
 `action` ∈ `APPROVED` \| `EDITED` \| `REPLACED`.
 
-**Live handler (today)** binds `diseaseId`, `remedyIds`, `officerNoteBn` and **derives** `action` on
-the server. Extra JSON properties are ignored. Send at least those three fields so the demo
-publishes; include `action` and `expectedVersion` so the generated client stays honest.
+The live record matches OpenAPI (`action`, `diseaseId`, `remedyIds`, `officerNoteBn`,
+`expectedVersion`). `./tools/call-api.sh` may omit `action`; the server still **derives**
+`APPROVED` / `EDITED` / `REPLACED` from the submitted disease, remedies and note. Extra JSON
+properties are ignored. Send `diseaseId` and `remedyIds` at minimum so the demo publishes.
 
 **400**, **403**, **404**, **409**.
 
@@ -731,7 +733,6 @@ Two browsers (or two profiles): farmer phone viewport and officer desktop.
 |---|---|
 | `GET /api/v1/notifications` not in OpenAPI | No generated inbox; use SSE + case/advisory GETs |
 | No OpenAPI audio content URL | Cannot play stored audio via a documented 302; raise a blocker if required |
-| OpenAPI `PublishAdvisoryRequest` vs live record | Send `diseaseId` + `remedyIds` + `officerNoteBn`; also send `action` / `expectedVersion` for the spec |
 | OpenAPI stream names vs wire `event:` | Use §10 wire names |
 
-Contract owner: A1 / `docs/openapi/foshol-api.yaml`. UI owner: `web/` only.
+Contract owner: A1 / `docs/openapi/foshol-api.yaml`. UI lives in a separate Angular application.

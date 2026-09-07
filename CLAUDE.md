@@ -33,7 +33,7 @@ The human-in-the-loop approval workflow is the product. The AI is a triage accel
 | `docs/adr/` | Why each contested decision went the way it did. |
 | `docs/openapi/foshol-api.yaml` | **FROZEN.** The API contract the frontend generates from. |
 
-`docs/fasol-doctor-plan-v2-revised-scope.md` is the historical input plan. It is **superseded** on
+`docs/requirements/fasol-doctor-plan-v2-revised-scope.md` is the historical input plan. It is **superseded** on
 naming (Fasol → Foshol), frontend (React → Angular), build (Kotlin DSL → Groovy DSL) and, most
 importantly, on machine learning. Use it for background only.
 
@@ -55,7 +55,8 @@ Dhan-Shomadhan fine-tune and ASR bake-off are **struck**. See ADR-0008.
 
 No accuracy, WER, F1 or precision figure from a model card, paper or benchmark may appear in the
 product, the deck, the README or any requirement. The only permitted source of an accuracy number is
-`docs/eval-report.md`, produced by this project's own held-out evaluation. See ADR-0011.
+a held-out evaluation produced by this project (`tools/eval.py`, ADR-0011). Until that report exists,
+do not quote a number.
 
 ### 3. Never author agricultural content
 
@@ -154,13 +155,8 @@ docker compose down -v && docker compose up -d && ./gradlew integrationTest
 
 ## Progress and blockers
 
-Maintain `docs/progress/<your-agent>.md` — the only file outside your ownership area you may create:
-
-```markdown
-## Done          requirement IDs completed, one per line
-## In progress   requirement ID + what remains
-## Blocked       requirement ID · what is blocking · who owns the unblock · since when
-```
+Record blockers against the owning requirement and owner in `docs/requirements/` (and
+`CONTENT-OWNERS.md` for content). Do not add new files under `docs/` outside your ownership area.
 
 `main` must be demoable at every daily checkpoint. If your work does not pass the gate, it does not
 merge.

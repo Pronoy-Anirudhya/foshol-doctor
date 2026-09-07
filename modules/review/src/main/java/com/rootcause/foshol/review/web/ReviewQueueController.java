@@ -1,8 +1,8 @@
 package com.rootcause.foshol.review.web;
 
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
-import com.rootcause.foshol.review.application.query.OfficerQueueQueryHandler;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/review")
 public class ReviewQueueController {
 
-    private final OfficerQueueQueryHandler queueQuery;
+    private final QueryBus queries;
 
-    public ReviewQueueController(OfficerQueueQueryHandler queueQuery) {
-        this.queueQuery = queueQuery;
+    public ReviewQueueController(QueryBus queries) {
+        this.queries = queries;
     }
 
     @GetMapping("/queue")
@@ -30,7 +30,7 @@ public class ReviewQueueController {
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "order", required = false) String order,
             Authentication authentication) {
-        return queueQuery.handle(new OfficerQueueQuery(
+        return queries.handle(new OfficerQueueQuery(
                 state, mine, ReviewAuth.subjectId(authentication), page, size, sort, order));
     }
 }

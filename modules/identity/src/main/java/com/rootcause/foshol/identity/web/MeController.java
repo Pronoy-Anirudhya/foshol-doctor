@@ -1,7 +1,7 @@
 package com.rootcause.foshol.identity.web;
 
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.identity.application.query.MeQuery;
-import com.rootcause.foshol.identity.application.query.MeQueryHandler;
 import com.rootcause.foshol.identity.application.query.MeView;
 import java.util.UUID;
 import org.springframework.security.core.Authentication;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class MeController {
 
-    private final MeQueryHandler meQueryHandler;
+    private final QueryBus queries;
 
-    public MeController(MeQueryHandler meQueryHandler) {
-        this.meQueryHandler = meQueryHandler;
+    public MeController(QueryBus queries) {
+        this.queries = queries;
     }
 
     @GetMapping("/me")
@@ -28,6 +28,6 @@ public class MeController {
                 .map(a -> a.substring("ROLE_".length()))
                 .findFirst()
                 .orElseThrow();
-        return meQueryHandler.handle(new MeQuery(UUID.fromString(authentication.getName()), role));
+        return queries.handle(new MeQuery(UUID.fromString(authentication.getName()), role));
     }
 }

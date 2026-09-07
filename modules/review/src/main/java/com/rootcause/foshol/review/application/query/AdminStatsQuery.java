@@ -1,3 +1,5 @@
 package com.rootcause.foshol.review.application.query;
 
-public record AdminStatsQuery() {}
+import com.rootcause.foshol.common.cqrs.Query;
+
+public record AdminStatsQuery() implements Query {}

@@ -1,9 +1,9 @@
 package com.rootcause.foshol.notification.web;
 
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsPage;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsQuery;
-import com.rootcause.foshol.notification.application.query.FarmerNotificationsQueryHandler;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,10 +19,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/v1")
 public class NotificationController {
 
-    private final FarmerNotificationsQueryHandler handler;
+    private final QueryBus queries;
 
-    public NotificationController(FarmerNotificationsQueryHandler handler) {
-        this.handler = handler;
+    public NotificationController(QueryBus queries) {
+        this.queries = queries;
     }
 
     @GetMapping("/notifications")
@@ -41,6 +41,6 @@ public class NotificationController {
         if (role != Role.FARMER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return handler.handle(new FarmerNotificationsQuery(UUID.fromString(authentication.getName()), page, size));
+        return queries.handle(new FarmerNotificationsQuery(UUID.fromString(authentication.getName()), page, size));
     }
 }

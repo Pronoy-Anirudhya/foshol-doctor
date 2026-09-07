@@ -6,7 +6,7 @@
 > **Read this first, read it whole, and treat it as immutable.**
 > If your module document disagrees with this file, this file wins.
 > If something you need is not here, it does not exist — raise a blocker, do not invent it.
-> Traces to `docs/fasol-doctor-plan-v2-revised-scope.md` (hereafter "the plan"). Requirements marked
+> Traces to `fasol-doctor-plan-v2-revised-scope.md` (hereafter "the plan"). Requirements marked
 > `[DERIVED]` extend the plan and carry inline reasoning.
 
 ---
