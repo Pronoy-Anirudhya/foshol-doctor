@@ -645,8 +645,14 @@ On `case-status`: update the stepper from `toStatus` (values of `CaseStatus`).
 On `advisory` with `ADVISORY_PUBLISHED` / `ADVISORY_REVISED`: toast, then
 `GET /api/v1/cases/{caseId}/advisory`.  
 On `CASE_REJECTED`: toast, refresh case.  
-On `queue`: **keep server order** — patch the matching row or refetch the current page; do not
-re-sort.
+On `queue`: **keep server order** — patch the matching row or refetch `GET /api/v1/review/queue`
+for the current page; do not re-sort. Heartbeats are **comment** frames, not events. If the stream
+is down, use the officer **manual refresh** (`WEB-FR-205`). **Do not poll on a timer** (`WEB-FR-356`,
+`WEB-FR-359`).
+
+`queue` frames are **not** stored in the `notification` table (`NOTIFY-FR-034`: that table is
+farmer-addressed; `farmer_id` is `NOT NULL`). Absence of a row does not mean the officer stream is
+broken — listen for `event: queue` on `GET /api/v1/stream`.
 
 `GET /api/v1/notifications` exists in backend requirements but **not** in the frozen OpenAPI. Do not
 call it from generated-client code until the spec includes it. Inbox for the demo is SSE + case
@@ -669,12 +675,25 @@ reads.
 
 Two browsers (or two profiles): farmer phone viewport and officer desktop.
 
+The Angular capture path **re-encodes** every image (`WEB-FR-112`, GPS strip). Replay vision is
+keyed by SHA-256 of the uploaded bytes, so a UI submit of `01-rice-blast-primary.jpg` will **not**
+match the replay fixture (PRIMARY). Use the **live sidecar** for a UI PRIMARY/SECONDARY beat:
+
+```bash
+docker compose --profile ai up -d sidecar
+FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
+```
+
+(`local` still applies `db/seed`. Default `local,demo` is replay for byte-exact `call-api.sh` only.)
+Without the sidecar, a UI case is `UNDETERMINED` and still reaches the officer queue (demo beat 8).
+
 1. **Farmer login** — OTP request + verify. Open SSE. Load crops.
 2. **Submit PRIMARY** — rice crop id, photo `01-rice-blast-primary.jpg`, new `Idempotency-Key`. Expect
    **202**, status view `SUBMITTED`.
-3. Wait for SSE until `IN_REVIEW` (replay analysis on `demo` does not need the sidecar).
+3. Wait for farmer SSE `case-status` until `IN_REVIEW` (live analysis needs the sidecar; replay of
+   **raw** demo files via the API client does not).
 4. **Officer login** — queue shows the case, least-confident-first among whatever is pending. Open
-   SSE for `queue` events.
+   SSE and handle `event: queue` (then refetch the queue page).
 5. Open task → **claim** → confirm analysis `decisionPath` and threshold lines match JSON → **approve**
    with suggested disease + at least one suggested remedy.
 6. **Farmer** receives `advisory` SSE → load advisory card with officer name and verified stamp.
