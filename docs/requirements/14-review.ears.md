@@ -55,7 +55,7 @@ and `ReviewTaskUniversalityIT` (§8) is what proves it on every build.
 | Officer and farmer records, authentication, JWT issuance | `identity` (`10-identity.ears.md`) | Review resolves an officer by id; it never stores officer data |
 | Delivering anything to a farmer | `notification` (`15-notification.ears.md`) | Review publishes an event and stops. It has no channel, no SSE, no transport |
 | `p_farmer_case_history` | `intake` | Different projection, different owner |
-| Admin CRUD on knowledge content | Nobody — cut, `[DEFERRED]` in `13-knowledge.ears.md` | `/api/v1/admin/stats` is read-only and is the entire admin surface |
+| Admin CRUD on knowledge content | Nobody — cut, `[DEFERRED]` in `13-knowledge.ears.md` | Admin surface is stats, KPIs, district case list and bulk reject |
 
 `REVIEW-NFR-001` **THE review module SHALL NOT execute an `INSERT`, `UPDATE` or `DELETE` against any
 table it does not own.** *(One writer per table is what allows seven agents to work in parallel
@@ -352,11 +352,11 @@ at a fixed delay of `foshol.review.sweeper.interval`, which for every task in `s
 SHALL be safe to run concurrently with officer claim and release requests**, producing the same
 result whether it runs once or many times over the same expired task.
 
-`REVIEW-FR-048` **THE review module SHALL restrict the officer queue, claims, task detail, and
-admin stats to tasks whose `district_code` matches the calling officer's or admin's
-`field_officer.district_code` (loaded from identity, never from the request body).** Cross-district
-access SHALL return `404` `ERR_REVIEW_TASK_NOT_FOUND` (or empty stats / queue), never a national
-view. There is no national admin in this build.
+`REVIEW-FR-048` **THE review module SHALL restrict the officer queue, claims, task detail,
+admin stats, admin case list, and admin KPI queries to tasks whose `district_code` matches the
+calling officer's or admin's `field_officer.district_code` (loaded from identity, never from the
+request body).** Cross-district access SHALL return `404` `ERR_REVIEW_TASK_NOT_FOUND` (or empty
+stats / queue / case page), never a national view. There is no national admin in this build.
 *Exception to `00-common.ears.md` §1.2: district routing is now in scope. Geography lives on
 `geo_division` / `geo_district`; cases snapshot farmer codes at submit.*
 
@@ -397,6 +397,37 @@ publish `ReviewTaskTransferred`.**
 
 `REVIEW-FR-098` **THE review module SHALL accept bulk transfer, approve and reject (cap
 `foshol.review.bulk.max-size`) with per-item success or failure in one response.**
+
+`REVIEW-FR-099` **THE review module SHALL compute `casesThisMonth` and `casesThisYear` as the count
+of `diagnosis_case` rows in the caller's district whose `created_at` falls on or after the start of
+the current calendar month and year respectively in `foshol.i18n.display-zone`, converted to UTC,
+and SHALL compute `casesLifetime` as the count of all `diagnosis_case` rows in that district.**
+
+`REVIEW-FR-100` **THE review module SHALL compute `rejectionRate` as the share of district
+`review_task` rows in `state = REJECTED` among rows in `state ∈ {DONE, REJECTED}`**, returning
+`null` when the denominator is zero (`REVIEW-FR-075`).
+
+`REVIEW-FR-101` **THE review module SHALL expose `GET /api/v1/admin/cases` (role `ADMIN` only),
+paginated, ordered by `submitted_at` descending, restricted to the caller's district, with optional
+filters `period` (`TODAY`\|`MONTH`\|`YEAR`\|`LIFETIME`, default `LIFETIME`), `state`
+(`PENDING`\|`CLAIMED`\|`DONE`\|`REJECTED`\|`ALL`, default `ALL`), `kpi` (`ASSIGNMENT`\|`RESOLUTION`),
+`officerId`, `cropCode`, `decisionPath`, `resubmission`, `page` and `size`.** A `kpi` filter SHALL
+restrict to tasks that have a matching `kpi_breach` row. This list is not the officer queue and
+SHALL NOT use `REVIEW-FR-030` ordering.
+
+`REVIEW-FR-102` **THE review module SHALL return `OfficerQueueRow` items from `GET /api/v1/admin/cases`
+so a selected row can be opened via `GET /api/v1/review/tasks/{id}`.**
+
+`REVIEW-FR-103` **WHEN `POST /api/v1/review/tasks/bulk-reject` carries root `reasonCode` and
+`messageBn`, THE review module SHALL apply them to every item that omits those fields.** Per-item
+values, when present, SHALL override the root. A blank or >500-character message SHALL fail as
+`REVIEW-FR-022`. The root fields SHALL NOT be treated as agronomic defaults — the caller supplies
+them (`COMMON-CON-003`).
+
+`REVIEW-FR-104` **WHEN bulk-rejecting a `PENDING` task, THE review module SHALL claim the task for
+the caller and then reject it in the same per-item attempt.** A task `CLAIMED` by another officer
+SHALL fail that item with `ERR_CLAIM_CONFLICT`. A terminal task SHALL fail that item with
+`ERR_TASK_TERMINAL`. Single-task `POST …/reject` is unchanged and still requires a live claim.
 
 ### 4.5 The four officer actions
 
@@ -596,7 +627,8 @@ under `/api/v1/review/**` and on `POST /api/v1/advisories/{id}/revise`**, return
 only for a case `CaseIntakeApi.isOwnedBy` confirms is theirs, and SHALL return `404` — not `403` —
 otherwise** (`COMMON-API-001`).
 
-`REVIEW-SEC-004` **THE review module SHALL require the role `ADMIN` on `GET /api/v1/admin/stats`**,
+`REVIEW-SEC-004` **THE review module SHALL require the role `ADMIN` on `GET /api/v1/admin/stats`,
+`GET /api/v1/admin/kpis`, `GET /api/v1/admin/kpis/breaches` and `GET /api/v1/admin/cases`**,
 returning `403` for `OFFICER` and `FARMER`.
 
 `REVIEW-SEC-005` **THE review module SHALL NOT include a farmer's phone number in any response,
@@ -605,8 +637,9 @@ projection row or log line** (`COMMON-SEC-001`, `COMMON-SEC-013`). `p_officer_qu
 
 ### 4.10 Admin stats — the measurement that makes the loop real
 
-Clarification items 19 and 20. This is the **entire** admin surface: one read-only page, no CRUD, no
-write endpoints.
+Clarification items 19 and 20. Knowledge CRUD remains cut. The admin surface is district-scoped
+stats (including time-window counts and rejection rate), KPI failure counts, a filtered case list,
+and bulk reject. There is no national admin.
 
 `REVIEW-FR-070` **THE review module SHALL compute the admin statistics by an aggregate SQL query over
 `diagnosis_case`, `review_task`, `advisory` and `case_candidate`, and SHALL NOT maintain a statistics
@@ -698,6 +731,9 @@ Base path `/api/v1`. All responses are JSON; all errors are RFC 9457 problem doc
 | `POST` | `/advisories/{id}/revise` | as `approve`; `{id}` is the current published advisory | `201`, `AdvisoryView` with `version = n+1`, `supersedesId = {id}` | `OFFICER` or `ADMIN`, and the re-claim of `REVIEW-FR-066` must succeed | `409` `ERR_ADVISORY_NOT_FOUND`, `ERR_CLAIM_CONFLICT`; plus every `approve` validation error |
 | `GET` | `/cases/{id}/advisory` | — | `200`, `AdvisoryView` + `history[]`, or `RejectionView` | `FARMER` for their own case only — `404`, never `403` (`REVIEW-SEC-003`); `OFFICER`, `ADMIN` for the same district only | `404` when the case has neither |
 | `GET` | `/admin/stats` | — | `200`, stats object (§5.2) | **`ADMIN` only** | `403` for `OFFICER` and `FARMER` |
+| `GET` | `/admin/kpis` | — | `200`, assignment and resolution failure counts | **`ADMIN` only** | `403` |
+| `GET` | `/admin/cases` | `period`, `state`, `kpi`, `officerId`, `cropCode`, `decisionPath`, `resubmission`, `page`, `size` | `200`, page of `OfficerQueueRow` | **`ADMIN` only** | `403` |
+| `POST` | `/review/tasks/bulk-reject` | `{reasonCode?, messageBn?, items[]}` | `200`, `BulkOperationResult` | `OFFICER` or `ADMIN` | `400` `ERR_BULK_TOO_LARGE` |
 
 `REVIEW-FR-053` forbids an `action` field on the approve and revise bodies; the server derives it.
 Ordering is not expressible on the queue request (`REVIEW-FR-030`, `REVIEW-FR-031`).
@@ -719,10 +755,14 @@ state, officerId, isResubmission, requeueCount, submittedAt, slaDueAt`.
 ```json
 {
   "casesToday": 0,
+  "casesThisMonth": 0,
+  "casesThisYear": 0,
+  "casesLifetime": 0,
   "approvalRate": null,
   "medianReviewMinutes": null,
   "agreementRate": null,
   "agreementSampleSize": 0,
+  "rejectionRate": null,
   "confidenceHigh": 0.75,
   "confidenceLow": 0.45
 }
@@ -811,8 +851,13 @@ Each maps one-to-one onto a test method.
 | `REVIEW-FR-070` | any dataset | stats are read | the response is produced by one aggregate query; no stats table exists in the schema |
 | `REVIEW-FR-071` | 4 cases with a rank-1 `MODEL` candidate; advisories agree on 3 | stats are read | `agreementRate = 0.75`, `agreementSampleSize = 4` |
 | `REVIEW-FR-071` | a case with a v1 disagreeing and a v2 agreeing | stats are read | only v2 counts; the case is an agreement |
-| `REVIEW-FR-075` | an empty database | stats are read | `approvalRate`, `agreementRate`, `medianReviewMinutes` are `null`; `casesToday` is `0` |
+| `REVIEW-FR-075` | an empty database | stats are read | `approvalRate`, `agreementRate`, `medianReviewMinutes`, `rejectionRate` are `null`; `casesToday` is `0` |
 | `REVIEW-FR-076` | properties `high=0.75`, `low=0.45` | stats are read | `confidenceHigh = 0.75`, `confidenceLow = 0.45` |
+| `REVIEW-FR-099` | cases created last month and this month | stats are read | `casesThisMonth` counts only this month in the display zone |
+| `REVIEW-FR-100` | two `DONE` and one `REJECTED` task in district | stats are read | `rejectionRate = 1/3` |
+| `REVIEW-FR-101` | cases in two districts | admin in district A lists cases | only district A rows, newest `submitted_at` first |
+| `REVIEW-FR-103` | bulk-reject with root message and items omitting `messageBn` | reject | each success uses the root message |
+| `REVIEW-FR-104` | a `PENDING` task | admin bulk-rejects it | the task is claimed then `REJECTED` |
 | `REVIEW-UX-004` | a case analysed in replay mode | task detail is read | `analysisMode = "REPLAY"` |
 
 ---
@@ -836,7 +881,7 @@ One test class per aggregate, no Spring context.
 Mockito doubles for `CaseIntakeApi`, `AnalysisApi`, `KnowledgeQueryApi`, `OfficerLookupApi`,
 `FarmerLookupApi` and the repositories. Handlers: `ClaimReviewTask`, `ReleaseReviewTask`,
 `ApproveCase`, `RejectCase`, `ReviseAdvisory`, `RecordOfficerSymptoms`, `SweepExpiredClaims`;
-queries: `OfficerQueue`, `ReviewTaskDetail`, `CaseAdvisory`, `AdminStats`.
+queries: `OfficerQueue`, `ReviewTaskDetail`, `CaseAdvisory`, `AdminStats`, `AdminCases`.
 
 `REVIEW-NFR-020` **THE module SHALL contain one unit test class per command handler and per query
 handler, each covering the happy path and every error branch that handler can produce.**
@@ -906,7 +951,8 @@ with the §6.2 signatures compiling (stub bodies are sufficient); and the error-
 6. `application/command/` — claim, release, approve, reject in that order; then revise
    (`REVIEW-FR-060` … `REVIEW-FR-066`); then symptoms.
 7. `infrastructure/ClaimSweeper` — `@Scheduled(fixedDelayString = "${foshol.review.sweeper.interval}")`.
-8. `application/query/AdminStatsQueryHandler` — `REVIEW-FR-070` … `REVIEW-FR-076`.
+8. `application/query/AdminStatsQueryHandler` — `REVIEW-FR-070` … `REVIEW-FR-076`, `REVIEW-FR-099`,
+   `REVIEW-FR-100`. `AdminCasesQueryHandler` — `REVIEW-FR-101`, `REVIEW-FR-102`.
 9. `web/` — the ten controllers of §5, thin (`COMMON-ARCH-009`).
 10. `ReviewTaskUniversalityIT` last.
 
@@ -945,7 +991,7 @@ and implemented in `V108` and the review/notification modules.
 
 | Category | IDs | Count |
 |---|---|---|
-| Functional | `REVIEW-FR-001` … `-006`, `-010` … `-016`, `-020` … `-026`, `-030` … `-033`, `-040` … `-049`, `-050` … `-059`, `-060` … `-066`, `-070` … `-077`, `-080` … `-083` | 63 |
+| Functional | `REVIEW-FR-001` … `-006`, `-010` … `-016`, `-020` … `-026`, `-030` … `-033`, `-040` … `-049`, `-050` … `-059`, `-060` … `-066`, `-070` … `-077`, `-080` … `-083`, `-090` … `-104` | 84 |
 | Data | `REVIEW-DATA-001` … `REVIEW-DATA-005` | 5 |
 | Security | `REVIEW-SEC-001` … `REVIEW-SEC-005` | 5 |
 | Non-functional | `REVIEW-NFR-001` … `-003`, `-010` … `-012`, `-020` … `-023` | 10 |
