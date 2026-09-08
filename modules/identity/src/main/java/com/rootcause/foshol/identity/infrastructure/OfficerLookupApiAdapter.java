@@ -33,6 +33,11 @@ public class OfficerLookupApiAdapter implements OfficerLookupApi {
 
     private OfficerView toView(FieldOfficerEntity entity) {
         return new OfficerView(
-                entity.getId(), entity.getName(), entity.getDistrictCode(), entity.getRole(), entity.isActive());
+                entity.getId(),
+                entity.getName(),
+                entity.getDistrictCode(),
+                entity.getRole(),
+                entity.isActive(),
+                entity.getDivisionCode());
     }
 }

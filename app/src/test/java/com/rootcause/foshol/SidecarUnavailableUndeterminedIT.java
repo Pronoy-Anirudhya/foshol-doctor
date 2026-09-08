@@ -98,6 +98,7 @@ class SidecarUnavailableUndeterminedIT {
                 PhoneHash.of(PhoneNumber.parse("+8801700000001")).hex(),
                 phoneCipher.encrypt("+8801700000001"),
                 "DHA",
+                "DHK",
                 "bn",
                 now,
                 now));
@@ -109,6 +110,7 @@ class SidecarUnavailableUndeterminedIT {
                 PhoneHash.of(PhoneNumber.parse("+8801700000002")).hex(),
                 phoneCipher.encrypt("+8801700000002"),
                 "DHA",
+                "DHK",
                 "OFFICER",
                 true,
                 now,

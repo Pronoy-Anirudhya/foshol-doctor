@@ -12,5 +12,7 @@ public interface OfficerReadRow {
 
     String getDistrictCode();
 
+    String getDivisionCode();
+
     String getRole();
 }
