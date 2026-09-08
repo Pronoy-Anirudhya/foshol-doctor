@@ -7,6 +7,7 @@ import com.rootcause.foshol.identity.application.command.OfficerLoginCommand;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.infrastructure.FieldOfficerEntity;
 import com.rootcause.foshol.identity.infrastructure.FieldOfficerJpaRepository;
+import com.rootcause.foshol.identity.infrastructure.GeoLabelLookup;
 import com.rootcause.foshol.identity.infrastructure.JwtService;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 
@@ -29,16 +30,19 @@ public class OfficerLoginCommandHandler implements CommandHandler<OfficerLoginCo
     private final FieldOfficerJpaRepository officers;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final GeoLabelLookup geoLabels;
     private final Clock clock;
 
     public OfficerLoginCommandHandler(
             FieldOfficerJpaRepository officers,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
+            GeoLabelLookup geoLabels,
             Clock clock) {
         this.officers = officers;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.geoLabels = geoLabels;
         this.clock = clock;
     }
 
@@ -58,6 +62,7 @@ public class OfficerLoginCommandHandler implements CommandHandler<OfficerLoginCo
         }
         Role role = Role.valueOf(officer.getRole());
         JwtService.IssuedToken token = jwtService.issue(officer.getId(), role, clock.instant());
+        GeoLabelLookup.Labels geo = geoLabels.forDistrict(officer.getDistrictCode(), officer.getDivisionCode());
         return new AuthTokenResult(
                 token.compact(),
                 token.expiresAt(),
@@ -65,6 +70,11 @@ public class OfficerLoginCommandHandler implements CommandHandler<OfficerLoginCo
                 officer.getId(),
                 officer.getName(),
                 officer.getDistrictCode(),
+                officer.getDivisionCode(),
+                geo.districtNameBn(),
+                geo.districtNameEn(),
+                geo.divisionNameBn(),
+                geo.divisionNameEn(),
                 null,
                 officer.getUsername());
     }

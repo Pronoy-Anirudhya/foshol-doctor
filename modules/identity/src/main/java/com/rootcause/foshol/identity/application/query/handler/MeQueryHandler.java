@@ -2,17 +2,16 @@ package com.rootcause.foshol.identity.application.query.handler;
 
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.identity.application.query.MeQuery;
 import com.rootcause.foshol.identity.application.query.MeView;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
 import com.rootcause.foshol.identity.infrastructure.FarmerReadRow;
 import com.rootcause.foshol.identity.infrastructure.FieldOfficerJpaRepository;
+import com.rootcause.foshol.identity.infrastructure.GeoLabelLookup;
 import com.rootcause.foshol.identity.infrastructure.OfficerReadRow;
-import com.rootcause.foshol.common.cqrs.QueryHandler;
-
 import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +25,13 @@ public class MeQueryHandler implements QueryHandler<MeQuery, MeView> {
 
     private final FarmerJpaRepository farmers;
     private final FieldOfficerJpaRepository officers;
+    private final GeoLabelLookup geoLabels;
 
-    public MeQueryHandler(FarmerJpaRepository farmers, FieldOfficerJpaRepository officers) {
+    public MeQueryHandler(
+            FarmerJpaRepository farmers, FieldOfficerJpaRepository officers, GeoLabelLookup geoLabels) {
         this.farmers = farmers;
         this.officers = officers;
+        this.geoLabels = geoLabels;
     }
 
     @Transactional(readOnly = true)
@@ -40,21 +42,33 @@ public class MeQueryHandler implements QueryHandler<MeQuery, MeView> {
         if (role == Role.FARMER) {
             FarmerReadRow farmer = farmers.findReadById(id)
                     .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_SUBJECT_NOT_FOUND, 404, "Subject not found."));
+            GeoLabelLookup.Labels geo = geoLabels.forDistrict(farmer.getDistrictCode(), farmer.getDivisionCode());
             return new MeView(
                     farmer.getId(),
                     Role.FARMER.name(),
                     farmer.getName(),
                     farmer.getDistrictCode(),
+                    farmer.getDivisionCode(),
+                    geo.districtNameBn(),
+                    geo.districtNameEn(),
+                    geo.divisionNameBn(),
+                    geo.divisionNameEn(),
                     farmer.getPreferredLanguage(),
                     null);
         }
         OfficerReadRow officer = officers.findReadById(id)
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_SUBJECT_NOT_FOUND, 404, "Subject not found."));
+        GeoLabelLookup.Labels geo = geoLabels.forDistrict(officer.getDistrictCode(), officer.getDivisionCode());
         return new MeView(
                 officer.getId(),
                 officer.getRole(),
                 officer.getName(),
                 officer.getDistrictCode(),
+                officer.getDivisionCode(),
+                geo.districtNameBn(),
+                geo.districtNameEn(),
+                geo.divisionNameBn(),
+                geo.divisionNameEn(),
                 null,
                 officer.getUsername());
     }

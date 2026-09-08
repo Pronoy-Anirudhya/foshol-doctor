@@ -77,6 +77,9 @@ class IdentityIntegrationTest {
     @Autowired
     JdbcTemplate jdbc;
 
+    @Autowired
+    com.rootcause.foshol.identity.api.OfficerLookupApi officerLookupApi;
+
     @BeforeEach
     void seed() {
         jdbc.update("delete from otp_challenge");
@@ -90,6 +93,7 @@ class IdentityIntegrationTest {
                 PhoneHash.of(PhoneNumber.parse(farmerPhone)).hex(),
                 phoneCipher.encrypt(farmerPhone),
                 "DHA",
+                "DHK",
                 "bn",
                 now,
                 now));
@@ -101,6 +105,7 @@ class IdentityIntegrationTest {
                 PhoneHash.of(PhoneNumber.parse("+8801700000002")).hex(),
                 phoneCipher.encrypt("+8801700000002"),
                 "DHA",
+                "DHK",
                 "OFFICER",
                 true,
                 now,
@@ -124,7 +129,20 @@ class IdentityIntegrationTest {
         String farmerToken = token(farmerLogin);
         mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + farmerToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("IT Farmer"));
+                .andExpect(jsonPath("$.name").value("IT Farmer"))
+                .andExpect(jsonPath("$.districtCode").value("DHA"))
+                .andExpect(jsonPath("$.divisionCode").value("DHK"))
+                .andExpect(jsonPath("$.districtNameBn").value("ঢাকা"))
+                .andExpect(jsonPath("$.divisionNameBn").exists());
+
+        mockMvc.perform(get("/api/v1/geo/divisions").header("Authorization", "Bearer " + farmerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(8));
+        mockMvc.perform(get("/api/v1/geo/divisions/DHK/districts").header("Authorization", "Bearer " + farmerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.code=='DHA')].nameEn", org.hamcrest.Matchers.hasItem("Dhaka")));
+        mockMvc.perform(get("/api/v1/geo/divisions/NOPE/districts").header("Authorization", "Bearer " + farmerToken))
+                .andExpect(status().isNotFound());
 
         MvcResult officerLogin = mockMvc.perform(post("/api/v1/auth/officer/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -135,6 +153,13 @@ class IdentityIntegrationTest {
         mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token(officerLogin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("it_officer"));
+        assertThat(officerLookupApi.findActiveByDistrict("DHA"))
+                .extracting(com.rootcause.foshol.identity.api.OfficerView::divisionCode)
+                .contains("DHK");
+        assertThat(officerLookupApi.findById(officers.findAll().getFirst().getId()))
+                .get()
+                .extracting(com.rootcause.foshol.identity.api.OfficerView::divisionCode)
+                .isEqualTo("DHK");
     }
 
     private static String token(MvcResult result) throws Exception {
