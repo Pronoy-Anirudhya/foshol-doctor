@@ -35,6 +35,8 @@ public final class ConfigKeys {
     public static final String INTAKE_QUALITY_EXPOSURE_MIN = "foshol.intake.quality.exposure-min";
     public static final String INTAKE_QUALITY_EXPOSURE_MAX = "foshol.intake.quality.exposure-max";
     public static final String INTAKE_QUALITY_MIN_EDGE_PX = "foshol.intake.quality.min-edge-px";
+    public static final String INTAKE_QUALITY_VEGETATION_COVERAGE_MIN =
+            "foshol.intake.quality.vegetation-coverage-min";
     public static final String ANALYSIS_CONFIDENCE_HIGH = "foshol.analysis.confidence.high";
     public static final String ANALYSIS_CONFIDENCE_LOW = "foshol.analysis.confidence.low";
     public static final String ANALYSIS_CONFIDENCE_TEMPERATURE = "foshol.analysis.confidence.temperature";
