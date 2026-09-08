@@ -61,7 +61,7 @@ public class GradcamLinkQueryHandler implements QueryHandler<GradcamLinkQuery, O
 
     private boolean visible(UUID caseId, UUID callerId, Role role) {
         if (role == Role.OFFICER || role == Role.ADMIN) {
-            return true;
+            return intake.officerSharesDistrict(caseId, callerId);
         }
         if (role == Role.FARMER && callerId != null) {
             return intake.isOwnedBy(caseId, callerId);
