@@ -48,12 +48,14 @@ public class HandleCaseStatusChanged {
 
     public void handle(CaseStatusChanged event) {
         CorrelationId.set(event.correlationId());
+        String district = "";
         try {
             Optional<FarmerView> farmer = farmers.findById(event.farmerId());
             if (farmer.isEmpty()) {
                 log.warn("Unknown farmer on CaseStatusChanged correlationId={}", event.correlationId());
                 return;
             }
+            district = farmer.get().districtCode() == null ? "" : farmer.get().districtCode();
             if (notifications
                     .findDuplicate(
                             event.farmerId(),
@@ -79,7 +81,7 @@ public class HandleCaseStatusChanged {
                     payload,
                     clock.instant()));
         } finally {
-            nudge.emitQueue(event.caseId(), event.toStatus().name(), event.correlationId());
+            nudge.emitQueue(event.caseId(), event.toStatus().name(), event.correlationId(), district);
         }
     }
 }

@@ -41,17 +41,17 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
         this.clock = clock;
     }
 
-    public SseEmitter subscribe(UUID subjectId, Role role, String lastEventId, Duration timeout) {
+    public SseEmitter subscribe(UUID subjectId, Role role, String districtCode, String lastEventId, Duration timeout) {
         SseEmitter emitter = new SseEmitter(timeout.toMillis());
-        attach(subjectId, role, lastEventId, emitter);
+        attach(subjectId, role, districtCode, lastEventId, emitter);
         return emitter;
     }
 
-    public SseSubscription attach(UUID subjectId, Role role, String lastEventId, SseEmitter emitter) {
+    public SseSubscription attach(UUID subjectId, Role role, String districtCode, String lastEventId, SseEmitter emitter) {
         if (lastEventId != null && !lastEventId.isBlank()) {
             log.debug("Last-Event-ID {} for subject {}", lastEventId, subjectId);
         }
-        SseSubscription sub = new SseSubscription(subjectId, role, emitter, clock.instant(), lastEventId);
+        SseSubscription sub = new SseSubscription(subjectId, role, districtCode, emitter, clock.instant(), lastEventId);
         CopyOnWriteArrayList<SseSubscription> list =
                 bySubject.computeIfAbsent(subjectId, id -> new CopyOnWriteArrayList<>());
         list.add(sub);
@@ -117,11 +117,15 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
     }
 
     @Override
-    public void emitQueue(UUID caseId, String toStatus, String correlationId) {
+    public void emitQueue(UUID caseId, String toStatus, String correlationId, String districtCode) {
         Map<String, String> data = Map.of(
                 "caseId", caseId.toString(), "toStatus", toStatus, "correlationId", correlationId);
+        String wanted = districtCode == null ? "" : districtCode;
         for (SseSubscription sub : all()) {
             if (sub.role() != Role.OFFICER && sub.role() != Role.ADMIN) {
+                continue;
+            }
+            if (!wanted.isBlank() && sub.districtCode() != null && !wanted.equals(sub.districtCode())) {
                 continue;
             }
             try {
@@ -184,14 +188,22 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
     public static final class SseSubscription {
         private final UUID subjectId;
         private final Role role;
+        private final String districtCode;
         private final SseEmitter emitter;
         private final Instant connectedAt;
         private final String lastEventId;
         private final AtomicLong counter = new AtomicLong();
 
-        SseSubscription(UUID subjectId, Role role, SseEmitter emitter, Instant connectedAt, String lastEventId) {
+        SseSubscription(
+                UUID subjectId,
+                Role role,
+                String districtCode,
+                SseEmitter emitter,
+                Instant connectedAt,
+                String lastEventId) {
             this.subjectId = subjectId;
             this.role = role;
+            this.districtCode = districtCode;
             this.emitter = emitter;
             this.connectedAt = connectedAt;
             this.lastEventId = lastEventId;
@@ -203,6 +215,10 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
 
         public Role role() {
             return role;
+        }
+
+        public String districtCode() {
+            return districtCode;
         }
 
         public SseEmitter emitter() {
