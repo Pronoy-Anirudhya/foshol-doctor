@@ -54,6 +54,24 @@ class SseChannelTest {
     }
 
     @Test
+    void kpiFrameGoesOnlyToAssignedOfficer() {
+        SseSubscriptionRegistry registry =
+                new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
+        CapturingEmitter holder = new CapturingEmitter();
+        CapturingEmitter other = new CapturingEmitter();
+        registry.attach(NotifyFixtures.OFFICER, Role.OFFICER, "DHA", null, holder);
+        registry.attach(Uuid7.create(), Role.OFFICER, "DHA", null, other);
+        registry.emitKpi(
+                NotifyFixtures.OFFICER,
+                NotifyFixtures.CASE,
+                Uuid7.create(),
+                NotifyFixtures.T0.plus(Duration.ofMinutes(15)),
+                NotifyFixtures.CORRELATION);
+        assertThat(holder.payloads.toString()).contains("RESOLUTION_WARN");
+        assertThat(other.payloads).isEmpty();
+    }
+
+    @Test
     void queueNudgeSkipsOtherDistrictOfficers() {
         SseSubscriptionRegistry registry =
                 new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
