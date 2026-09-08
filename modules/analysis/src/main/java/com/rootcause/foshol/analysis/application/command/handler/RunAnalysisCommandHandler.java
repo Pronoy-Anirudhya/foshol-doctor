@@ -25,6 +25,7 @@ import com.rootcause.foshol.analysis.domain.CandidateAggregator;
 import com.rootcause.foshol.analysis.domain.CaseCandidate;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
 import com.rootcause.foshol.analysis.domain.ConfidenceRouter;
+import com.rootcause.foshol.analysis.domain.FieldMetricsExtractor;
 import com.rootcause.foshol.analysis.domain.LabelResolver;
 import com.rootcause.foshol.analysis.domain.MappedCandidate;
 import com.rootcause.foshol.analysis.domain.MergeRanker;
@@ -39,6 +40,7 @@ import com.rootcause.foshol.common.CandidateSource;
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
@@ -163,6 +165,7 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
             try {
                 if (assembled.transcriptBn() != null) {
                     intake.recordTranscript(command.caseId(), assembled.transcriptBn(), assembled.asrConfidence());
+                    persistSpeechMetrics(command.caseId(), assembled.transcriptBn());
                 }
             } catch (RuntimeException transcriptEx) {
                 log.warn(
@@ -506,6 +509,24 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                 command.correlationId(),
                 Instant.now());
         return new Assembled(run, persisted, speechSymptoms, completed, speechBundle.transcriptBn(), speechBundle.asrConfidence());
+    }
+
+    private void persistSpeechMetrics(UUID caseId, String transcriptBn) {
+        FieldMetricsExtractor.Extracted extracted = FieldMetricsExtractor.extract(transcriptBn);
+        if (extracted.isEmpty()) {
+            return;
+        }
+        try {
+            intake.recordFieldMetrics(
+                    caseId,
+                    extracted.fieldArea(),
+                    extracted.fieldAreaUnit(),
+                    extracted.cropQuantity(),
+                    extracted.cropQuantityUnit(),
+                    MetricsSource.SPEECH);
+        } catch (RuntimeException ex) {
+            log.warn("speech field metrics persist failed caseId={}", caseId, ex);
+        }
     }
 
     private String storeGradcam(
