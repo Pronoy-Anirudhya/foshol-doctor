@@ -108,6 +108,8 @@ public class ReviewTaskController {
         UUID caller = ReviewAuth.subjectId(authentication);
         return bulk.reject(
                 caller,
+                request.reasonCode(),
+                request.messageBn(),
                 request.items() == null
                         ? List.of()
                         : request.items().stream()

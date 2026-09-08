@@ -2,10 +2,12 @@ package com.rootcause.foshol.review.application;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.RejectionReason;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
 import com.rootcause.foshol.review.application.command.BulkOperationResult;
 import com.rootcause.foshol.review.application.command.BulkOperationResult.BulkItemResult;
+import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
 import com.rootcause.foshol.review.application.command.TransferReviewTaskCommand;
 import com.rootcause.foshol.review.domain.ReviewException;
@@ -83,7 +85,8 @@ public class BulkReviewService {
         return new BulkOperationResult(ok, failed, results);
     }
 
-    public BulkOperationResult reject(UUID callerId, List<BulkRejectItem> items) {
+    public BulkOperationResult reject(
+            UUID callerId, RejectionReason commonReason, String commonMessage, List<BulkRejectItem> items) {
         List<BulkRejectItem> normalised = requireItems(items);
         List<BulkItemResult> results = new ArrayList<>();
         Set<UUID> seen = new HashSet<>();
@@ -95,8 +98,16 @@ public class BulkReviewService {
                 failed++;
                 continue;
             }
+            RejectionReason reason = item.reasonCode() != null ? item.reasonCode() : commonReason;
+            String message = item.messageBn() != null && !item.messageBn().isBlank() ? item.messageBn() : commonMessage;
+            if (reason == null || message == null || message.isBlank() || message.length() > 500) {
+                results.add(new BulkItemResult(item.taskId(), "FAILED", ErrorCodes.ERR_BAD_REQUEST));
+                failed++;
+                continue;
+            }
             try {
-                commands.handle(new RejectCaseCommand(item.taskId(), callerId, item.reasonCode(), item.messageBn()));
+                commands.handle(new ClaimReviewTaskCommand(item.taskId(), callerId));
+                commands.handle(new RejectCaseCommand(item.taskId(), callerId, reason, message));
                 results.add(new BulkItemResult(item.taskId(), "OK", null));
                 ok++;
             } catch (ReviewException ex) {
