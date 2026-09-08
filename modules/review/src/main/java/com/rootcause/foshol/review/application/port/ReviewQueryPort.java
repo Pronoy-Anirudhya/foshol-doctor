@@ -4,6 +4,7 @@ import com.rootcause.foshol.review.application.query.AdminStatsView;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,6 +19,9 @@ public interface ReviewQueryPort {
             java.math.BigDecimal confidenceHigh,
             java.math.BigDecimal confidenceLow,
             String districtCode);
+
+    List<com.rootcause.foshol.review.application.query.KpiWarningView> findOpenResolutionWarnings(
+            UUID officerId, Instant now, java.time.Duration warnBefore);
 
     record QueueTaskRow(
             UUID caseId,
@@ -38,5 +42,7 @@ public interface ReviewQueryPort {
             boolean resubmission,
             short requeueCount,
             Instant submittedAt,
-            Instant slaDueAt) {}
+            Instant slaDueAt,
+            Instant assignmentDueAt,
+            Instant resolutionDueAt) {}
 }

@@ -5,6 +5,7 @@ import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
+import com.rootcause.foshol.review.application.query.KpiWarningView;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.application.query.OfficerQueueRow;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +63,7 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 select q.case_id, q.review_task_id, q.farmer_name, q.crop_code, q.crop_name_bn, q.district_code,
                        q.decision_path, q.top_disease_id, q.top_disease_name_bn, q.top_confidence, q.image_count,
                        q.has_audio, q.analysis_mode, q.state, q.officer_id, q.is_resubmission,
-                       t.requeue_count, q.submitted_at, q.sla_due_at
+                       t.requeue_count, q.submitted_at, q.sla_due_at, q.assignment_due_at, q.resolution_due_at
                 from p_officer_queue q
                 join review_task t on t.id = q.review_task_id
                 """
@@ -79,7 +81,7 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 select q.case_id, q.review_task_id, q.farmer_name, q.crop_code, q.crop_name_bn, q.district_code,
                        q.decision_path, q.top_disease_id, q.top_disease_name_bn, q.top_confidence, q.image_count,
                        q.has_audio, q.analysis_mode, q.state, q.officer_id, q.is_resubmission,
-                       t.requeue_count, q.submitted_at, q.sla_due_at
+                       t.requeue_count, q.submitted_at, q.sla_due_at, q.assignment_due_at, q.resolution_due_at
                 from p_officer_queue q
                 join review_task t on t.id = q.review_task_id
                 where q.review_task_id = ?
@@ -132,6 +134,31 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 districtCode);
     }
 
+    @Override
+    public List<KpiWarningView> findOpenResolutionWarnings(UUID officerId, Instant now, Duration warnBefore) {
+        Timestamp nowTs = Timestamp.from(now);
+        Timestamp cutoff = Timestamp.from(now.plus(warnBefore));
+        return jdbc.query(
+                """
+                select t.case_id, t.id as review_task_id, t.resolution_due_at
+                from review_task t
+                where t.officer_id = ?
+                  and t.state = 'CLAIMED'
+                  and t.resolution_due_at is not null
+                  and t.resolution_due_at > ?
+                  and (t.kpi_warn_emitted_at is not null or t.resolution_due_at <= ?)
+                order by t.resolution_due_at asc
+                """,
+                (rs, i) -> new KpiWarningView(
+                        rs.getObject("case_id", UUID.class),
+                        rs.getObject("review_task_id", UUID.class),
+                        rs.getTimestamp("resolution_due_at").toInstant(),
+                        rs.getTimestamp("resolution_due_at").toInstant().minus(warnBefore)),
+                officerId,
+                nowTs,
+                cutoff);
+    }
+
     private static BigDecimal decimal(ResultSet rs, String column) throws SQLException {
         Object value = rs.getObject(column);
         if (value == null) {
@@ -144,6 +171,11 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
             return BigDecimal.valueOf(n.doubleValue());
         }
         return new BigDecimal(value.toString());
+    }
+
+    private static Instant timestamp(ResultSet rs, String column) throws SQLException {
+        Timestamp value = rs.getTimestamp(column);
+        return value == null ? null : value.toInstant();
     }
 
     private OfficerQueueRow mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -167,7 +199,9 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 raw.resubmission(),
                 raw.requeueCount(),
                 raw.submittedAt(),
-                raw.slaDueAt());
+                raw.slaDueAt(),
+                raw.assignmentDueAt(),
+                raw.resolutionDueAt());
     }
 
     private QueueTaskRow toQueueTaskRow(ResultSet rs) throws SQLException {
@@ -190,6 +224,8 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 rs.getBoolean("is_resubmission"),
                 rs.getShort("requeue_count"),
                 rs.getTimestamp("submitted_at").toInstant(),
-                rs.getTimestamp("sla_due_at").toInstant());
+                rs.getTimestamp("sla_due_at").toInstant(),
+                timestamp(rs, "assignment_due_at"),
+                timestamp(rs, "resolution_due_at"));
     }
 }

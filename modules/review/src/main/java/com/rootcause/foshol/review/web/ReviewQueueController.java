@@ -1,8 +1,13 @@
 package com.rootcause.foshol.review.web;
 
 import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.review.application.query.KpiWarningsQuery;
+import com.rootcause.foshol.review.application.query.KpiWarningView;
+import com.rootcause.foshol.review.application.query.ListDistrictOfficersQuery;
+import com.rootcause.foshol.review.application.query.ColleagueOfficerView;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
+import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,5 +37,17 @@ public class ReviewQueueController {
             Authentication authentication) {
         var officerId = ReviewAuth.subjectId(authentication);
         return queries.handle(new OfficerQueueQuery(state, mine, officerId, null, page, size, sort, order));
+    }
+
+    @GetMapping("/officers")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public List<ColleagueOfficerView> officers(Authentication authentication) {
+        return queries.handle(new ListDistrictOfficersQuery(ReviewAuth.subjectId(authentication)));
+    }
+
+    @GetMapping("/kpi-warnings")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public List<KpiWarningView> kpiWarnings(Authentication authentication) {
+        return queries.handle(new KpiWarningsQuery(ReviewAuth.subjectId(authentication)));
     }
 }
