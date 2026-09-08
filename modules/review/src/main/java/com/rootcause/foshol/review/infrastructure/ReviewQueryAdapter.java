@@ -6,6 +6,7 @@ import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
 import com.rootcause.foshol.review.application.query.KpiWarningView;
+import com.rootcause.foshol.review.application.query.AdminCaseListCriteria;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.application.query.OfficerQueueRow;
@@ -93,7 +94,12 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
 
     @Override
     public AdminStatsView loadStats(
-            Instant dayStartUtc, BigDecimal confidenceHigh, BigDecimal confidenceLow, String districtCode) {
+            Instant dayStartUtc,
+            Instant monthStartUtc,
+            Instant yearStartUtc,
+            BigDecimal confidenceHigh,
+            BigDecimal confidenceLow,
+            String districtCode) {
         return jdbc.queryForObject(
                 """
                 with published as (
@@ -111,6 +117,9 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 )
                 select
                     (select count(*) from diagnosis_case where created_at >= ? and district_code = ?) as cases_today,
+                    (select count(*) from diagnosis_case where created_at >= ? and district_code = ?) as cases_month,
+                    (select count(*) from diagnosis_case where created_at >= ? and district_code = ?) as cases_year,
+                    (select count(*) from diagnosis_case where district_code = ?) as cases_lifetime,
                     (select count(*) filter (where action = 'APPROVED')::numeric / nullif(count(*), 0)
                         from published) as approval_rate,
                     (select percentile_cont(0.5) within group (order by extract(epoch from (rt.updated_at - rt.created_at)) / 60.0)
@@ -118,20 +127,95 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                         join diagnosis_case c on c.id = rt.case_id
                         where rt.state in ('DONE','REJECTED') and c.district_code = ?) as median_minutes,
                     (select avg(agrees::int) from agreement_pop) as agreement_rate,
-                    (select count(*) from agreement_pop) as agreement_sample
+                    (select count(*) from agreement_pop) as agreement_sample,
+                    (select count(*) filter (where rt.state = 'REJECTED')::numeric
+                            / nullif(count(*) filter (where rt.state in ('DONE','REJECTED')), 0)
+                        from review_task rt
+                        join diagnosis_case c on c.id = rt.case_id
+                        where c.district_code = ?) as rejection_rate
                 """,
                 (rs, i) -> new AdminStatsView(
                         rs.getLong("cases_today"),
+                        rs.getLong("cases_month"),
+                        rs.getLong("cases_year"),
+                        rs.getLong("cases_lifetime"),
                         decimal(rs, "approval_rate"),
                         decimal(rs, "median_minutes"),
                         decimal(rs, "agreement_rate"),
                         rs.getLong("agreement_sample"),
+                        decimal(rs, "rejection_rate"),
                         confidenceHigh,
                         confidenceLow),
                 districtCode,
                 Timestamp.from(dayStartUtc),
                 districtCode,
+                Timestamp.from(monthStartUtc),
+                districtCode,
+                Timestamp.from(yearStartUtc),
+                districtCode,
+                districtCode,
+                districtCode,
                 districtCode);
+    }
+
+    @Override
+    public OfficerQueuePage findAdminCases(AdminCaseListCriteria criteria) {
+        int size = criteria.size() <= 0 ? 20 : Math.min(criteria.size(), 100);
+        int page = Math.max(criteria.page(), 0);
+        String state = criteria.state() == null || criteria.state().isBlank() ? "ALL" : criteria.state();
+        List<Object> args = new ArrayList<>();
+        StringBuilder where = new StringBuilder(" where q.district_code = ? ");
+        args.add(criteria.districtCode());
+        if (!"ALL".equals(state)) {
+            where.append(" and q.state = ? ");
+            args.add(state);
+        }
+        if (criteria.submittedSince() != null) {
+            where.append(" and q.submitted_at >= ? ");
+            args.add(Timestamp.from(criteria.submittedSince()));
+        }
+        if (criteria.kpi() != null) {
+            where.append(
+                    " and exists (select 1 from kpi_breach b where b.review_task_id = q.review_task_id and b.kind = ?) ");
+            args.add(criteria.kpi().name());
+        }
+        if (criteria.officerId() != null) {
+            where.append(" and q.officer_id = ? ");
+            args.add(criteria.officerId());
+        }
+        if (criteria.cropCode() != null && !criteria.cropCode().isBlank()) {
+            where.append(" and q.crop_code = ? ");
+            args.add(criteria.cropCode());
+        }
+        if (criteria.decisionPath() != null) {
+            where.append(" and q.decision_path = ? ");
+            args.add(criteria.decisionPath().name());
+        }
+        if (criteria.resubmission() != null) {
+            where.append(" and q.is_resubmission = ? ");
+            args.add(criteria.resubmission());
+        }
+        Long total = jdbc.queryForObject(
+                "select count(*) from p_officer_queue q" + where, Long.class, args.toArray());
+        long totalElements = total == null ? 0 : total;
+        int totalPages = size == 0 ? 0 : (int) Math.ceil(totalElements / (double) size);
+        List<Object> pageArgs = new ArrayList<>(args);
+        pageArgs.add(size);
+        pageArgs.add(page * size);
+        List<OfficerQueueRow> content = jdbc.query(
+                """
+                select q.case_id, q.review_task_id, q.farmer_name, q.crop_code, q.crop_name_bn, q.district_code,
+                       q.decision_path, q.top_disease_id, q.top_disease_name_bn, q.top_confidence, q.image_count,
+                       q.has_audio, q.analysis_mode, q.state, q.officer_id, q.is_resubmission,
+                       t.requeue_count, q.submitted_at, q.sla_due_at, q.assignment_due_at, q.resolution_due_at
+                from p_officer_queue q
+                join review_task t on t.id = q.review_task_id
+                """
+                        + where
+                        + " order by q.submitted_at desc limit ? offset ?",
+                this::mapRow,
+                pageArgs.toArray());
+        return new OfficerQueuePage(content, page, size, totalElements, totalPages);
     }
 
     @Override
