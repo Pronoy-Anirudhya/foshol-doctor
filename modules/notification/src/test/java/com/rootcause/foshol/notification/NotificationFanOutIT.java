@@ -124,9 +124,9 @@ class NotificationFanOutIT {
         CapturingEmitter farmer = new CapturingEmitter();
         CapturingEmitter officer = new CapturingEmitter();
         CapturingEmitter other = new CapturingEmitter();
-        registry.attach(F1, Role.FARMER, null, farmer);
-        registry.attach(OFFICER, Role.OFFICER, null, officer);
-        registry.attach(F2, Role.FARMER, null, other);
+        registry.attach(F1, Role.FARMER, null, null, farmer);
+        registry.attach(OFFICER, Role.OFFICER, "DHA", null, officer);
+        registry.attach(F2, Role.FARMER, null, null, other);
 
         status.handle(new CaseStatusChanged(CASE, F1, CaseStatus.ANALYSING, CaseStatus.ANALYSED, "c1", T0));
         assertThat(countRows()).isEqualTo(1);
@@ -149,7 +149,7 @@ class NotificationFanOutIT {
         revised.handle(new AdvisoryRevised(ADVISORY_V2, ADVISORY_V1, CASE, F1, OFFICER, "Officer A", 2, "c3", T0));
         assertThat(countRows()).isEqualTo(3);
 
-        registry.attach(F1, Role.FARMER, null, new CapturingEmitter()).emitter().complete();
+        registry.attach(F1, Role.FARMER, null, null, new CapturingEmitter()).emitter().complete();
         // disconnect F1's live connections by completing them
         farmer.complete();
         assertThat(registry.farmerConnected(F1)).isFalse();
@@ -161,7 +161,7 @@ class NotificationFanOutIT {
                 .isZero();
 
         CapturingEmitter reconnect = new CapturingEmitter();
-        registry.attach(F1, Role.FARMER, ADVISORY_V1.toString(), reconnect);
+        registry.attach(F1, Role.FARMER, null, ADVISORY_V1.toString(), reconnect);
         assertThat(reconnect.payloads.getFirst()).contains("resync");
 
         assertThat(channels).hasSize(3);
@@ -171,38 +171,42 @@ class NotificationFanOutIT {
 
     private void seed() {
         jdbc.update(
-                "insert into farmer (id, name, phone_hash, phone_enc, district_code, preferred_language) values (?,?,?,?,?,?) on conflict do nothing",
+                "insert into farmer (id, name, phone_hash, phone_enc, district_code, division_code, preferred_language) values (?,?,?,?,?,?,?) on conflict do nothing",
                 F1,
                 "Farmer 1",
                 "1".repeat(64),
                 new byte[] {1},
-                "DHK01",
+                "DHA",
+                "DHK",
                 "bn");
         jdbc.update(
-                "insert into farmer (id, name, phone_hash, phone_enc, district_code, preferred_language) values (?,?,?,?,?,?) on conflict do nothing",
+                "insert into farmer (id, name, phone_hash, phone_enc, district_code, division_code, preferred_language) values (?,?,?,?,?,?,?) on conflict do nothing",
                 F2,
                 "Farmer 2",
                 "2".repeat(64),
                 new byte[] {1},
-                "DHK01",
+                "DHA",
+                "DHK",
                 "bn");
         jdbc.update(
-                "insert into field_officer (id, name, username, password_hash, phone_hash, phone_enc, district_code, role, active) values (?,?,?,?,?,?,?,?,true) on conflict do nothing",
+                "insert into field_officer (id, name, username, password_hash, phone_hash, phone_enc, district_code, division_code, role, active) values (?,?,?,?,?,?,?,?,?,true) on conflict do nothing",
                 OFFICER,
                 "Officer A",
                 "officer.a",
                 "hash",
                 "3".repeat(64),
                 new byte[] {1},
-                "DHK01",
+                "DHA",
+                "DHK",
                 "OFFICER");
         jdbc.update(
-                "insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, correlation_id) values (?,?,?,?,?,?) on conflict do nothing",
+                "insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, division_code, correlation_id) values (?,?,?,?,?,?,?) on conflict do nothing",
                 CASE,
                 F1,
                 CROP,
                 "ANALYSED",
-                "DHK01",
+                "DHA",
+                "DHK",
                 "c1");
         jdbc.update(
                 """
@@ -258,10 +262,10 @@ class NotificationFanOutIT {
                 @Override
                 public Optional<FarmerView> findById(UUID farmerId) {
                     if (F1.equals(farmerId)) {
-                        return Optional.of(new FarmerView(F1, "Farmer 1", "DHK01", "bn"));
+                        return Optional.of(new FarmerView(F1, "Farmer 1", "DHA", "bn", "DHK"));
                     }
                     if (F2.equals(farmerId)) {
-                        return Optional.of(new FarmerView(F2, "Farmer 2", "DHK01", "bn"));
+                        return Optional.of(new FarmerView(F2, "Farmer 2", "DHA", "bn", "DHK"));
                     }
                     return Optional.empty();
                 }

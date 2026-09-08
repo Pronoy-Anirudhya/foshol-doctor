@@ -9,6 +9,6 @@ public interface FarmerJpaRepository extends JpaRepository<FarmerEntity, UUID> {
 
     Optional<FarmerEntity> findByPhoneHash(String phoneHash);
 
-    @Query("select f.id as id, f.name as name, f.districtCode as districtCode, f.preferredLanguage as preferredLanguage from FarmerEntity f where f.id = :id")
+    @Query("select f.id as id, f.name as name, f.districtCode as districtCode, f.divisionCode as divisionCode, f.preferredLanguage as preferredLanguage from FarmerEntity f where f.id = :id")
     Optional<FarmerReadRow> findReadById(UUID id);
 }

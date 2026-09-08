@@ -52,6 +52,11 @@ public class AuthController {
                         result.name(),
                         result.role().name(),
                         result.districtCode(),
+                        result.divisionCode(),
+                        result.districtNameBn(),
+                        result.districtNameEn(),
+                        result.divisionNameBn(),
+                        result.divisionNameEn(),
                         result.preferredLanguage(),
                         result.username()));
     }

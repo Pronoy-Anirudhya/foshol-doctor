@@ -158,6 +158,14 @@ public class CreateReviewTaskOnAnalysisListener {
                 district = "";
             }
         }
+        String division = summary != null && summary.divisionCode() != null ? summary.divisionCode() : "";
+        if (division.isBlank()) {
+            try {
+                division = farmers.findById(farmerId).map(FarmerView::divisionCode).orElse("");
+            } catch (RuntimeException ignored) {
+                division = "";
+            }
+        }
         Instant submittedAt = summary != null && summary.submittedAt() != null ? summary.submittedAt() : occurredAt;
         boolean resubmission = summary != null && summary.parentCaseId() != null;
         if (summary != null && summary.images() != null) {
@@ -176,7 +184,8 @@ public class CreateReviewTaskOnAnalysisListener {
                         clip(farmerName, 120),
                         clip(cropCode, 24),
                         clip(cropNameBn, 120),
-                        clip(district, 8),
+                        clip(district, 16),
+                        clip(division, 8),
                         path,
                         topDiseaseId,
                         topDiseaseNameBn,

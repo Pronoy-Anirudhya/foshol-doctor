@@ -120,7 +120,7 @@ class SubmitCaseCommandHandlerTest {
                 "audio/wav,audio/webm,audio/ogg,audio/mp4");
         lenient()
                 .when(farmers.findById(FARMER))
-                .thenReturn(Optional.of(new FarmerView(FARMER, "Demo", "DHA", "bn")));
+                .thenReturn(Optional.of(new FarmerView(FARMER, "Demo", "DHA", "bn", "DHK")));
         lenient()
                 .when(knowledge.findCropById(CROP))
                 .thenReturn(Optional.of(new CropView(CROP, "rice", "ধান", "Rice", "crop-rice")));
@@ -135,7 +135,10 @@ class SubmitCaseCommandHandlerTest {
     void acceptsSharpJpegAndWav() {
         SubmitCaseResult result = handler.handle(valid());
         assertThat(result.replayed()).isFalse();
-        verify(cases).save(any(DiagnosisCase.class));
+        ArgumentCaptor<DiagnosisCase> saved = ArgumentCaptor.forClass(DiagnosisCase.class);
+        verify(cases).save(saved.capture());
+        assertThat(saved.getValue().districtCode()).isEqualTo("DHA");
+        assertThat(saved.getValue().divisionCode()).isEqualTo("DHK");
         ArgumentCaptor<CaseSubmitted> event = ArgumentCaptor.forClass(CaseSubmitted.class);
         verify(events).publishEvent(event.capture());
         assertThat(event.getValue().images()).hasSize(1);

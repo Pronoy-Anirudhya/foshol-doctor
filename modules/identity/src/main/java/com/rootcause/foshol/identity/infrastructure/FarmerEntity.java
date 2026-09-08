@@ -26,8 +26,11 @@ public class FarmerEntity {
     @Column(name = "phone_enc", nullable = false)
     private byte[] phoneEnc;
 
-    @Column(name = "district_code", nullable = false, length = 8)
+    @Column(name = "district_code", nullable = false, length = 16)
     private String districtCode;
+
+    @Column(name = "division_code", nullable = false, length = 8)
+    private String divisionCode;
 
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "preferred_language", nullable = false, length = 2)
@@ -47,6 +50,7 @@ public class FarmerEntity {
             String phoneHash,
             byte[] phoneEnc,
             String districtCode,
+            String divisionCode,
             String preferredLanguage,
             Instant createdAt,
             Instant updatedAt) {
@@ -55,6 +59,7 @@ public class FarmerEntity {
         this.phoneHash = phoneHash;
         this.phoneEnc = phoneEnc;
         this.districtCode = districtCode;
+        this.divisionCode = divisionCode;
         this.preferredLanguage = preferredLanguage;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -74,6 +79,10 @@ public class FarmerEntity {
 
     public String getDistrictCode() {
         return districtCode;
+    }
+
+    public String getDivisionCode() {
+        return divisionCode;
     }
 
     public String getPreferredLanguage() {

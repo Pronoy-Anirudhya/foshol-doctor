@@ -45,6 +45,10 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
             where.append(" and q.officer_id = ? ");
             args.add(query.officerId());
         }
+        if (query.districtCode() != null && !query.districtCode().isBlank()) {
+            where.append(" and q.district_code = ? ");
+            args.add(query.districtCode());
+        }
         Long total = jdbc.queryForObject(
                 "select count(*) from p_officer_queue q" + where, Long.class, args.toArray());
         long totalElements = total == null ? 0 : total;
@@ -86,12 +90,15 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
     }
 
     @Override
-    public AdminStatsView loadStats(Instant dayStartUtc, BigDecimal confidenceHigh, BigDecimal confidenceLow) {
+    public AdminStatsView loadStats(
+            Instant dayStartUtc, BigDecimal confidenceHigh, BigDecimal confidenceLow, String districtCode) {
         return jdbc.queryForObject(
                 """
                 with published as (
                     select distinct on (a.case_id) a.case_id, a.disease_id, a.action
                     from advisory a
+                    join diagnosis_case c on c.id = a.case_id
+                    where c.district_code = ?
                     order by a.case_id, a.version desc
                 ),
                 agreement_pop as (
@@ -101,11 +108,13 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                     join case_candidate cc on cc.case_id = p.case_id and cc.source = 'MODEL' and cc.rank = 1
                 )
                 select
-                    (select count(*) from diagnosis_case where created_at >= ?) as cases_today,
+                    (select count(*) from diagnosis_case where created_at >= ? and district_code = ?) as cases_today,
                     (select count(*) filter (where action = 'APPROVED')::numeric / nullif(count(*), 0)
                         from published) as approval_rate,
-                    (select percentile_cont(0.5) within group (order by extract(epoch from (updated_at - created_at)) / 60.0)
-                        from review_task where state in ('DONE','REJECTED')) as median_minutes,
+                    (select percentile_cont(0.5) within group (order by extract(epoch from (rt.updated_at - rt.created_at)) / 60.0)
+                        from review_task rt
+                        join diagnosis_case c on c.id = rt.case_id
+                        where rt.state in ('DONE','REJECTED') and c.district_code = ?) as median_minutes,
                     (select avg(agrees::int) from agreement_pop) as agreement_rate,
                     (select count(*) from agreement_pop) as agreement_sample
                 """,
@@ -117,7 +126,10 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                         rs.getLong("agreement_sample"),
                         confidenceHigh,
                         confidenceLow),
-                Timestamp.from(dayStartUtc));
+                districtCode,
+                Timestamp.from(dayStartUtc),
+                districtCode,
+                districtCode);
     }
 
     private static BigDecimal decimal(ResultSet rs, String column) throws SQLException {

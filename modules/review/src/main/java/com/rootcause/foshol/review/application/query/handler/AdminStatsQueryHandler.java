@@ -1,9 +1,11 @@
 package com.rootcause.foshol.review.application.query.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminStatsQuery;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
+import com.rootcause.foshol.review.domain.ReviewException;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ public class AdminStatsQueryHandler implements QueryHandler<AdminStatsQuery, Adm
     }
 
     private final ReviewQueryPort reads;
+    private final OfficerLookupApi officers;
     private final Clock clock;
     private final ZoneId displayZone;
     private final BigDecimal confidenceHigh;
@@ -31,11 +34,13 @@ public class AdminStatsQueryHandler implements QueryHandler<AdminStatsQuery, Adm
 
     public AdminStatsQueryHandler(
             ReviewQueryPort reads,
+            OfficerLookupApi officers,
             Clock clock,
             @Value("${" + ConfigKeys.I18N_DISPLAY_ZONE + ":Asia/Dhaka}") String displayZone,
             @Value("${" + ConfigKeys.ANALYSIS_CONFIDENCE_HIGH + ":0.75}") BigDecimal confidenceHigh,
             @Value("${" + ConfigKeys.ANALYSIS_CONFIDENCE_LOW + ":0.45}") BigDecimal confidenceLow) {
         this.reads = reads;
+        this.officers = officers;
         this.clock = clock;
         this.displayZone = ZoneId.of(displayZone);
         this.confidenceHigh = confidenceHigh;
@@ -45,7 +50,11 @@ public class AdminStatsQueryHandler implements QueryHandler<AdminStatsQuery, Adm
     @Transactional(readOnly = true)
     @Override
     public AdminStatsView handle(AdminStatsQuery query) {
+        String district = officers
+                .findById(query.callerId())
+                .map(o -> o.districtCode())
+                .orElseThrow(ReviewException::taskNotFound);
         var start = LocalDate.now(clock.withZone(displayZone)).atStartOfDay(displayZone).toInstant();
-        return reads.loadStats(start, confidenceHigh, confidenceLow);
+        return reads.loadStats(start, confidenceHigh, confidenceLow, district);
     }
 }

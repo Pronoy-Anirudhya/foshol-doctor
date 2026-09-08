@@ -16,6 +16,7 @@ import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.ComputedDoseView;
 import com.rootcause.foshol.review.api.RemedyRefView;
+import com.rootcause.foshol.review.application.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort.QueueTaskRow;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
@@ -50,6 +51,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
     private final CaseIntakeApi cases;
     private final KnowledgeQueryApi knowledge;
     private final OfficerLookupApi officers;
+    private final ReviewDistrictGuard districtGuard;
     private final Clock clock;
     private final Duration claimTtl;
 
@@ -61,6 +63,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
             CaseIntakeApi cases,
             KnowledgeQueryApi knowledge,
             OfficerLookupApi officers,
+            ReviewDistrictGuard districtGuard,
             Clock clock,
             @Value("${" + ConfigKeys.REVIEW_CLAIM_TTL + ":PT15M}") Duration claimTtl) {
         this.reads = reads;
@@ -70,6 +73,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
         this.cases = cases;
         this.knowledge = knowledge;
         this.officers = officers;
+        this.districtGuard = districtGuard;
         this.clock = clock;
         this.claimTtl = claimTtl;
     }
@@ -78,6 +82,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
     @Override
     public ReviewTaskDetailView handle(ReviewTaskDetailQuery query) {
         QueueTaskRow row = reads.findQueueRow(query.taskId()).orElseThrow(ReviewException::taskNotFound);
+        districtGuard.requireDistrict(query.callerId(), row.districtCode());
         ReviewTask task = tasks.findById(query.taskId()).orElseThrow(ReviewException::taskNotFound);
         CaseSummary summary = cases.findById(row.caseId()).orElse(null);
         AnalysisView analysis = analysisApi.findByCaseId(row.caseId()).orElse(null);

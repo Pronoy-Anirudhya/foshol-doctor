@@ -38,7 +38,7 @@ public class AnalysisDetailQueryHandler implements QueryHandler<AnalysisDetailQu
 
     private boolean visible(UUID caseId, UUID callerId, Role role) {
         if (role == Role.OFFICER || role == Role.ADMIN) {
-            return true;
+            return intake.officerSharesDistrict(caseId, callerId);
         }
         if (role == Role.FARMER && callerId != null) {
             return intake.isOwnedBy(caseId, callerId);

@@ -12,6 +12,7 @@ import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
+import com.rootcause.foshol.review.application.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.AdvisoryViewMapper;
 import com.rootcause.foshol.review.application.command.AdvisoryActionDeriver;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
@@ -58,6 +59,7 @@ public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseComm
     private final KnowledgeQueryApi knowledge;
     private final OfficerLookupApi officers;
     private final CaseIntakeApi cases;
+    private final ReviewDistrictGuard districtGuard;
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final Duration claimTtl;
@@ -70,6 +72,7 @@ public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseComm
             KnowledgeQueryApi knowledge,
             OfficerLookupApi officers,
             CaseIntakeApi cases,
+            ReviewDistrictGuard districtGuard,
             ApplicationEventPublisher events,
             Clock clock,
             @Value("${" + ConfigKeys.REVIEW_CLAIM_TTL + ":PT15M}") Duration claimTtl) {
@@ -80,6 +83,7 @@ public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseComm
         this.knowledge = knowledge;
         this.officers = officers;
         this.cases = cases;
+        this.districtGuard = districtGuard;
         this.events = events;
         this.clock = clock;
         this.claimTtl = claimTtl;
@@ -88,6 +92,7 @@ public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseComm
     @Transactional
     @Override
     public ApproveCaseResult handle(ApproveCaseCommand command) {
+        districtGuard.requireTaskInCallerDistrict(command.officerId(), command.taskId());
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         Instant now = clock.instant();
         task.requireLiveClaim(command.officerId(), now, claimTtl);

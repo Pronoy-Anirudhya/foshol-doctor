@@ -1,6 +1,7 @@
 package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.review.application.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
@@ -30,16 +31,19 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
 
     private final ReviewTaskRepository tasks;
     private final OfficerQueueProjectionPort queue;
+    private final ReviewDistrictGuard districtGuard;
     private final Clock clock;
     private final Duration claimTtl;
 
     public ClaimReviewTaskCommandHandler(
             ReviewTaskRepository tasks,
             OfficerQueueProjectionPort queue,
+            ReviewDistrictGuard districtGuard,
             Clock clock,
             @Value("${" + ConfigKeys.REVIEW_CLAIM_TTL + ":PT15M}") Duration claimTtl) {
         this.tasks = tasks;
         this.queue = queue;
+        this.districtGuard = districtGuard;
         this.clock = clock;
         this.claimTtl = claimTtl;
     }
@@ -47,6 +51,7 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
     @Transactional
     @Override
     public ClaimReviewTaskResult handle(ClaimReviewTaskCommand command) {
+        districtGuard.requireTaskInCallerDistrict(command.officerId(), command.taskId());
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         task.claim(command.officerId(), clock.instant(), claimTtl);
         try {

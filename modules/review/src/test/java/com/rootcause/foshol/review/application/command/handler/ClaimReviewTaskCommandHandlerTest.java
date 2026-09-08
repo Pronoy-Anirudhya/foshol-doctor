@@ -43,11 +43,14 @@ class ClaimReviewTaskCommandHandlerTest {
     @Mock
     private OfficerQueueProjectionPort queue;
 
+    @Mock
+    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+
     private ClaimReviewTaskCommandHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new ClaimReviewTaskCommandHandler(tasks, queue, Clock.fixed(T0, ZoneOffset.UTC), TTL);
+        handler = new ClaimReviewTaskCommandHandler(tasks, queue, districtGuard, Clock.fixed(T0, ZoneOffset.UTC), TTL);
     }
 
     @Test

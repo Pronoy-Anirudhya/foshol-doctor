@@ -10,6 +10,7 @@ public record CaseSubmitted(
         UUID cropId,
         String cropCode,
         String districtCode,
+        String divisionCode,
         List<CaseImageRef> images,
         CaseAudioRef audio,
         String noteBn,

@@ -110,6 +110,7 @@ class ReviseAdvisoryCommandHandlerTest {
                 knowledge,
                 officers,
                 cases,
+                org.mockito.Mockito.mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class),
                 events,
                 Clock.fixed(ReviewFixtures.T0.plusSeconds(5), ZoneOffset.UTC),
                 Duration.ofMinutes(15));

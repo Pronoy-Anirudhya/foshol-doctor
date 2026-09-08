@@ -11,5 +11,10 @@ public record AuthTokenResult(
         UUID subjectId,
         String name,
         String districtCode,
+        String divisionCode,
+        String districtNameBn,
+        String districtNameEn,
+        String divisionNameBn,
+        String divisionNameEn,
         String preferredLanguage,
         String username) {}

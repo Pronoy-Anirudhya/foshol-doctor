@@ -13,7 +13,11 @@ public interface ReviewQueryPort {
 
     Optional<QueueTaskRow> findQueueRow(UUID reviewTaskId);
 
-    AdminStatsView loadStats(Instant dayStartUtc, java.math.BigDecimal confidenceHigh, java.math.BigDecimal confidenceLow);
+    AdminStatsView loadStats(
+            Instant dayStartUtc,
+            java.math.BigDecimal confidenceHigh,
+            java.math.BigDecimal confidenceLow,
+            String districtCode);
 
     record QueueTaskRow(
             UUID caseId,

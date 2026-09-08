@@ -18,7 +18,7 @@ Remedy rows in the database are labelled **DEMO ONLY**. They are not production 
 
 | Piece | Role | Default local address |
 |---|---|---|
-| Postgres 17 + pgvector | Cases, knowledge, identities, Flyway | host **5433** → container 5432 |
+| Postgres 17 + pgvector | Cases, knowledge, identities, Flyway | host **5434** → container 5432 |
 | MinIO | Case photos and audio (`foshol-cases`) | **9000** (API), **9001** (console) |
 | Spring Boot (`:app:bootRun`) | HTTP API | **8080** |
 | Inference sidecar | Optional live vision / ASR / embeddings | **8000** (`docker compose --profile ai`) |
@@ -52,16 +52,18 @@ Flyway runs on first boot of an empty `./.data/postgres`.
 
 | Migration | What it is |
 |---|---|
-| `V100__seed_demo_identities.sql` | Fictional farmer, officer and admin. Not agronomic content. |
+| `V100__seed_demo_identities.sql` | Fictional farmer, officer and admin (Dhaka / `DHA`). Not agronomic content. |
+| `V107__seed_district_identities.sql` | One extra farmer/officer/admin trio per remaining district. |
 | `V101__seed_historical_cases.sql` | Placeholder (`SELECT 1`). Historical case rows are not loaded yet. |
 
 `./tools/start-stack.sh` uses `local,demo`, so V100 runs. Login as:
 
 | Role | How |
 |---|---|
-| Farmer | Phone `+8801711111111`, OTP `123456` (`foshol.auth.otp.dev-code`) |
-| Officer | Username `officer`, password `password` |
-| Admin | Username `admin`, password `password` |
+| Farmer (Dhaka) | Phone `+8801711111111`, OTP `123456` (`foshol.auth.otp.dev-code`) |
+| Officer (Dhaka) | Username `officer`, password `password` (alias `officer-dha`) |
+| Admin (Dhaka) | Username `admin`, password `password` (alias `admin-dha`) |
+| Other districts | `officer-{code}` / `admin-{code}` (lowercase, e.g. `officer-ctg`), same password. Farmers `+8801712` plus a 6-digit sequence from the district catalogue (not the Dhaka demo phone). |
 
 If this machine already has an older Flyway history in `./.data/postgres` that cannot apply a new
 migration, wipe data (see below) and start again. Do not hand-edit Flyway’s schema history.

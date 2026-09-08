@@ -59,6 +59,8 @@ class ReviewTaskDetailQueryHandlerTest {
     private static final UUID CROP = Uuid7.create();
     private static final Instant T0 = Instant.parse("2026-01-01T00:00:00Z");
 
+    private static final UUID OFFICER_A = Uuid7.create();
+
     @Mock
     private ReviewQueryPort reads;
 
@@ -80,11 +82,14 @@ class ReviewTaskDetailQueryHandlerTest {
     @Mock
     private OfficerLookupApi officers;
 
+    @Mock
+    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+
     @Test
     void missingTask() {
         when(reads.findQueueRow(org.mockito.ArgumentMatchers.any())).thenReturn(Optional.empty());
         ReviewTaskDetailQueryHandler handler = handler();
-        assertThatThrownBy(() -> handler.handle(new ReviewTaskDetailQuery(Uuid7.create())))
+        assertThatThrownBy(() -> handler.handle(new ReviewTaskDetailQuery(Uuid7.create(), OFFICER_A)))
                 .extracting(ex -> ((ReviewException) ex).errorCode())
                 .isEqualTo(ErrorCodes.ERR_REVIEW_TASK_NOT_FOUND);
     }
@@ -120,6 +125,7 @@ class ReviewTaskDetailQueryHandlerTest {
                 CROP,
                 "rice",
                 "DHK01",
+                "DHK",
                 CaseStatus.IN_REVIEW,
                 DecisionPath.PRIMARY,
                 null,
@@ -167,7 +173,7 @@ class ReviewTaskDetailQueryHandlerTest {
                 null)));
         when(advisories.findPublishedByCaseId(CASE)).thenReturn(Optional.empty());
 
-        ReviewTaskDetailView detail = handler().handle(new ReviewTaskDetailQuery(TASK));
+        ReviewTaskDetailView detail = handler().handle(new ReviewTaskDetailQuery(TASK, OFFICER_A));
 
         assertThat(detail.suggestedRemedies()).hasSize(1);
         RemedyRefView rem = detail.suggestedRemedies().getFirst();
@@ -190,6 +196,7 @@ class ReviewTaskDetailQueryHandlerTest {
                 cases,
                 knowledge,
                 officers,
+                districtGuard,
                 Clock.fixed(T0, ZoneOffset.UTC),
                 Duration.ofMinutes(15));
     }

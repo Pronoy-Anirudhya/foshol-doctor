@@ -24,6 +24,8 @@ public interface CaseQueryPort {
 
     Optional<UUID> findFarmerId(UUID caseId);
 
+    Optional<String> findDistrictCode(UUID caseId);
+
     record ImageLocator(UUID caseId, UUID farmerId, String objectKey, String derivativeObjectKey) {}
 
     record AudioLocator(UUID caseId, UUID farmerId, String objectKey) {}

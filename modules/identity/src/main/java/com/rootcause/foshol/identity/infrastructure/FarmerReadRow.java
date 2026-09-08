@@ -10,5 +10,7 @@ public interface FarmerReadRow {
 
     String getDistrictCode();
 
+    String getDivisionCode();
+
     String getPreferredLanguage();
 }

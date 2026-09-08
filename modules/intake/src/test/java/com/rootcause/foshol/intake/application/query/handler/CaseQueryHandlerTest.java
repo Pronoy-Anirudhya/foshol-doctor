@@ -43,10 +43,13 @@ class CaseQueryHandlerTest {
     @Mock
     private ImageStorePort store;
 
+    @Mock
+    private com.rootcause.foshol.intake.application.StaffRegionAccess staffRegion;
+
     @Test
     void farmerCannotSeeAnotherCase() {
         when(queries.findFarmerId(CASE)).thenReturn(Optional.of(OWNER));
-        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries);
+        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries, staffRegion);
         assertThatThrownBy(() -> handler.handle(new CaseDetailQuery(CASE, OTHER, Role.FARMER)))
                 .isInstanceOf(IntakeException.class)
                 .extracting(ex -> ((IntakeException) ex).errorCode())
@@ -60,7 +63,8 @@ class CaseQueryHandlerTest {
                 CASE, UUID.randomUUID(), "ধান", null, null, null, null, java.util.List.of(), null, Instant.now(),
                 java.math.BigDecimal.ONE, com.rootcause.foshol.common.FieldAreaUnit.DECIMAL, null, null,
                 com.rootcause.foshol.common.MetricsSource.FORM)));
-        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries);
+        when(staffRegion.allows(Role.OFFICER, OTHER, CASE)).thenReturn(true);
+        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries, staffRegion);
         assertThat(handler.handle(new CaseDetailQuery(CASE, OTHER, Role.OFFICER)).caseId()).isEqualTo(CASE);
     }
 
@@ -71,7 +75,7 @@ class CaseQueryHandlerTest {
                 .thenReturn(Optional.of(new CaseQueryPort.ImageLocator(CASE, OWNER, "orig", "deriv")));
         when(store.presign("orig", Duration.ofMinutes(10))).thenReturn("https://example.test/orig");
         CaseImageUrlQueryHandler handler =
-                new CaseImageUrlQueryHandler(queries, store, Clock.fixed(Instant.now(), ZoneOffset.UTC), Duration.ofMinutes(10));
+                new CaseImageUrlQueryHandler(queries, store, staffRegion, Clock.fixed(Instant.now(), ZoneOffset.UTC), Duration.ofMinutes(10));
         PresignedUrlView view =
                 handler.handle(new CaseImageUrlQuery(CASE, IMAGE, OWNER, Role.FARMER, false));
         assertThat(view.url()).contains("orig");

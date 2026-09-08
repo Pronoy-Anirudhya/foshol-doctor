@@ -63,7 +63,7 @@ class HandleCaseStatusChangedTest {
                 .thenReturn(Optional.empty());
         handler.handle(event(CaseStatus.ANALYSING, CaseStatus.ANALYSED));
         verify(delivery).deliver(any(Notification.class));
-        verify(nudge).emitQueue(NotifyFixtures.CASE, CaseStatus.ANALYSED.name(), NotifyFixtures.CORRELATION);
+        verify(nudge).emitQueue(NotifyFixtures.CASE, CaseStatus.ANALYSED.name(), NotifyFixtures.CORRELATION, "DHA");
     }
 
     @Test
@@ -82,7 +82,7 @@ class HandleCaseStatusChangedTest {
                         NotifyFixtures.T0)));
         handler.handle(event(CaseStatus.ANALYSING, CaseStatus.ANALYSED));
         verify(delivery, never()).deliver(any());
-        verify(nudge).emitQueue(NotifyFixtures.CASE, "ANALYSED", NotifyFixtures.CORRELATION);
+        verify(nudge).emitQueue(NotifyFixtures.CASE, "ANALYSED", NotifyFixtures.CORRELATION, "DHA");
     }
 
     @Test
@@ -93,7 +93,7 @@ class HandleCaseStatusChangedTest {
         doThrow(new IllegalStateException("delivery failed")).when(delivery).deliver(any(Notification.class));
         assertThatThrownBy(() -> handler.handle(event(CaseStatus.ANALYSING, CaseStatus.ANALYSED)))
                 .isInstanceOf(IllegalStateException.class);
-        verify(nudge).emitQueue(NotifyFixtures.CASE, CaseStatus.ANALYSED.name(), NotifyFixtures.CORRELATION);
+        verify(nudge).emitQueue(NotifyFixtures.CASE, CaseStatus.ANALYSED.name(), NotifyFixtures.CORRELATION, "DHA");
     }
 
     private static CaseStatusChanged event(CaseStatus from, CaseStatus to) {

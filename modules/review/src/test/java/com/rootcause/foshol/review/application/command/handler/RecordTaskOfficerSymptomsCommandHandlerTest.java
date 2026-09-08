@@ -74,6 +74,7 @@ class RecordTaskOfficerSymptomsCommandHandlerTest {
                 tasks,
                 analysisApi,
                 knowledge,
+                org.mockito.Mockito.mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class),
                 Clock.fixed(ReviewFixtures.T0.plusSeconds(1), ZoneOffset.UTC),
                 Duration.ofMinutes(15));
     }

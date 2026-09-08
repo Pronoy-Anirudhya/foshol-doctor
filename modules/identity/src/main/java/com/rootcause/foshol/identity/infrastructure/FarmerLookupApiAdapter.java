@@ -32,6 +32,11 @@ public class FarmerLookupApiAdapter implements FarmerLookupApi {
     }
 
     private FarmerView toView(FarmerEntity entity) {
-        return new FarmerView(entity.getId(), entity.getName(), entity.getDistrictCode(), entity.getPreferredLanguage());
+        return new FarmerView(
+                entity.getId(),
+                entity.getName(),
+                entity.getDistrictCode(),
+                entity.getPreferredLanguage(),
+                entity.getDivisionCode());
     }
 }

@@ -4,6 +4,7 @@ import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.intake.application.StaffRegionAccess;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.port.ImageStorePort;
 import com.rootcause.foshol.intake.application.query.CaseImageUrlQuery;
@@ -27,16 +28,19 @@ public class CaseImageUrlQueryHandler implements QueryHandler<CaseImageUrlQuery,
 
     private final CaseQueryPort queries;
     private final ImageStorePort store;
+    private final StaffRegionAccess staffRegion;
     private final Duration presignTtl;
     private final Clock clock;
 
     public CaseImageUrlQueryHandler(
             CaseQueryPort queries,
             ImageStorePort store,
+            StaffRegionAccess staffRegion,
             Clock clock,
             @Value("${" + ConfigKeys.STORAGE_PRESIGN_TTL + "}") Duration presignTtl) {
         this.queries = queries;
         this.store = store;
+        this.staffRegion = staffRegion;
         this.clock = clock;
         this.presignTtl = presignTtl;
     }
@@ -47,9 +51,11 @@ public class CaseImageUrlQueryHandler implements QueryHandler<CaseImageUrlQuery,
         java.util.UUID owner = queries
                 .findFarmerId(query.caseId())
                 .orElseThrow(() -> new IntakeException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case was not found."));
-        if (query.callerRole() != Role.OFFICER
-                && query.callerRole() != Role.ADMIN
-                && !owner.equals(query.callerId())) {
+        if (query.callerRole() == Role.FARMER) {
+            if (!owner.equals(query.callerId())) {
+                throw new IntakeException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case was not found.");
+            }
+        } else if (!staffRegion.allows(query.callerRole(), query.callerId(), query.caseId())) {
             throw new IntakeException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case was not found.");
         }
         CaseQueryPort.ImageLocator locator = queries

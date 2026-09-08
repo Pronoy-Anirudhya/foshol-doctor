@@ -11,6 +11,7 @@ import com.rootcause.foshol.identity.domain.OtpCodeHash;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
 import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
+import com.rootcause.foshol.identity.infrastructure.GeoLabelLookup;
 import com.rootcause.foshol.identity.infrastructure.JwtService;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
 import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
@@ -34,6 +35,7 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
     private final FarmerJpaRepository farmers;
     private final OtpChallengeJpaRepository challenges;
     private final JwtService jwtService;
+    private final GeoLabelLookup geoLabels;
     private final Clock clock;
     private final boolean otpEnabled;
     private final int maxAttempts;
@@ -42,12 +44,14 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
             FarmerJpaRepository farmers,
             OtpChallengeJpaRepository challenges,
             JwtService jwtService,
+            GeoLabelLookup geoLabels,
             Clock clock,
             @Value("${" + ConfigKeys.AUTH_OTP_ENABLED + "}") boolean otpEnabled,
             @Value("${" + ConfigKeys.AUTH_OTP_MAX_ATTEMPTS + "}") int maxAttempts) {
         this.farmers = farmers;
         this.challenges = challenges;
         this.jwtService = jwtService;
+        this.geoLabels = geoLabels;
         this.clock = clock;
         this.otpEnabled = otpEnabled;
         this.maxAttempts = maxAttempts;
@@ -94,6 +98,7 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_OTP_INVALID, 401, "The code is not valid."));
         row.setConsumedAt(now);
         JwtService.IssuedToken token = jwtService.issue(farmer.getId(), Role.FARMER, now);
+        GeoLabelLookup.Labels geo = geoLabels.forDistrict(farmer.getDistrictCode(), farmer.getDivisionCode());
         return new AuthTokenResult(
                 token.compact(),
                 token.expiresAt(),
@@ -101,6 +106,11 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
                 farmer.getId(),
                 farmer.getName(),
                 farmer.getDistrictCode(),
+                farmer.getDivisionCode(),
+                geo.districtNameBn(),
+                geo.districtNameEn(),
+                geo.divisionNameBn(),
+                geo.divisionNameEn(),
                 farmer.getPreferredLanguage(),
                 null);
     }

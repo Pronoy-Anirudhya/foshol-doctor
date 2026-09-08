@@ -60,6 +60,7 @@ class AnalysisDetailQueryHandlerTest {
                 12,
                 null);
         when(reads.findByCaseId(CASE_ID)).thenReturn(Optional.of(view));
+        when(intake.officerSharesDistrict(CASE_ID, FARMER_A)).thenReturn(true);
         AnalysisDetailQueryHandler handler = new AnalysisDetailQueryHandler(reads, intake);
         assertThat(handler.handle(new AnalysisDetailQuery(CASE_ID, FARMER_A, Role.OFFICER)))
                 .contains(view);

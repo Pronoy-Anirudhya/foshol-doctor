@@ -13,6 +13,8 @@ public interface CaseIntakeApi {
 
     boolean isOwnedBy(UUID caseId, UUID farmerId);
 
+    boolean officerSharesDistrict(UUID caseId, UUID officerId);
+
     void recordTranscript(UUID caseId, String transcriptBn, BigDecimal asrConfidence);
 
     void recordFieldMetrics(

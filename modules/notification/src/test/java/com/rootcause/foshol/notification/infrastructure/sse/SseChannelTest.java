@@ -3,6 +3,7 @@ package com.rootcause.foshol.notification.infrastructure.sse;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.notification.NotifyFixtures;
 import com.rootcause.foshol.notification.domain.ChannelNames;
 import java.io.IOException;
@@ -25,7 +26,7 @@ class SseChannelTest {
         assertThat(channel.enabled()).isTrue();
         assertThat(channel.supports(NotifyFixtures.FARMER)).isFalse();
         CapturingEmitter emitter = new CapturingEmitter();
-        registry.attach(NotifyFixtures.FARMER, Role.FARMER, null, emitter);
+        registry.attach(NotifyFixtures.FARMER, Role.FARMER, null, null, emitter);
         assertThat(channel.supports(NotifyFixtures.FARMER)).isTrue();
         assertThat(channel.send(NotifyFixtures.advisoryNotification())).isTrue();
         assertThat(emitter.payloads).isNotEmpty();
@@ -38,7 +39,7 @@ class SseChannelTest {
         SseSubscriptionRegistry registry =
                 new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
         for (int i = 0; i < 6; i++) {
-            registry.subscribe(NotifyFixtures.FARMER, Role.FARMER, null, Duration.ofMinutes(30));
+            registry.subscribe(NotifyFixtures.FARMER, Role.FARMER, null, null, Duration.ofMinutes(30));
         }
         assertThat(registry.count(NotifyFixtures.FARMER)).isEqualTo(5);
     }
@@ -48,8 +49,21 @@ class SseChannelTest {
         SseSubscriptionRegistry registry =
                 new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
         CapturingEmitter emitter = new CapturingEmitter();
-        registry.attach(NotifyFixtures.FARMER, Role.FARMER, NotifyFixtures.ADVISORY.toString(), emitter);
+        registry.attach(NotifyFixtures.FARMER, Role.FARMER, null, NotifyFixtures.ADVISORY.toString(), emitter);
         assertThat(emitter.payloads.getFirst()).contains("resync");
+    }
+
+    @Test
+    void queueNudgeSkipsOtherDistrictOfficers() {
+        SseSubscriptionRegistry registry =
+                new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
+        CapturingEmitter dhaka = new CapturingEmitter();
+        CapturingEmitter chattogram = new CapturingEmitter();
+        registry.attach(NotifyFixtures.OFFICER, Role.OFFICER, "DHA", null, dhaka);
+        registry.attach(Uuid7.create(), Role.OFFICER, "CTG", null, chattogram);
+        registry.emitQueue(NotifyFixtures.CASE, "ANALYSED", NotifyFixtures.CORRELATION, "DHA");
+        assertThat(dhaka.payloads.toString()).contains("ANALYSED");
+        assertThat(chattogram.payloads).isEmpty();
     }
 
     static final class CapturingEmitter extends SseEmitter {

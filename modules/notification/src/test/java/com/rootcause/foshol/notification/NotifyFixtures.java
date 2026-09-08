@@ -28,7 +28,7 @@ public final class NotifyFixtures {
     private NotifyFixtures() {}
 
     public static FarmerView farmer() {
-        return new FarmerView(FARMER, "Farmer A", "DHK01", "bn");
+        return new FarmerView(FARMER, "Farmer A", "DHA", "bn", "DHK");
     }
 
     public static AdvisoryView advisoryView() {

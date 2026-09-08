@@ -4,6 +4,7 @@ import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.application.query.AdminStatsQuery;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ public class AdminStatsController {
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
-    public AdminStatsView stats() {
-        return queries.handle(new AdminStatsQuery());
+    public AdminStatsView stats(Authentication authentication) {
+        return queries.handle(new AdminStatsQuery(ReviewAuth.subjectId(authentication)));
     }
 }

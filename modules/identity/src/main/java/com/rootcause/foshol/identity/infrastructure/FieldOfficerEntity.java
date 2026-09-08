@@ -32,8 +32,11 @@ public class FieldOfficerEntity {
     @Column(name = "phone_enc", nullable = false)
     private byte[] phoneEnc;
 
-    @Column(name = "district_code", nullable = false, length = 8)
+    @Column(name = "district_code", nullable = false, length = 16)
     private String districtCode;
+
+    @Column(name = "division_code", nullable = false, length = 8)
+    private String divisionCode;
 
     @Column(nullable = false)
     private String role;
@@ -57,6 +60,7 @@ public class FieldOfficerEntity {
             String phoneHash,
             byte[] phoneEnc,
             String districtCode,
+            String divisionCode,
             String role,
             boolean active,
             Instant createdAt,
@@ -68,6 +72,7 @@ public class FieldOfficerEntity {
         this.phoneHash = phoneHash;
         this.phoneEnc = phoneEnc;
         this.districtCode = districtCode;
+        this.divisionCode = divisionCode;
         this.role = role;
         this.active = active;
         this.createdAt = createdAt;
@@ -92,6 +97,10 @@ public class FieldOfficerEntity {
 
     public String getDistrictCode() {
         return districtCode;
+    }
+
+    public String getDivisionCode() {
+        return divisionCode;
     }
 
     public String getRole() {

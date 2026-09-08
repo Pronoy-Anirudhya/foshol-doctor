@@ -54,7 +54,19 @@ export FOSHOL_JWT_SECRET FOSHOL_PHONE_KEY FOSHOL_DB_PASSWORD
 export FOSHOL_MINIO_ACCESS_KEY FOSHOL_MINIO_SECRET_KEY
 
 echo "starting postgres and minio"
-docker compose up -d postgres minio
+if ! docker compose up -d postgres minio; then
+  occupant="$(docker ps --filter publish=5434 --format '{{.Names}}' | head -n 1 || true)"
+  if [[ -z "${occupant}" ]]; then
+    occupant="$(docker ps --filter publish=5433 --format '{{.Names}}' | head -n 1 || true)"
+  fi
+  echo "Could not bind Postgres on the host." >&2
+  if [[ -n "${occupant}" ]]; then
+    echo "Port is already used by container: ${occupant}" >&2
+    echo "Stop it with:  docker stop ${occupant}" >&2
+    echo "Then re-run ${ROOT}/tools/start-stack.sh" >&2
+  fi
+  exit 1
+fi
 
 echo -n "waiting for postgres"
 for _ in $(seq 1 60); do
@@ -162,9 +174,10 @@ echo "  health  $(curl -sf "${BASE_URL}/actuator/health")"
 echo "  MinIO   http://127.0.0.1:9000  (console :9001)"
 echo "  profile ${PROFILES}"
 echo
-echo "farmer  +8801711111111  OTP 123456"
-echo "officer officer / password"
-echo "admin   admin / password"
+echo "farmer  +8801711111111  OTP 123456  (Dhaka / DHA)"
+echo "officer officer / password   (Dhaka; also officer-dha)"
+echo "admin   admin / password     (Dhaka; also admin-dha)"
+echo "other districts: officer-{code} / admin-{code}  (e.g. officer-ctg)"
 echo
 echo "in another terminal:  ${ROOT}/tools/call-api.sh"
 echo "follow logs:          tail -f ${APP_LOG}"

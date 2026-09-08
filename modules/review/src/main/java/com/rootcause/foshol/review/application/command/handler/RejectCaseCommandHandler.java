@@ -7,6 +7,7 @@ import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.review.api.RejectionView;
+import com.rootcause.foshol.review.application.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.CaseRejectionRepository;
@@ -44,6 +45,7 @@ public class RejectCaseCommandHandler implements CommandHandler<RejectCaseComman
     private final OfficerQueueProjectionPort queue;
     private final OfficerLookupApi officers;
     private final CaseIntakeApi cases;
+    private final ReviewDistrictGuard districtGuard;
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final Duration claimTtl;
@@ -55,6 +57,7 @@ public class RejectCaseCommandHandler implements CommandHandler<RejectCaseComman
             OfficerQueueProjectionPort queue,
             OfficerLookupApi officers,
             CaseIntakeApi cases,
+            ReviewDistrictGuard districtGuard,
             ApplicationEventPublisher events,
             Clock clock,
             @Value("${" + ConfigKeys.REVIEW_CLAIM_TTL + ":PT15M}") Duration claimTtl) {
@@ -64,6 +67,7 @@ public class RejectCaseCommandHandler implements CommandHandler<RejectCaseComman
         this.queue = queue;
         this.officers = officers;
         this.cases = cases;
+        this.districtGuard = districtGuard;
         this.events = events;
         this.clock = clock;
         this.claimTtl = claimTtl;
@@ -72,6 +76,7 @@ public class RejectCaseCommandHandler implements CommandHandler<RejectCaseComman
     @Transactional
     @Override
     public RejectionView handle(RejectCaseCommand command) {
+        districtGuard.requireTaskInCallerDistrict(command.officerId(), command.taskId());
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
         Instant now = clock.instant();
         task.requireLiveClaim(command.officerId(), now, claimTtl);

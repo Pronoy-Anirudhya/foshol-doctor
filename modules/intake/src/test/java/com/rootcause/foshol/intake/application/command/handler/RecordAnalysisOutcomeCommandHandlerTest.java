@@ -72,6 +72,7 @@ class RecordAnalysisOutcomeCommandHandlerTest {
                 null,
                 null,
                 "DHA",
+                "DHK",
                 "corr",
                 Instant.parse("2026-01-01T00:00:00Z"),
                 List.of(image),

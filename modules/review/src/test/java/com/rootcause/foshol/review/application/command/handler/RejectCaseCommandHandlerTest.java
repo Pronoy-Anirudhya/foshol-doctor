@@ -52,6 +52,9 @@ class RejectCaseCommandHandlerTest {
     @Mock
     private ApplicationEventPublisher events;
 
+    @Mock
+    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+
     @Test
     void writesRejectionAndNoAdvisory() {
         ReviewTask task = ReviewTask.createPending(
@@ -69,6 +72,7 @@ class RejectCaseCommandHandlerTest {
                 queue,
                 officers,
                 cases,
+                districtGuard,
                 events,
                 Clock.fixed(ReviewFixtures.T0.plusSeconds(1), ZoneOffset.UTC),
                 Duration.ofMinutes(15));

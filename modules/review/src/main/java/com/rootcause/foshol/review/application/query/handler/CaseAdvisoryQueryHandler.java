@@ -55,6 +55,13 @@ public class CaseAdvisoryQueryHandler implements QueryHandler<CaseAdvisoryQuery,
         if (query.actor().role() == Role.FARMER && !cases.isOwnedBy(query.caseId(), query.actor().id())) {
             throw new ReviewException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case not found.");
         }
+        if (query.actor().role() == Role.OFFICER || query.actor().role() == Role.ADMIN) {
+            String caseDistrict = cases.findById(query.caseId()).map(c -> c.districtCode()).orElse(null);
+            String callerDistrict = officers.findById(query.actor().id()).map(o -> o.districtCode()).orElse(null);
+            if (caseDistrict == null || !caseDistrict.equals(callerDistrict)) {
+                throw new ReviewException(ErrorCodes.ERR_CASE_NOT_FOUND, 404, "Case not found.");
+            }
+        }
         List<AdvisoryView> history = advisories.findHistoryByCaseId(query.caseId()).stream()
                 .map(this::toView)
                 .toList();

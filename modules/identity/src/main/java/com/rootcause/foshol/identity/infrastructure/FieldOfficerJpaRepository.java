@@ -10,7 +10,7 @@ public interface FieldOfficerJpaRepository extends JpaRepository<FieldOfficerEnt
 
     Optional<FieldOfficerEntity> findByUsername(String username);
 
-    @Query("select o.id as id, o.name as name, o.username as username, o.districtCode as districtCode, o.role as role from FieldOfficerEntity o where o.id = :id")
+    @Query("select o.id as id, o.name as name, o.username as username, o.districtCode as districtCode, o.divisionCode as divisionCode, o.role as role from FieldOfficerEntity o where o.id = :id")
     Optional<OfficerReadRow> findReadById(UUID id);
 
     List<FieldOfficerEntity> findByDistrictCodeAndActiveTrueOrderByNameAsc(String districtCode);

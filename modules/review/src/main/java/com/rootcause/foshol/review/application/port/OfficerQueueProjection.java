@@ -14,6 +14,7 @@ public record OfficerQueueProjection(
         String cropCode,
         String cropNameBn,
         String districtCode,
+        String divisionCode,
         DecisionPath decisionPath,
         UUID topDiseaseId,
         String topDiseaseNameBn,

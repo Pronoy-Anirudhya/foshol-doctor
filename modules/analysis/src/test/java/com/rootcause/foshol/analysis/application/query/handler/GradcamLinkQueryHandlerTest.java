@@ -44,23 +44,31 @@ class GradcamLinkQueryHandlerTest {
     @Mock
     private ObjectStorePort objectStore;
 
+    private GradcamLinkQueryHandler handler() {
+        return new GradcamLinkQueryHandler(reads, objectStore, intake, settings());
+    }
+
+    private void stubSameDistrict() {
+        when(intake.officerSharesDistrict(CASE_ID, CALLER)).thenReturn(true);
+    }
+
     @Test
     void missingOverlayIsEmpty() {
+        stubSameDistrict();
         when(reads.findGradcamObjectKey(CASE_ID)).thenReturn(Optional.empty());
-        GradcamLinkQueryHandler handler = new GradcamLinkQueryHandler(reads, objectStore, intake, settings());
-        assertThat(handler.handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER))).isEmpty();
+        assertThat(handler().handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER))).isEmpty();
     }
 
     @Test
     void returnsPresignedUrl() {
+        stubSameDistrict();
         when(reads.findGradcamObjectKey(CASE_ID))
                 .thenReturn(Optional.of("cases/x/gradcam/" + IMAGE_ID + ".png"));
         when(reads.findPrimaryGradcamImageId(CASE_ID)).thenReturn(Optional.of(IMAGE_ID));
         Instant expires = Instant.parse("2026-09-07T11:00:00Z");
         when(objectStore.presign(any(), eq(Duration.ofMinutes(10))))
                 .thenReturn(new PresignedUrl("http://minio/overlay", expires));
-        GradcamLinkQueryHandler handler = new GradcamLinkQueryHandler(reads, objectStore, intake, settings());
-        Optional<GradcamLink> link = handler.handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER));
+        Optional<GradcamLink> link = handler().handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER));
         assertThat(link).isPresent();
         assertThat(link.get().url()).isEqualTo("http://minio/overlay");
         assertThat(link.get().imageId()).isEqualTo(IMAGE_ID);
@@ -69,10 +77,10 @@ class GradcamLinkQueryHandlerTest {
 
     @Test
     void storageFailureIs503() {
+        stubSameDistrict();
         when(reads.findGradcamObjectKey(CASE_ID)).thenReturn(Optional.of("cases/x/gradcam/" + IMAGE_ID + ".png"));
         when(objectStore.presign(any(), any())).thenThrow(new IllegalStateException("down"));
-        GradcamLinkQueryHandler handler = new GradcamLinkQueryHandler(reads, objectStore, intake, settings());
-        assertThatThrownBy(() -> handler.handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER)))
+        assertThatThrownBy(() -> handler().handle(new GradcamLinkQuery(CASE_ID, CALLER, Role.OFFICER)))
                 .isInstanceOf(AnalysisException.class)
                 .extracting(ex -> ((AnalysisException) ex).errorCode())
                 .isEqualTo(ErrorCodes.ERR_STORAGE_UNAVAILABLE);

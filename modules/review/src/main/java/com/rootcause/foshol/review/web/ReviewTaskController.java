@@ -43,8 +43,8 @@ public class ReviewTaskController {
     }
 
     @GetMapping("/{taskId}")
-    public ReviewTaskDetailView get(@PathVariable UUID taskId) {
-        return queries.handle(new ReviewTaskDetailQuery(taskId));
+    public ReviewTaskDetailView get(@PathVariable UUID taskId, Authentication authentication) {
+        return queries.handle(new ReviewTaskDetailQuery(taskId, ReviewAuth.subjectId(authentication)));
     }
 
     @PostMapping("/{taskId}/claim")

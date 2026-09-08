@@ -204,15 +204,15 @@ class AnalysisIntegrationTest {
         jdbc.update("delete from symptom where id = ?", SYMPTOM);
         jdbc.update(
                 """
-                insert into farmer (id, name, phone_hash, phone_enc, district_code, preferred_language)
-                values (?, 'IT Farmer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ?, 'BD-13', 'bn')
+                insert into farmer (id, name, phone_hash, phone_enc, district_code, division_code, preferred_language)
+                values (?, 'IT Farmer', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ?, 'DHA', 'DHK', 'bn')
                 """,
                 FARMER,
                 new byte[] {0});
         jdbc.update(
                 """
-                insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, correlation_id)
-                values (?, ?, ?, 'SUBMITTED', 'BD-13', 'corr-it')
+                insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, division_code, correlation_id)
+                values (?, ?, ?, 'SUBMITTED', 'DHA', 'DHK', 'corr-it')
                 """,
                 CASE_ID,
                 FARMER,
@@ -309,7 +309,8 @@ class AnalysisIntegrationTest {
                 FARMER,
                 CROP,
                 "rice",
-                "BD-13",
+                "DHA",
+                "DHK",
                 CaseStatus.SUBMITTED,
                 null,
                 null,

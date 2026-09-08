@@ -61,7 +61,7 @@ code, not just on a slide.
 | Web Push (VAPID + service worker) | HTTPS and permission friction on the demo machine; SSE carries the demo beat | `WebPushChannel` ships as a real registered `NotificationChannel` behind a disabled flag |
 | SMS / USSD channel | Out of scope in the plan; kept as extensibility proof | `SmsChannel` ships as a real registered `NotificationChannel` behind a disabled flag |
 | Confidence calibration | Needs a calibration set we will not have in time | `foshol.analysis.confidence.temperature` exists and defaults to `1.0` |
-| District-based officer routing | One officer in the demo; a shared claim pool is simpler and safer | `field_officer.district_code` and `OfficerLookupApi.findActiveByDistrict` exist and are unused |
+| District-based officer routing | **In scope.** Officers and per-district admins see only their own district. Geography is identity-owned (`geo_division` / `geo_district`); cases snapshot the farmer's codes. There is no national admin. | `REVIEW-FR-048`; `FarmerView.divisionCode`; queue and SSE filter by `district_code` |
 | Cloud deployment | The live sidecar-kill demo is far more reliable on a local machine. **Local now means HTTPS on the LAN, not plain `http://localhost`** — see `COMMON-SEC-018` | `docker-compose.yml` is the only deployment artefact |
 | Offline / on-device inference | Out of scope in the plan | `VisionModelPort` is an interface; today's adapter is HTTP |
 | Marketplace, weather alerts, outbreak analytics, multi-district scaling | Out of scope in the plan | Not represented in code |
@@ -1016,22 +1016,23 @@ public interface FarmerLookupApi {
     Optional<FarmerView> findById(UUID farmerId);
     Optional<FarmerView> findByPhone(String e164Phone);
 }
-public record FarmerView(UUID id, String name, String districtCode, String preferredLanguage) {}
+public record FarmerView(UUID id, String name, String districtCode, String preferredLanguage, String divisionCode) {}
 
 public interface OfficerLookupApi {
     Optional<OfficerView> findById(UUID officerId);
     List<OfficerView> findActiveByDistrict(String districtCode);
 }
-public record OfficerView(UUID id, String name, String districtCode, String role, boolean active) {}
+public record OfficerView(UUID id, String name, String districtCode, String role, boolean active, String divisionCode) {}
 
 // ── com.rootcause.foshol.intake.api ───────────────────────────────────────────
 public interface CaseIntakeApi {
     Optional<CaseSummary> findById(UUID caseId);
     boolean isOwnedBy(UUID caseId, UUID farmerId);
+    boolean officerSharesDistrict(UUID caseId, UUID officerId);
     void recordTranscript(UUID caseId, String transcriptBn, BigDecimal asrConfidence);
 }
 public record CaseSummary(UUID caseId, UUID farmerId, UUID cropId, String cropCode,
-                          String districtCode, CaseStatus status, DecisionPath decisionPath,
+                          String districtCode, String divisionCode, CaseStatus status, DecisionPath decisionPath,
                           String noteBn, UUID parentCaseId, List<CaseImageRef> images,
                           CaseAudioRef audio, String correlationId, Instant submittedAt) {}
 public record CaseImageRef(UUID imageId, String objectKey, String derivativeObjectKey,
@@ -1167,7 +1168,7 @@ Records below are shown with their field lists; their package is `common.events`
 ```java
 // publisher: intake  ·  package: com.rootcause.foshol.common.events
 public record CaseSubmitted(UUID caseId, UUID farmerId, UUID cropId, String cropCode,
-                            String districtCode, List<CaseImageRef> images, CaseAudioRef audio,
+                            String districtCode, String divisionCode, List<CaseImageRef> images, CaseAudioRef audio,
                             String noteBn, UUID parentCaseId,
                             String correlationId, Instant occurredAt) {}
 

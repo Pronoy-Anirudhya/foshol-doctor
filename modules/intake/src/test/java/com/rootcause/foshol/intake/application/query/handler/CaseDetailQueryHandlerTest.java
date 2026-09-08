@@ -28,12 +28,15 @@ class CaseDetailQueryHandlerTest {
     @Mock
     private CaseQueryPort queries;
 
+    @Mock
+    private com.rootcause.foshol.intake.application.StaffRegionAccess staffRegion;
+
     @Test
     void hidesAnotherFarmersCase() {
         UUID caseId = UUID.randomUUID();
         UUID owner = UUID.randomUUID();
         when(queries.findFarmerId(caseId)).thenReturn(Optional.of(owner));
-        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries);
+        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries, staffRegion);
         assertThatThrownBy(() -> handler.handle(new CaseDetailQuery(caseId, UUID.randomUUID(), Role.FARMER)))
                 .isInstanceOf(IntakeException.class)
                 .extracting(ex -> ((IntakeException) ex).errorCode())
@@ -61,7 +64,9 @@ class CaseDetailQueryHandlerTest {
                 com.rootcause.foshol.common.MetricsSource.FORM);
         when(queries.findFarmerId(caseId)).thenReturn(Optional.of(UUID.randomUUID()));
         when(queries.findDetail(caseId)).thenReturn(Optional.of(view));
-        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries);
+        when(staffRegion.allows(org.mockito.ArgumentMatchers.eq(Role.OFFICER), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(caseId)))
+                .thenReturn(true);
+        CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries, staffRegion);
         assertThat(handler.handle(new CaseDetailQuery(caseId, UUID.randomUUID(), Role.OFFICER))).isEqualTo(view);
     }
 }

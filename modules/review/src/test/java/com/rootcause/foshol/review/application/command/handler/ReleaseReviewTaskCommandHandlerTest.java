@@ -2,6 +2,7 @@ package com.rootcause.foshol.review.application.command.handler;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +43,7 @@ class ReleaseReviewTaskCommandHandlerTest {
         when(tasks.findById(task.id())).thenReturn(Optional.of(task));
         when(tasks.save(any())).thenAnswer(inv -> inv.getArgument(0));
         ReleaseReviewTaskCommandHandler handler =
-                new ReleaseReviewTaskCommandHandler(tasks, queue, Clock.fixed(t0.plusSeconds(1), ZoneOffset.UTC), Duration.ofMinutes(15));
+                new ReleaseReviewTaskCommandHandler(tasks, queue, mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class), Clock.fixed(t0.plusSeconds(1), ZoneOffset.UTC), Duration.ofMinutes(15));
         handler.handle(new ReleaseReviewTaskCommand(task.id(), officer));
         verify(queue).updateState(eq(task.caseId()), eq(ReviewState.PENDING), eq(null), any());
     }
