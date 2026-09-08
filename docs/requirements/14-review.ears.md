@@ -79,7 +79,7 @@ KnowledgeQueryApi .findDiseaseById(UUID diseaseId) -> Optional<DiseaseView>   //
 KnowledgeQueryApi .listActiveRemedies(UUID diseaseId) -> List<RemedyView>
 KnowledgeQueryApi .listSymptoms() -> List<SymptomRefView>
 OfficerLookupApi  .findById(UUID officerId) -> Optional<OfficerView>     // identity.api
-OfficerLookupApi  .findActiveByDistrict(String districtCode) -> List<OfficerView>  // [DEFERRED] seam, REVIEW-FR-048
+OfficerLookupApi  .findActiveByDistrict(String districtCode) -> List<OfficerView>  // identity.api
 FarmerLookupApi   .findById(UUID farmerId) -> Optional<FarmerView>       // identity.api, REVIEW-NFR-002
 ```
 
@@ -366,6 +366,37 @@ farmer's wait, not to the officer's attempts.)*
 
 `REVIEW-UX-001` **THE review module SHALL expose `sla_due_at` and `requeue_count` on every queue row
 and task detail response**, so the officer console can mark an overdue or repeatedly-abandoned case.
+
+`REVIEW-FR-090` **THE review module SHALL compute `assignment_due_at` at task creation as working time
+from `foshol.review.kpi.assignment-sla`, `work-start`, `work-end`, `work-days` and `zone`.** The
+assignment clock starts when the review task becomes `PENDING`.
+
+`REVIEW-FR-091` **WHEN an officer first claims a task in an assignment window, THE review module SHALL
+set `resolution_due_at` to working time `foshol.review.kpi.resolution-sla` after that claim and SHALL
+NOT change it on holder re-claim or same-district transfer.**
+
+`REVIEW-FR-092` **WHEN a live claim is released or TTL-swept, THE review module SHALL open a new
+assignment window from now and SHALL cancel an unbreached resolution KPI.** A resolution KPI already
+overdue remains recorded.
+
+`REVIEW-FR-093` **THE review module SHALL persist one `kpi_breach` row per `(review_task_id, kind,
+window_started_at)`.** Assignment breaches have no officer; resolution breaches record the holder.
+
+`REVIEW-FR-094` **THE review module SHALL publish `KpiWarningIssued` once per claim window when now is
+within `foshol.review.kpi.warn-before` of `resolution_due_at`.**
+
+`REVIEW-FR-095` **THE review module SHALL expose district-scoped `GET /api/v1/admin/kpis` and
+`GET /api/v1/admin/kpis/breaches`, and `GET /api/v1/review/kpi-warnings` for the caller.**
+
+`REVIEW-FR-096` **WHEN an officer holding a live claim transfers a task, THE review module SHALL move
+the claim to an active same-district `OFFICER`, keep `resolution_due_at`, refresh `claimed_at`, and
+publish `ReviewTaskTransferred`.**
+
+`REVIEW-FR-097` **THE review module SHALL expose `GET /api/v1/review/officers` from
+`OfficerLookupApi.findActiveByDistrict`, excluding the caller.**
+
+`REVIEW-FR-098` **THE review module SHALL accept bulk transfer, approve and reject (cap
+`foshol.review.bulk.max-size`) with per-item success or failure in one response.**
 
 ### 4.5 The four officer actions
 
@@ -903,6 +934,10 @@ with the §6.2 signatures compiling (stub bodies are sufficient); and the error-
    on the repository interfaces.
 5. `/admin/stats` returns four numbers and two thresholds against the `demo` seed data, and the
    agreement rate is not null.
+
+`REVIEW-FR-090` … `REVIEW-FR-098` (working-hours assignment/resolution KPIs, district KPI dashboard,
+same-district transfer, bulk transfer/approve/reject) are specified in the Day-N additive contract
+and implemented in `V108` and the review/notification modules.
 
 ---
 

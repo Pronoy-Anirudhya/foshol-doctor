@@ -305,8 +305,8 @@ events whose `farmerId` equals that subject's id.** *(Per-subject filtering. A f
 another farmer's case id, disease or officer name.)*
 
 `NOTIFY-SEC-002` **WHILE an `OFFICER` or `ADMIN` subject is connected, THE notification module SHALL
-emit only queue events (`NOTIFY-FR-033`) and SHALL NOT emit any farmer-addressed advisory
-notification.**
+emit only `queue` events (`NOTIFY-FR-033`) and `kpi` events (`NOTIFY-FR-056`), and SHALL NOT emit any
+farmer-addressed advisory notification.**
 
 `NOTIFY-FR-032` **THE notification module SHALL emit an event named `advisory` to a farmer subject
 for every notification whose type is `ADVISORY_PUBLISHED`, `ADVISORY_REVISED` or `CASE_REJECTED`, and
@@ -325,8 +325,8 @@ refetches `GET /api/v1/review/queue`, which is the single ordered source of trut
 `REVIEW-FR-030`.)*
 
 `NOTIFY-FR-034` **THE notification module SHALL NOT persist a `notification` row for a `queue`
-event.** *(`notification.farmer_id` is `NOT NULL`; an officer nudge has no farmer recipient. Officer
-queue events are transient by design.)*
+or `kpi` event.** *(`notification.farmer_id` is `NOT NULL`; an officer nudge has no farmer recipient.
+Officer live events are transient by design.)*
 
 `NOTIFY-FR-035` **WHILE an SSE connection is open, THE notification module SHALL emit a comment-only
 heartbeat frame every `foshol.channels.sse.heartbeat`.** *(Keeps intermediaries from closing an idle
@@ -410,6 +410,14 @@ true, THEN the corresponding channel SHALL continue to return false from `suppor
 SHALL log one `WARN` at startup stating that the channel has no transport configured.**
 *(Flipping a flag must not silently swallow a farmer's advisory by claiming a delivery that never
 happened.)*
+
+`NOTIFY-FR-056` **WHEN the notification module consumes `KpiWarningIssued`, THE notification module
+SHALL emit an event named `kpi` to the assigned officer's open SSE subscriptions only**, carrying
+`{ caseId, reviewTaskId, kind: RESOLUTION_WARN, dueAt, correlationId }`, and SHALL NOT write a
+`notification` row.
+
+`NOTIFY-FR-057` **WHEN the notification module consumes `ReviewTaskTransferred`, THE notification
+module SHALL emit a `queue` event to connected officers and admins in that district.**
 
 **These two classes are not stubs to be filled in later, and must not be described that way in a
 comment, a log line or a progress note.** They are the shipped, permanent behaviour of a disabled

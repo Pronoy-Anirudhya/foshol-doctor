@@ -370,8 +370,7 @@ historical advisory can still render its author's name.
 
 `IDENTITY-API-004` **THE identity module SHALL implement `OfficerLookupApi.findActiveByDistrict` to
 return every `field_officer` row with the given `district_code` and `active = true`, ordered by
-`name`.** `[DEFERRED]` — no caller invokes it in this scope; it is the district-routing seam recorded
-in `00-common` §1.2 and it is implemented and unit-tested so the seam is real.
+`name`.** Used by the officer transfer colleague list (`REVIEW-FR-097`).
 
 `IDENTITY-API-005` **THE identity module SHALL NOT include a phone number in `FarmerView` or
 `OfficerView`.** (The frozen records carry none; this requirement exists so no agent proposes adding
