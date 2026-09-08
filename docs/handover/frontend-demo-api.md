@@ -608,24 +608,39 @@ within about a second.
 
 ## 9. Admin APIs
 
-Exactly one product screen: read-only stats (`WEB-FR-300`). CRUD is `[DEFERRED]`.
+Admin dashboard: existing stats strip plus month/year/lifetime counts, rejection rate, KPI failure
+tiles from `/admin/kpis`, a district case list, and bulk reject. Knowledge CRUD is `[DEFERRED]`.
 
-`GET /api/v1/admin/stats` — role **ADMIN** only. **200**:
+`GET /api/v1/admin/stats` — role **ADMIN** only. **200** (Java field names on the wire):
 
 ```json
 {
   "casesToday": 1,
+  "casesThisMonth": 4,
+  "casesThisYear": 12,
+  "casesLifetime": 12,
   "approvalRate": 1.0,
-  "medianReviewSeconds": 42,
-  "modelOfficerAgreementRate": 1.0,
-  "advisoriesPublished": 1,
-  "casesRejected": 0,
-  "pathCounts": { "PRIMARY": 1, "SECONDARY": 0, "UNDETERMINED": 0 },
-  "thresholds": { "high": 0.75, "low": 0.45 }
+  "medianReviewMinutes": 0.7,
+  "agreementRate": 1.0,
+  "agreementSampleSize": 1,
+  "rejectionRate": null,
+  "confidenceHigh": 0.75,
+  "confidenceLow": 0.45
 }
 ```
 
-**403** for farmer/officer. Admin may also use the officer console (same JWT, `role=ADMIN`).
+Assignment and resolution KPI failure counts: `GET /api/v1/admin/kpis` (`assignmentFailures`,
+`resolutionFailures`). Do not recompute on the client.
+
+`GET /api/v1/admin/cases` — role **ADMIN** only. Query: `period` (`TODAY`|`MONTH`|`YEAR`|`LIFETIME`,
+default `LIFETIME`), `state` (`PENDING`|`CLAIMED`|`DONE`|`REJECTED`|`ALL`, default `ALL`), `kpi`
+(`ASSIGNMENT`|`RESOLUTION`), `officerId`, `cropCode`, `decisionPath`, `resubmission`, `page`, `size`.
+**200** `PageOfOfficerQueueRow`, newest `submittedAt` first, caller's district only.
+
+`POST /api/v1/review/tasks/bulk-reject` — shared `{ reasonCode, messageBn, items: [{ taskId }] }`.
+The admin types the Bangla message; the API does not supply default rejection text.
+
+**403** for farmer/officer on admin GETs. Admin may also use the officer console (same JWT, `role=ADMIN`).
 
 ---
 
@@ -783,6 +798,7 @@ Without the sidecar, a UI case is `UNDETERMINED` and still reaches the officer q
 | GET | `/api/v1/admin/stats` | — | — | yes | admin beat |
 | GET | `/api/v1/admin/kpis` | — | — | yes | KPI dashboard |
 | GET | `/api/v1/admin/kpis/breaches` | — | — | yes | KPI drill-down |
+| GET | `/api/v1/admin/cases` | — | — | yes | district case list |
 | GET | `/api/v1/stream` | yes | yes | yes | yes |
 
 ---

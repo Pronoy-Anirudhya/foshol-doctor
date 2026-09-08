@@ -4,6 +4,7 @@ import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.identity.application.query.MeQuery;
 import com.rootcause.foshol.identity.application.query.MeView;
 import java.util.UUID;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ public class MeController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public MeView me(Authentication authentication) {
         String role = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

@@ -1,8 +1,10 @@
 package com.rootcause.foshol.review.application.port;
 
+import com.rootcause.foshol.review.application.query.AdminCaseListCriteria;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -16,9 +18,13 @@ public interface ReviewQueryPort {
 
     AdminStatsView loadStats(
             Instant dayStartUtc,
-            java.math.BigDecimal confidenceHigh,
-            java.math.BigDecimal confidenceLow,
+            Instant monthStartUtc,
+            Instant yearStartUtc,
+            BigDecimal confidenceHigh,
+            BigDecimal confidenceLow,
             String districtCode);
+
+    OfficerQueuePage findAdminCases(AdminCaseListCriteria criteria);
 
     List<com.rootcause.foshol.review.application.query.KpiWarningView> findOpenResolutionWarnings(
             UUID officerId, Instant now, java.time.Duration warnBefore);

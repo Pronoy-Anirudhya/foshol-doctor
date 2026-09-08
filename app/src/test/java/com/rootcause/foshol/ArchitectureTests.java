@@ -8,6 +8,8 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaField;
+import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -21,6 +23,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.springframework.core.env.Environment;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @AnalyzeClasses(packages = "com.rootcause.foshol", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTests {
@@ -121,11 +126,42 @@ class ArchitectureTests {
             .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule restControllersDeclareRoleChecks = classes()
+            .that()
+            .areAnnotatedWith(RestController.class)
+            .and()
+            .doNotHaveSimpleName("AuthController")
+            .should(beSecuredByPreAuthorize())
+            .because("every product API must declare RBAC; AuthController is the public login surface");
+
+    @ArchTest
     static final ArchRule noGetPropertyOutsideCommon = noClasses()
             .that()
             .resideOutsideOfPackage("..foshol.common..")
             .should()
             .callMethod(Environment.class, "getProperty", String.class);
+
+    private static ArchCondition<JavaClass> beSecuredByPreAuthorize() {
+        return new ArchCondition<JavaClass>("be annotated with @PreAuthorize or annotate every mapped method") {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                if (item.isAnnotatedWith(PreAuthorize.class)) {
+                    return;
+                }
+                for (JavaMethod method : item.getMethods()) {
+                    if (!method.getModifiers().contains(JavaModifier.PUBLIC)
+                            || !method.isMetaAnnotatedWith(RequestMapping.class)) {
+                        continue;
+                    }
+                    if (!method.isAnnotatedWith(PreAuthorize.class)) {
+                        events.add(SimpleConditionEvent.violated(
+                                method,
+                                method.getFullName() + " is a mapped controller method without @PreAuthorize"));
+                    }
+                }
+            }
+        };
+    }
 
     private static DescribedPredicate<JavaClass> namedCommandQueryViewOrEvent() {
         return new DescribedPredicate<JavaClass>("named Command, Query, Request, Response, View or Event") {

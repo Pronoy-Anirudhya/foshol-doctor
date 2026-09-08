@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/review")
+@PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
 public class ReviewQueueController {
 
     private final QueryBus queries;
@@ -26,7 +27,6 @@ public class ReviewQueueController {
     }
 
     @GetMapping("/queue")
-    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
     public OfficerQueuePage queue(
             @RequestParam(name = "state", required = false) String state,
             @RequestParam(name = "mine", required = false, defaultValue = "false") boolean mine,
@@ -40,13 +40,11 @@ public class ReviewQueueController {
     }
 
     @GetMapping("/officers")
-    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
     public List<ColleagueOfficerView> officers(Authentication authentication) {
         return queries.handle(new ListDistrictOfficersQuery(ReviewAuth.subjectId(authentication)));
     }
 
     @GetMapping("/kpi-warnings")
-    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
     public List<KpiWarningView> kpiWarnings(Authentication authentication) {
         return queries.handle(new KpiWarningsQuery(ReviewAuth.subjectId(authentication)));
     }

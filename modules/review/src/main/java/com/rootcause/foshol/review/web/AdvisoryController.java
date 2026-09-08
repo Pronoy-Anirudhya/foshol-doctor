@@ -32,7 +32,7 @@ public class AdvisoryController {
     }
 
     @GetMapping("/api/v1/cases/{caseId}/advisory")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public Object getCaseAdvisory(@PathVariable UUID caseId, Authentication authentication) {
         CaseAdvisoryResult result = queries.handle(new CaseAdvisoryQuery(caseId, Actors.from(authentication)));
         if (result.published() != null) {
@@ -42,7 +42,7 @@ public class AdvisoryController {
     }
 
     @GetMapping("/api/v1/cases/{caseId}/advisories")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public List<AdvisoryView> history(@PathVariable UUID caseId, Authentication authentication) {
         CaseAdvisoryResult result = queries.handle(new CaseAdvisoryQuery(caseId, Actors.from(authentication)));
         return result.history();

@@ -10,7 +10,7 @@ import com.rootcause.foshol.common.cqrs.QueryHandler;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.ZoneId;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +54,10 @@ public class AdminStatsQueryHandler implements QueryHandler<AdminStatsQuery, Adm
                 .findById(query.callerId())
                 .map(o -> o.districtCode())
                 .orElseThrow(ReviewException::taskNotFound);
-        var start = LocalDate.now(clock.withZone(displayZone)).atStartOfDay(displayZone).toInstant();
-        return reads.loadStats(start, confidenceHigh, confidenceLow, district);
+        var zoned = clock.instant().atZone(displayZone);
+        Instant dayStart = zoned.toLocalDate().atStartOfDay(displayZone).toInstant();
+        Instant monthStart = zoned.toLocalDate().withDayOfMonth(1).atStartOfDay(displayZone).toInstant();
+        Instant yearStart = zoned.toLocalDate().withDayOfYear(1).atStartOfDay(displayZone).toInstant();
+        return reads.loadStats(dayStart, monthStart, yearStart, confidenceHigh, confidenceLow, district);
     }
 }

@@ -2,6 +2,7 @@ package com.rootcause.foshol.identity.infrastructure;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,9 +21,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final SecurityProblemWriter problems;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, SecurityProblemWriter problems) {
         this.jwtService = jwtService;
+        this.problems = problems;
     }
 
     @Override
@@ -33,16 +36,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (!header.startsWith("Bearer ")) {
+        try {
+            String token = bearerToken(header);
+            DecodedJWT jwt = jwtService.verify(token);
+            Role role = parseRole(jwt.getClaim("role").asString());
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    jwt.getSubject(), jwt, List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+        } catch (IdentityException ex) {
+            SecurityContextHolder.clearContext();
+            problems.write(response, ex.status(), ex.errorCode(), ex.getMessage(), request);
+        }
+    }
+
+    private static String bearerToken(String header) {
+        String trimmed = header.trim();
+        if (trimmed.length() < 7 || !trimmed.regionMatches(true, 0, "Bearer ", 0, 7)) {
             throw new IdentityException(ErrorCodes.ERR_TOKEN_INVALID, 401, "The token is not valid.");
         }
-        DecodedJWT jwt = jwtService.verify(header.substring("Bearer ".length()).trim());
-        String role = jwt.getClaim("role").asString();
-        var authentication = new UsernamePasswordAuthenticationToken(
-                jwt.getSubject(),
-                jwt,
-                List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        filterChain.doFilter(request, response);
+        String token = trimmed.substring(7).trim();
+        if (token.isEmpty()) {
+            throw new IdentityException(ErrorCodes.ERR_TOKEN_INVALID, 401, "The token is not valid.");
+        }
+        return token;
+    }
+
+    private static Role parseRole(String claim) {
+        if (claim == null || claim.isBlank()) {
+            throw new IdentityException(ErrorCodes.ERR_TOKEN_INVALID, 401, "The token is not valid.");
+        }
+        try {
+            return Role.valueOf(claim);
+        } catch (IllegalArgumentException ex) {
+            throw new IdentityException(ErrorCodes.ERR_TOKEN_INVALID, 401, "The token is not valid.");
+        }
     }
 }

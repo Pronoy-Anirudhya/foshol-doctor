@@ -16,7 +16,8 @@ present.** Do not guess a version.
 ## 1. Scope
 
 One Angular single-page application serving **three surfaces** from one bundle: the **farmer** app,
-the **officer console**, and a **read-only admin stats page**. It renders state the backend produced,
+the **officer console**, and an **admin dashboard** (stats strip, district case list, bulk reject).
+It renders state the backend produced,
 captures farmer input, and makes the two-threshold routing and the human approval step *visible*.
 
 ### 1.1 This module owns
@@ -136,7 +137,7 @@ exposing `readonly` signals and `computed` derivations; mutation happens only th
 | `QueueStore` | `rows[]`, `page`, `total`, `loading`, `staleSince` | rows held in server order, never re-sorted client-side (`REVIEW-FR-030`) |
 | `CaseReviewStore` | `analysis`, `candidates[]`, `symptoms[]`, `remedyDraft`, `claim` | `remedyDraft` is never discarded by a background refresh |
 | `SseStore` | `connectionState`, `retryAttempt`, `lastEventId` | `connectionState ∈ {CONNECTING, OPEN, RETRYING, CLOSED}` |
-| `StatsStore` | `casesToday`, `approvalRate`, `medianReviewMs`, `agreementRate`, `thresholdHigh`, `thresholdLow` | read-only; no setter exposed |
+| `StatsStore` | `casesToday`, `casesThisMonth`, `casesThisYear`, `casesLifetime`, `approvalRate`, `medianReviewMs`, `agreementRate`, `rejectionRate`, `thresholdHigh`, `thresholdLow` | read-only; no setter exposed |
 
 `WEB-DATA-002` **THE frontend SHALL expose every store signal as `readonly`, SHALL mutate state only
 through a method on the owning store, and SHALL derive with `computed()` every value that can be
@@ -633,9 +634,10 @@ it can no longer be submitted.**
 `WEB-FR-244` **IF an action is attempted on a case whose claim has expired, THEN THE frontend SHALL
 surface the server's `409` per `WEB-FR-235` and SHALL NOT retry automatically.**
 
-### 4.6 Admin surface — read-only stats page
+### 4.6 Admin surface — stats strip, district case list, bulk reject
 
-`WEB-FR-300` **THE admin surface SHALL consist of exactly one read-only stats page.**
+`WEB-FR-300` **THE admin surface SHALL consist of a stats strip, a district case list, and bulk
+reject of selected cases.** Knowledge CRUD remains `[DEFERRED]` (`WEB-FR-900` … `WEB-FR-904`).
 
 `WEB-FR-301` **THE stats page SHALL display cases today, approval rate, median review time and
 model-vs-officer agreement rate**, sourced from the admin stats endpoint (`REVIEW-FR-070`).
@@ -645,13 +647,31 @@ model-vs-officer agreement rate**, sourced from the admin stats endpoint (`REVIE
 clarification 20: the two-threshold story is on screen without an editable control that would need
 write endpoints nobody is building.)*
 
-`WEB-FR-303` **THE stats page SHALL contain no control that writes to the server.**
+`WEB-FR-303` **THE admin surface SHALL issue writes only through bulk reject of selected district
+cases** (`REVIEW-FR-103`, `REVIEW-FR-104`). Thresholds and stats remain read-only.
 
 `WEB-FR-304` **THE stats page SHALL display the timestamp of the data shown and SHALL offer a manual
 refresh.**
 
 `WEB-FR-305` **IF the stats request fails, THEN THE stats page SHALL display the error and the last
 successfully loaded values under a stale marker.**
+
+`WEB-FR-306` **THE stats strip SHALL display cases this month, this year and lifetime, and the
+rejection rate**, sourced from `GET /api/v1/admin/stats` (`REVIEW-FR-099`, `REVIEW-FR-100`). A null
+rate SHALL render as `—`.
+
+`WEB-FR-307` **THE stats strip SHALL display failed assignment KPI count and failed resolution KPI
+count**, sourced from `GET /api/v1/admin/kpis` (`REVIEW-FR-095`). Those numbers SHALL NOT be
+recomputed on the client.
+
+`WEB-FR-308` **THE admin surface SHALL list cases for the caller's district via
+`GET /api/v1/admin/cases`**, with curated filters `period`, `state`, `kpi`, `officerId`, `cropCode`,
+`decisionPath` and `resubmission` (`REVIEW-FR-101`). The table SHALL NOT re-sort rows client-side.
+
+`WEB-FR-309` **WHEN the admin selects one or more list rows and confirms bulk reject, THE frontend
+SHALL call `POST /api/v1/review/tasks/bulk-reject` with one shared `reasonCode` and `messageBn`
+supplied by the admin**, SHALL NOT invent Bangla rejection text (`COMMON-CON-003`), and SHALL show
+per-item success and failure from the response.
 
 #### `[DEFERRED]` — admin CRUD screens
 
@@ -826,6 +846,9 @@ exception is the SSE stream, which is not an OpenAPI operation (`WEB-FR-350`).
 | Approve · edit · replace · reject | `POST /api/v1/review/tasks/{id}/…` | `OFFICER` | `14-review` |
 | Remedies for a disease | `GET /api/v1/diseases/{id}/remedies` | `OFFICER` | `13-knowledge` |
 | Stats and thresholds | `GET /api/v1/admin/stats` | `ADMIN` | `14-review` |
+| District KPI failures | `GET /api/v1/admin/kpis` | `ADMIN` | `14-review` |
+| District case list | `GET /api/v1/admin/cases` | `ADMIN` | `14-review` |
+| Bulk reject | `POST /api/v1/review/tasks/bulk-reject` | `ADMIN` | `14-review` |
 | Live updates | `GET /api/v1/stream` | authenticated | `15-notification` |
 
 `WEB-API-002` **THE frontend SHALL treat `404` as "not found or not yours" and SHALL NOT infer
@@ -907,7 +930,9 @@ One scenario per load-bearing requirement, written to map onto a single test met
 | AC-21 | Given a farmer watching a case, when `CASE_STATUS_CHANGED` arrives, then the stepper advances with no additional request | `WEB-FR-353`, `WEB-FR-356` |
 | AC-22 | Given a published advisory, when the farmer views it, then the officer's name and "verified by" stamp are visible and steps render as a numbered list in order | `WEB-FR-155`, `WEB-FR-156` |
 | AC-23 | Given a rejected case, when the farmer views it, then the Bangla message shows and "submit a new case" opens a draft carrying `parentCaseId` | `WEB-FR-160` |
-| AC-24 | Given the admin stats page, when it renders, then both threshold values are displayed and no control issues a write | `WEB-FR-302`, `WEB-FR-303` |
+| AC-24 | Given the admin stats page, when it renders, then both threshold values are displayed and the only write control is bulk reject | `WEB-FR-302`, `WEB-FR-303` |
+| AC-29 | Given the admin dashboard, when it renders, then month, year, lifetime counts and rejection rate are shown, and assignment and resolution KPI failures come from `/admin/kpis` | `WEB-FR-306`, `WEB-FR-307` |
+| AC-30 | Given selected district cases and a shared Bangla rejection message typed by the admin, when bulk reject is confirmed, then one bulk-reject request is sent with that message | `WEB-FR-309` |
 | AC-25 | Given a logout, when storage is inspected, then only `foshol.lang` remains and the SSE connection is closed | `WEB-DATA-023`, `WEB-SEC-004` |
 | AC-26 | Given 360 px, 768 px and 1280 px, when every route renders, then no horizontal page scroll occurs and the queue is cards below `md`, a table at and above | `WEB-UX-031`, `WEB-UX-032` |
 | AC-27 | Given any surface, when navigated by keyboard alone, then every action is reachable with a visible focus indicator | `WEB-UX-040`, `WEB-UX-041` |
