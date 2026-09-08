@@ -81,12 +81,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisCommand, Void> {
 
@@ -95,7 +95,6 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         return RunAnalysisCommand.class;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(RunAnalysisCommandHandler.class);
     private static final String CONTENT_TYPE_PNG = "image/png";
     private static final String METRIC_PATH = "foshol.analysis.path";
 
@@ -147,10 +146,12 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         Instant start = Instant.now();
         try {
             if (persistence.hasCompletedRun(command.caseId())) {
+                log.info("analysis skipped caseId={} already completed", command.caseId());
                 return null;
             }
             Optional<CaseSummary> loaded = intake.findById(command.caseId());
             if (loaded.isEmpty()) {
+                log.info("analysis failed caseId={} case not found", command.caseId());
                 events.publishFailed(new AnalysisFailed(
                         command.caseId(),
                         command.farmerId(),
@@ -176,6 +177,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
             }
             events.publishCompleted(assembled.completed());
             meters.counter(METRIC_PATH, "path", assembled.run().decisionPath().name()).increment();
+            log.info(
+                    "analysis completed caseId={} path={} candidates={}",
+                    command.caseId(),
+                    assembled.run().decisionPath(),
+                    assembled.candidates().size());
         } catch (RuntimeException ex) {
             log.warn(
                     "analysis persistence failed caseId={} correlationId={}",
@@ -192,8 +198,7 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
             CorrelationId.clear();
         }
         return null;
-    
-}
+    }
 
     Assembled orchestrate(RunAnalysisCommand command, CaseSummary summary, Instant start) {
         Duration deadline = settings.deadline();

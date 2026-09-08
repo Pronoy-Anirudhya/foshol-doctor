@@ -60,11 +60,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseCommand, SubmitCaseResult> {
 
@@ -73,7 +74,6 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
         return SubmitCaseCommand.class;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(SubmitCaseCommandHandler.class);
     static final String ENDPOINT = "POST /api/v1/cases";
 
     private final DiagnosisCaseRepository cases;
@@ -219,6 +219,7 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
                     + diagnosisCase.createdAt()
                     + "\"}";
             persist(diagnosisCase, command, fingerprint, body, now, crop);
+            log.info("case submitted caseId={} cropId={} images={}", caseId.value(), crop.id(), domainImages.size());
             return SubmitCaseResult.accepted(caseId.value(), body);
         } catch (DuplicateIdempotencyKeyException ex) {
             storedKeys.forEach(store::deleteQuietly);

@@ -12,13 +12,13 @@ import com.rootcause.foshol.common.cqrs.CommandHandler;
 
 import java.time.Clock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class ChangeCaseStatusCommandHandler implements CommandHandler<ChangeCaseStatusCommand, Void> {
 
@@ -26,8 +26,6 @@ public class ChangeCaseStatusCommandHandler implements CommandHandler<ChangeCase
     public Class<ChangeCaseStatusCommand> commandType() {
         return ChangeCaseStatusCommand.class;
     }
-
-    private static final Logger log = LoggerFactory.getLogger(ChangeCaseStatusCommandHandler.class);
 
     private final DiagnosisCaseRepository cases;
     private final ApplicationEventPublisher events;
@@ -65,12 +63,7 @@ public class ChangeCaseStatusCommandHandler implements CommandHandler<ChangeCase
             }
             cases.save(diagnosisCase);
             events.publishEvent(changed);
-            log.info(
-                    "case status {} -> {} caseId={} correlationId={}",
-                    changed.fromStatus(),
-                    changed.toStatus(),
-                    changed.caseId(),
-                    changed.correlationId());
+            log.info("case status {} -> {} caseId={}", changed.fromStatus(), changed.toStatus(), changed.caseId());
         } catch (IllegalCaseTransitionException ex) {
             log.warn(
                     "illegal transition ignored caseId={} from={} to={} correlationId={}",

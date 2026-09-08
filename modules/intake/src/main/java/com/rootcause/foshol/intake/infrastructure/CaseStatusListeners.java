@@ -1,6 +1,7 @@
 package com.rootcause.foshol.intake.infrastructure;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
@@ -15,15 +16,13 @@ import com.rootcause.foshol.intake.domain.CaseNotFoundException;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class CaseStatusListeners {
-
-    private static final Logger log = LoggerFactory.getLogger(CaseStatusListeners.class);
 
     private final CommandBus commands;
     private final DiagnosisCaseRepository cases;
@@ -37,11 +36,15 @@ public class CaseStatusListeners {
 
     @ApplicationModuleListener
     public void onSubmitted(CaseSubmitted event) {
+        CorrelationId.set(event.correlationId());
+        log.info("event CaseSubmitted caseId={}", event.caseId());
         safeStatus(event.caseId(), CaseStatus.ANALYSING);
     }
 
     @ApplicationModuleListener
     public void onAnalysisCompleted(AnalysisCompleted event) {
+        CorrelationId.set(event.correlationId());
+        log.info("event AnalysisCompleted caseId={} path={}", event.caseId(), event.decisionPath());
         try {
             commands.handle(new RecordAnalysisOutcomeCommand(event.caseId(), event.decisionPath(), false));
         } catch (CaseNotFoundException ex) {
@@ -52,6 +55,8 @@ public class CaseStatusListeners {
 
     @ApplicationModuleListener
     public void onAnalysisFailed(AnalysisFailed event) {
+        CorrelationId.set(event.correlationId());
+        log.info("event AnalysisFailed caseId={}", event.caseId());
         try {
             commands.handle(new RecordAnalysisOutcomeCommand(event.caseId(), null, true));
         } catch (CaseNotFoundException ex) {
@@ -61,6 +66,8 @@ public class CaseStatusListeners {
 
     @ApplicationModuleListener
     public void onAdvisoryApproved(AdvisoryApproved event) {
+        CorrelationId.set(event.correlationId());
+        log.info("event AdvisoryApproved caseId={} advisoryId={}", event.caseId(), event.advisoryId());
         safeStatus(event.caseId(), CaseStatus.ADVISED);
         cases.enrichAdvisory(
                 event.caseId(),
@@ -73,12 +80,15 @@ public class CaseStatusListeners {
 
     @ApplicationModuleListener
     public void onCaseRejected(CaseRejected event) {
+        CorrelationId.set(event.correlationId());
+        log.info("event CaseRejected caseId={}", event.caseId());
         safeStatus(event.caseId(), CaseStatus.REJECTED);
         cases.enrichRejection(event.caseId(), event.messageBn());
     }
 
     @ApplicationModuleListener
     public void onStatusChanged(CaseStatusChanged event) {
+        CorrelationId.set(event.correlationId());
         cases.findById(CaseId.of(event.caseId())).ifPresent(this::persistHistory);
     }
 

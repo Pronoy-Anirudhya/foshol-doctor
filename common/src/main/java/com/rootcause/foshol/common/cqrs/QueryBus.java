@@ -3,7 +3,9 @@ package com.rootcause.foshol.common.cqrs;
 import com.rootcause.foshol.common.CorrelationId;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class QueryBus {
 
     private final Map<Class<?>, QueryHandler<?, ?>> queryHandlerMap = new ConcurrentHashMap<>();
@@ -24,10 +26,18 @@ public class QueryBus {
         if (handler == null) {
             throw new IllegalArgumentException("No handler found for query: " + query.getClass());
         }
+        String name = query.getClass().getSimpleName();
         String previous = CorrelationId.current();
+        long started = System.nanoTime();
         try {
             CorrelationId.set(query.tracerId());
-            return handler.handle(query);
+            log.info("query start {}", name);
+            R result = handler.handle(query);
+            log.info("query done {} ({} ms)", name, elapsedMs(started));
+            return result;
+        } catch (RuntimeException ex) {
+            log.info("query failed {} ({} ms): {}", name, elapsedMs(started), ex.getClass().getSimpleName());
+            throw ex;
         } finally {
             if (previous == null || previous.isBlank()) {
                 CorrelationId.clear();
@@ -35,5 +45,9 @@ public class QueryBus {
                 CorrelationId.set(previous);
             }
         }
+    }
+
+    private static long elapsedMs(long startedNanos) {
+        return (System.nanoTime() - startedNanos) / 1_000_000L;
     }
 }

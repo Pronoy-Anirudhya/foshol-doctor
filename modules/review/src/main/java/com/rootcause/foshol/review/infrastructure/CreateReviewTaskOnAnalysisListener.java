@@ -2,6 +2,7 @@ package com.rootcause.foshol.review.infrastructure;
 
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.common.Uuid7;
@@ -26,18 +27,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Component
 public class CreateReviewTaskOnAnalysisListener {
-
-    private static final Logger log = LoggerFactory.getLogger(CreateReviewTaskOnAnalysisListener.class);
 
     private final ReviewTaskRepository tasks;
     private final OfficerQueueProjectionPort queue;
@@ -67,9 +66,12 @@ public class CreateReviewTaskOnAnalysisListener {
     @ApplicationModuleListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onCompleted(AnalysisCompleted event) {
+        CorrelationId.set(event.correlationId());
         if (tasks.findByCaseId(event.caseId()).isPresent()) {
+            log.info("review task already exists caseId={}", event.caseId());
             return;
         }
+        log.info("creating review task caseId={} path={}", event.caseId(), event.decisionPath());
         ReviewTask task = ReviewTask.createPending(
                 Uuid7.create(),
                 event.caseId(),
@@ -96,9 +98,12 @@ public class CreateReviewTaskOnAnalysisListener {
     @ApplicationModuleListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onFailed(AnalysisFailed event) {
+        CorrelationId.set(event.correlationId());
         if (tasks.findByCaseId(event.caseId()).isPresent()) {
+            log.info("review task already exists caseId={}", event.caseId());
             return;
         }
+        log.info("creating review task after analysis failure caseId={}", event.caseId());
         ReviewTask task = ReviewTask.createPending(
                 Uuid7.create(), event.caseId(), null, event.occurredAt().plus(sla), clock.instant());
         tasks.save(task);

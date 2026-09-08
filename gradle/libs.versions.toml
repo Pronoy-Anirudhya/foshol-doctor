@@ -9,6 +9,7 @@ java-jwt = "4.5.0"
 resilience4j = "2.3.0"
 springdoc = "2.8.6"
 slf4j = "2.0.17"
+lombok = "1.18.42"
 minio = "8.5.17"
 
 [libraries]
@@ -23,6 +24,7 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
 springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
 
 [plugins]

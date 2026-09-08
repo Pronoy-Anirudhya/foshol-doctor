@@ -12,6 +12,16 @@ repositories {
     mavenCentral()
 }
 
+def catalogs = extensions.getByType(org.gradle.api.artifacts.VersionCatalogsExtension)
+def libs = catalogs.named('libs')
+
+dependencies {
+    compileOnly libs.findLibrary('lombok').get()
+    annotationProcessor libs.findLibrary('lombok').get()
+    testCompileOnly libs.findLibrary('lombok').get()
+    testAnnotationProcessor libs.findLibrary('lombok').get()
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs.addAll(['-parameters'])
