@@ -26,6 +26,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ReviseAdvisoryCommandHandler implements CommandHandler<ReviseAdvisoryCommand, ApproveCaseResult> {
 
@@ -116,6 +119,7 @@ public class ReviseAdvisoryCommandHandler implements CommandHandler<ReviseAdviso
                 next.version(),
                 CorrelationId.currentOrCreate(),
                 now));
+        log.info("advisory revised caseId={} advisoryId={} version={}", next.caseId(), next.id(), next.version());
         return new ApproveCaseResult(AdvisoryViewMapper.toView(next, knowledge, officers));
     }
 }

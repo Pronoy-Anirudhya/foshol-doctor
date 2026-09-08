@@ -5,8 +5,7 @@ import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.ProblemResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
@@ -19,11 +18,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @RestControllerAdvice
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String SAFE_INTERNAL = "An unexpected error occurred.";
     private static final String SAFE_BAD_REQUEST = "The request could not be read.";
 

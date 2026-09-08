@@ -17,6 +17,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReviewTaskCommand, ClaimReviewTaskResult> {
 
@@ -52,6 +55,7 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
             throw ReviewException.claimConflict();
         }
         queue.updateState(task.caseId(), task.state(), task.officerId(), clock.instant());
+        log.info("review task claimed taskId={} caseId={}", task.id(), task.caseId());
         return new ClaimReviewTaskResult(
                 task.id(),
                 task.caseId(),

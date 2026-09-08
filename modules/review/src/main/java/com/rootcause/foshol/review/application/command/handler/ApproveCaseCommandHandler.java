@@ -40,6 +40,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseCommand, ApproveCaseResult> {
 
@@ -116,6 +119,7 @@ public class ApproveCaseCommandHandler implements CommandHandler<ApproveCaseComm
                 advisory.version(),
                 CorrelationId.currentOrCreate(),
                 now));
+        log.info("advisory approved caseId={} taskId={} advisoryId={}", task.caseId(), task.id(), advisory.id());
         return new ApproveCaseResult(AdvisoryViewMapper.toView(advisory, knowledge, officers));
     }
 

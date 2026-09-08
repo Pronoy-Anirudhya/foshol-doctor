@@ -16,6 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ReleaseReviewTaskCommandHandler implements CommandHandler<ReleaseReviewTaskCommand, ClaimReviewTaskResult> {
 
@@ -47,6 +50,7 @@ public class ReleaseReviewTaskCommandHandler implements CommandHandler<ReleaseRe
         task.release(command.officerId(), clock.instant(), claimTtl);
         tasks.save(task);
         queue.updateState(task.caseId(), task.state(), task.officerId(), clock.instant());
+        log.info("review task released taskId={} caseId={}", task.id(), task.caseId());
         return new ClaimReviewTaskResult(
                 task.id(),
                 task.caseId(),

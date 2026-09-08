@@ -27,6 +27,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class RejectCaseCommandHandler implements CommandHandler<RejectCaseCommand, RejectionView> {
 
@@ -97,6 +100,7 @@ public class RejectCaseCommandHandler implements CommandHandler<RejectCaseComman
                 rejection.messageBn(),
                 CorrelationId.currentOrCreate(),
                 now));
+        log.info("case rejected caseId={} taskId={} reason={}", task.caseId(), task.id(), command.reasonCode());
         return new RejectionView(
                 rejection.caseId(),
                 rejection.officerId(),
