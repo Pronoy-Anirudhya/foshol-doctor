@@ -352,13 +352,13 @@ at a fixed delay of `foshol.review.sweeper.interval`, which for every task in `s
 SHALL be safe to run concurrently with officer claim and release requests**, producing the same
 result whether it runs once or many times over the same expired task.
 
-`REVIEW-FR-048` `[DEFERRED]` **WHERE district-based officer routing is included, THE review module
-SHALL restrict the officer queue to tasks whose `district_code` matches a district returned by
-`OfficerLookupApi.findActiveByDistrict` for the calling officer.**
-*Deferred per `00-common.ears.md` §1.2 — one officer in the demo. The seam is real and compiles
-today: `field_officer.district_code` exists, `p_officer_queue.district_code` is populated by
-`REVIEW-FR-010`, and `OfficerLookupApi.findActiveByDistrict` is declared in the frozen API. Turning
-this on is a `WHERE` clause, not a redesign.*
+`REVIEW-FR-048` **THE review module SHALL restrict the officer queue, claims, task detail, and
+admin stats to tasks whose `district_code` matches the calling officer's or admin's
+`field_officer.district_code` (loaded from identity, never from the request body).** Cross-district
+access SHALL return `404` `ERR_REVIEW_TASK_NOT_FOUND` (or empty stats / queue), never a national
+view. There is no national admin in this build.
+*Exception to `00-common.ears.md` §1.2: district routing is now in scope. Geography lives on
+`geo_division` / `geo_district`; cases snapshot farmer codes at submit.*
 
 `REVIEW-FR-049` **THE review module SHALL set `review_task.sla_due_at` from `foshol.review.sla` at
 creation and SHALL NOT recompute it on claim, release or sweep.** *(The SLA clock belongs to the
@@ -657,7 +657,7 @@ Base path `/api/v1`. All responses are JSON; all errors are RFC 9457 problem doc
 
 | Method | Path | Request | Response | Authorisation | Errors beyond `401` |
 |---|---|---|---|---|---|
-| `GET` | `/review/queue` | `state` (`PENDING`\|`CLAIMED`\|`ALL`, default `PENDING`), `mine`, `page`, `size` | `200`, page of `OfficerQueueRow` | any `OFFICER` or `ADMIN` — the pool is shared; `REVIEW-FR-048` would narrow it by district | `400` `ERR_QUEUE_SORT_NOT_SUPPORTED` |
+| `GET` | `/review/queue` | `state` (`PENDING`\|`CLAIMED`\|`ALL`, default `PENDING`), `mine`, `page`, `size` | `200`, page of `OfficerQueueRow` | `OFFICER` or `ADMIN` — rows for the caller's district only (`REVIEW-FR-048`) | `400` `ERR_QUEUE_SORT_NOT_SUPPORTED` |
 | `GET` | `/review/tasks/{id}` | — | `200`, `ReviewTaskDetailView` | `OFFICER`, `ADMIN` | `404` `ERR_REVIEW_TASK_NOT_FOUND` |
 | `POST` | `/review/tasks/{id}/claim` | empty body | `200`, `ReviewTaskDetailView` with `claimExpiresAt` | any `OFFICER` or `ADMIN` | `409` `ERR_CLAIM_CONFLICT`, `ERR_TASK_TERMINAL` |
 | `POST` | `/review/tasks/{id}/release` | empty body | `204` | **the claim holder only** | `409` `ERR_CLAIM_NOT_HELD`, `ERR_TASK_TERMINAL` |
@@ -665,7 +665,7 @@ Base path `/api/v1`. All responses are JSON; all errors are RFC 9457 problem doc
 | `POST` | `/review/tasks/{id}/reject` | `{reasonCode, messageBn}` | `204` | **the claim holder only** | `400` (unknown reason code, blank or >500-char message); `409` `ERR_CLAIM_NOT_HELD`, `ERR_TASK_TERMINAL` |
 | `POST` | `/review/tasks/{id}/symptoms` | `{symptomIds[]}` | `204` | **the claim holder only** | `400` `ERR_UNKNOWN_SYMPTOM`; `409` `ERR_CLAIM_NOT_HELD` |
 | `POST` | `/advisories/{id}/revise` | as `approve`; `{id}` is the current published advisory | `201`, `AdvisoryView` with `version = n+1`, `supersedesId = {id}` | `OFFICER` or `ADMIN`, and the re-claim of `REVIEW-FR-066` must succeed | `409` `ERR_ADVISORY_NOT_FOUND`, `ERR_CLAIM_CONFLICT`; plus every `approve` validation error |
-| `GET` | `/cases/{id}/advisory` | — | `200`, `AdvisoryView` + `history[]`, or `RejectionView` | `FARMER` for their own case only — `404`, never `403` (`REVIEW-SEC-003`); `OFFICER`, `ADMIN` for any case | `404` when the case has neither |
+| `GET` | `/cases/{id}/advisory` | — | `200`, `AdvisoryView` + `history[]`, or `RejectionView` | `FARMER` for their own case only — `404`, never `403` (`REVIEW-SEC-003`); `OFFICER`, `ADMIN` for the same district only | `404` when the case has neither |
 | `GET` | `/admin/stats` | — | `200`, stats object (§5.2) | **`ADMIN` only** | `403` for `OFFICER` and `FARMER` |
 
 `REVIEW-FR-053` forbids an `action` field on the approve and revise bodies; the server derives it.
@@ -917,6 +917,6 @@ with the §6.2 signatures compiling (stub bodies are sufficient); and the error-
 | UX | `REVIEW-UX-001` … `REVIEW-UX-004` | 4 |
 | **Total** | | **87** |
 
-`[DEFERRED]`: `REVIEW-FR-048` (district routing), `REVIEW-FR-077` (threshold write endpoints).
+`[DEFERRED]`: `REVIEW-FR-077` (threshold write endpoints).
 `[DERIVED]`: `REVIEW-NFR-002` (`FarmerLookupApi` for the projection's farmer name),
 `REVIEW-FR-066` (revision re-claims the task).
