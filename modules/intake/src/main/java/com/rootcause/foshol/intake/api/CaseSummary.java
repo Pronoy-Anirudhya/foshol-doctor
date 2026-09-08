@@ -18,6 +18,7 @@ public record CaseSummary(
         UUID cropId,
         String cropCode,
         String districtCode,
+        String divisionCode,
         CaseStatus status,
         DecisionPath decisionPath,
         String noteBn,

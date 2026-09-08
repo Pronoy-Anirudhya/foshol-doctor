@@ -46,6 +46,7 @@ class CaseStatusListenersTest {
                 UUID.randomUUID(),
                 "rice",
                 "DHA",
+                "DHK",
                 List.of(),
                 null,
                 null,

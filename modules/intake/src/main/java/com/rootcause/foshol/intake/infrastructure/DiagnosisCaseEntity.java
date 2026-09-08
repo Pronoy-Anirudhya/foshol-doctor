@@ -39,8 +39,11 @@ public class DiagnosisCaseEntity {
     @Column(name = "note_bn")
     private String noteBn;
 
-    @Column(name = "district_code", nullable = false, length = 8)
+    @Column(name = "district_code", nullable = false, length = 16)
     private String districtCode;
+
+    @Column(name = "division_code", nullable = false, length = 8)
+    private String divisionCode;
 
     @Column(name = "correlation_id", nullable = false, length = 36)
     private String correlationId;
@@ -87,6 +90,7 @@ public class DiagnosisCaseEntity {
             String decisionPath,
             String noteBn,
             String districtCode,
+            String divisionCode,
             String correlationId,
             BigDecimal fieldArea,
             String fieldAreaUnit,
@@ -104,6 +108,7 @@ public class DiagnosisCaseEntity {
         this.decisionPath = decisionPath;
         this.noteBn = noteBn;
         this.districtCode = districtCode;
+        this.divisionCode = divisionCode;
         this.correlationId = correlationId;
         this.fieldArea = fieldArea;
         this.fieldAreaUnit = fieldAreaUnit;
@@ -153,6 +158,10 @@ public class DiagnosisCaseEntity {
 
     public String getDistrictCode() {
         return districtCode;
+    }
+
+    public String getDivisionCode() {
+        return divisionCode;
     }
 
     public String getCorrelationId() {

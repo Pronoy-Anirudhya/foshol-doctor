@@ -199,6 +199,14 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 .optional();
     }
 
+    @Override
+    public Optional<String> findDistrictCode(UUID caseId) {
+        return jdbc.sql("select district_code from diagnosis_case where id = :id")
+                .param("id", caseId)
+                .query(String.class)
+                .optional();
+    }
+
     private FarmerCaseRow historyRow(ResultSet rs, int rowNum) throws SQLException {
         String cropName = rs.getString("crop_name_bn");
         if (cropName == null) {
@@ -250,6 +258,11 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 .query(String.class)
                 .optional()
                 .orElse("");
+        String division = jdbc.sql("select division_code from diagnosis_case where id = :id")
+                .param("id", detail.caseId())
+                .query(String.class)
+                .optional()
+                .orElse("");
         List<CaseImageRef> images = jdbc.sql(
                         """
                         select id, object_key, derivative_object_key, sha256, quality_score, is_primary, position
@@ -288,6 +301,7 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 detail.cropId(),
                 cropCode,
                 district,
+                division,
                 detail.status(),
                 detail.decisionPath(),
                 detail.noteBn(),

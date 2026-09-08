@@ -129,8 +129,8 @@ class IntakeIntegrationTest {
         jdbc.update("delete from farmer where id = ?", FARMER);
         jdbc.update(
                 """
-                insert into farmer (id, name, phone_hash, phone_enc, district_code, preferred_language)
-                values (?, 'IT Farmer', ?, ?, 'DHA', 'bn')
+                insert into farmer (id, name, phone_hash, phone_enc, district_code, division_code, preferred_language)
+                values (?, 'IT Farmer', ?, ?, 'DHA', 'DHK', 'bn')
                 """,
                 FARMER,
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -194,7 +194,7 @@ class IntakeIntegrationTest {
         @Bean
         FarmerLookupApi farmerLookupApi() {
             FarmerLookupApi api = mock(FarmerLookupApi.class);
-            when(api.findById(FARMER)).thenReturn(Optional.of(new FarmerView(FARMER, "IT Farmer", "DHA", "bn")));
+            when(api.findById(FARMER)).thenReturn(Optional.of(new FarmerView(FARMER, "IT Farmer", "DHA", "bn", "DHK")));
             return api;
         }
 

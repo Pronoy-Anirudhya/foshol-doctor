@@ -27,6 +27,7 @@ public final class DiagnosisCase {
     private DecisionPath decisionPath;
     private final String noteBn;
     private final String districtCode;
+    private final String divisionCode;
     private final String correlationId;
     private BigDecimal fieldArea;
     private FieldAreaUnit fieldAreaUnit;
@@ -48,6 +49,7 @@ public final class DiagnosisCase {
             DecisionPath decisionPath,
             String noteBn,
             String districtCode,
+            String divisionCode,
             String correlationId,
             BigDecimal fieldArea,
             FieldAreaUnit fieldAreaUnit,
@@ -67,6 +69,7 @@ public final class DiagnosisCase {
         this.decisionPath = decisionPath;
         this.noteBn = noteBn;
         this.districtCode = Objects.requireNonNull(districtCode, "districtCode");
+        this.divisionCode = Objects.requireNonNull(divisionCode, "divisionCode");
         this.correlationId = Objects.requireNonNull(correlationId, "correlationId");
         this.fieldArea = Objects.requireNonNull(fieldArea, "fieldArea");
         this.fieldAreaUnit = Objects.requireNonNull(fieldAreaUnit, "fieldAreaUnit");
@@ -88,6 +91,7 @@ public final class DiagnosisCase {
             CaseId parentCaseId,
             String noteBn,
             String districtCode,
+            String divisionCode,
             String correlationId,
             Instant submittedAt,
             List<CaseImage> images,
@@ -107,6 +111,7 @@ public final class DiagnosisCase {
                 null,
                 noteBn,
                 districtCode,
+                divisionCode,
                 correlationId,
                 fieldArea,
                 fieldAreaUnit,
@@ -131,6 +136,7 @@ public final class DiagnosisCase {
             DecisionPath decisionPath,
             String noteBn,
             String districtCode,
+            String divisionCode,
             String correlationId,
             BigDecimal fieldArea,
             FieldAreaUnit fieldAreaUnit,
@@ -151,6 +157,7 @@ public final class DiagnosisCase {
                 decisionPath,
                 noteBn,
                 districtCode,
+                divisionCode,
                 correlationId,
                 fieldArea,
                 fieldAreaUnit,
@@ -295,6 +302,10 @@ public final class DiagnosisCase {
         return districtCode;
     }
 
+    public String divisionCode() {
+        return divisionCode;
+    }
+
     public String correlationId() {
         return correlationId;
     }
@@ -352,6 +363,9 @@ public final class DiagnosisCase {
     private void assertInvariants() {
         if (districtCode.isBlank()) {
             throw new IllegalStateException("district code is required");
+        }
+        if (divisionCode.isBlank()) {
+            throw new IllegalStateException("division code is required");
         }
         if (correlationId.isBlank()) {
             throw new IllegalStateException("correlation id is required");

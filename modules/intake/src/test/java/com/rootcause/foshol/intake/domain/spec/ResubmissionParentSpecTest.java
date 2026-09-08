@@ -51,6 +51,7 @@ class ResubmissionParentSpecTest {
                 null,
                 null,
                 "DHA",
+                "DHK",
                 "corr",
                 BigDecimal.ONE,
                 FieldAreaUnit.DECIMAL,

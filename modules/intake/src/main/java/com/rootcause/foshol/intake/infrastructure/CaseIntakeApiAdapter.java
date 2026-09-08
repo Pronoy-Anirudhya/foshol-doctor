@@ -3,9 +3,11 @@ package com.rootcause.foshol.intake.infrastructure;
 import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
+import com.rootcause.foshol.intake.application.StaffRegionAccess;
 import com.rootcause.foshol.intake.application.command.RecordFieldMetricsCommand;
 import com.rootcause.foshol.intake.application.command.RecordTranscriptCommand;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
@@ -20,10 +22,12 @@ public class CaseIntakeApiAdapter implements CaseIntakeApi {
 
     private final CaseQueryPort queries;
     private final CommandBus commands;
+    private final StaffRegionAccess staffRegion;
 
-    public CaseIntakeApiAdapter(CaseQueryPort queries, CommandBus commands) {
+    public CaseIntakeApiAdapter(CaseQueryPort queries, CommandBus commands, StaffRegionAccess staffRegion) {
         this.queries = queries;
         this.commands = commands;
+        this.staffRegion = staffRegion;
     }
 
     @Override
@@ -36,6 +40,12 @@ public class CaseIntakeApiAdapter implements CaseIntakeApi {
     @Transactional(readOnly = true)
     public boolean isOwnedBy(UUID caseId, UUID farmerId) {
         return queries.findFarmerId(caseId).filter(farmerId::equals).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean officerSharesDistrict(UUID caseId, UUID officerId) {
+        return staffRegion.allows(Role.OFFICER, officerId, caseId);
     }
 
     @Override
