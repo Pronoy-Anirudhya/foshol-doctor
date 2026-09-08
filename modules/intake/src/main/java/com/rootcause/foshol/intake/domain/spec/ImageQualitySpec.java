@@ -13,13 +13,19 @@ public final class ImageQualitySpec {
     private final double exposureMin;
     private final double exposureMax;
     private final int minEdgePx;
+    private final double vegetationCoverageMin;
 
     public ImageQualitySpec(
-            double blurVarianceMin, double exposureMin, double exposureMax, int minEdgePx) {
+            double blurVarianceMin,
+            double exposureMin,
+            double exposureMax,
+            int minEdgePx,
+            double vegetationCoverageMin) {
         this.blurVarianceMin = blurVarianceMin;
         this.exposureMin = exposureMin;
         this.exposureMax = exposureMax;
         this.minEdgePx = minEdgePx;
+        this.vegetationCoverageMin = vegetationCoverageMin;
     }
 
     public QualityVerdict verdict(ImageMetrics metrics) {
@@ -28,6 +34,9 @@ public final class ImageQualitySpec {
         }
         if (metrics.shorterEdge() < minEdgePx) {
             return QualityVerdict.reject(QualityReason.TOO_SMALL);
+        }
+        if (metrics.vegetationCoverage() < vegetationCoverageMin) {
+            return QualityVerdict.reject(QualityReason.NOT_A_CROP);
         }
         if (metrics.blurVariance() < blurVarianceMin) {
             return QualityVerdict.reject(QualityReason.BLURRY);

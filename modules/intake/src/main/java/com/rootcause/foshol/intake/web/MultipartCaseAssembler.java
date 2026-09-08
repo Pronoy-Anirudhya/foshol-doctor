@@ -1,8 +1,11 @@
 package com.rootcause.foshol.intake.web;
 
+import com.rootcause.foshol.common.CropQuantityUnit;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.intake.api.IntakeAudio;
 import com.rootcause.foshol.intake.api.IntakeImage;
 import com.rootcause.foshol.intake.api.IntakeRequest;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +20,10 @@ final class MultipartCaseAssembler {
             UUID cropId,
             String noteBn,
             UUID parentCaseId,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
             Integer audioDurationMs,
             List<MultipartFile> images,
             MultipartFile audio,
@@ -37,6 +44,16 @@ final class MultipartCaseAssembler {
             intakeAudio = new IntakeAudio("", audio.getContentType(), audio.getBytes(), duration);
         }
         return new IntakeRequest(
-                farmerId, cropId, noteBn, parentCaseId, List.copyOf(intakeImages), intakeAudio, idempotencyKey);
+                farmerId,
+                cropId,
+                noteBn,
+                parentCaseId,
+                fieldArea,
+                fieldAreaUnit,
+                cropQuantity,
+                cropQuantityUnit,
+                List.copyOf(intakeImages),
+                intakeAudio,
+                idempotencyKey);
     }
 }

@@ -1,7 +1,10 @@
 package com.rootcause.foshol.intake.infrastructure;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.intake.api.CaseSummary;
@@ -11,6 +14,7 @@ import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -39,7 +43,8 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
     public Optional<CaseDetailView> findDetail(UUID caseId) {
         Optional<CaseRow> row = jdbc.sql(
                         """
-                        select id, farmer_id, crop_id, parent_case_id, status, decision_path, note_bn, created_at
+                        select id, farmer_id, crop_id, parent_case_id, status, decision_path, note_bn, created_at,
+                               field_area, field_area_unit, crop_quantity, crop_quantity_unit, metrics_source
                           from diagnosis_case where id = :id
                         """)
                 .param("id", caseId)
@@ -83,7 +88,12 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 c.parentCaseId(),
                 images,
                 audio,
-                c.createdAt()));
+                c.createdAt(),
+                c.fieldArea(),
+                c.fieldAreaUnit(),
+                c.cropQuantity(),
+                c.cropQuantityUnit(),
+                c.metricsSource()));
     }
 
     @Override
@@ -214,6 +224,9 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
     private CaseRow caseRow(ResultSet rs, int rowNum) throws SQLException {
         String path = rs.getString("decision_path");
         Object parent = rs.getObject("parent_case_id");
+        String areaUnit = rs.getString("field_area_unit");
+        String qtyUnit = rs.getString("crop_quantity_unit");
+        String metrics = rs.getString("metrics_source");
         return new CaseRow(
                 rs.getObject("id", UUID.class),
                 rs.getObject("farmer_id", UUID.class),
@@ -222,7 +235,12 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 CaseStatus.valueOf(rs.getString("status")),
                 path == null ? null : DecisionPath.valueOf(path),
                 rs.getString("note_bn"),
-                rs.getTimestamp("created_at").toInstant());
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getBigDecimal("field_area"),
+                areaUnit == null ? null : FieldAreaUnit.valueOf(areaUnit),
+                rs.getBigDecimal("crop_quantity"),
+                qtyUnit == null ? null : CropQuantityUnit.valueOf(qtyUnit),
+                metrics == null ? null : MetricsSource.valueOf(metrics));
     }
 
     private CaseSummary toSummary(CaseDetailView detail, UUID farmerId) {
@@ -277,7 +295,12 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                 images,
                 audio,
                 correlation,
-                detail.submittedAt());
+                detail.submittedAt(),
+                detail.fieldArea(),
+                detail.fieldAreaUnit(),
+                detail.cropQuantity(),
+                detail.cropQuantityUnit(),
+                detail.metricsSource());
     }
 
     private record CaseRow(
@@ -288,5 +311,10 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
             CaseStatus status,
             DecisionPath decisionPath,
             String noteBn,
-            java.time.Instant createdAt) {}
+            java.time.Instant createdAt,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
+            MetricsSource metricsSource) {}
 }

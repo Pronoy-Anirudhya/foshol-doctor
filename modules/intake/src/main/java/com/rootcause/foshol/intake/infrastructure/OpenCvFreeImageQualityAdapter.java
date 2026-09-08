@@ -11,6 +11,10 @@ public class OpenCvFreeImageQualityAdapter implements ImageQualityPort {
     public ImageProbe probe(byte[] bytes) {
         ImageMetrics metrics = ImageMetricsCalculator.calculate(bytes);
         return new ImageProbe(
-                metrics.width(), metrics.height(), metrics.blurVariance(), metrics.exposureScore());
+                metrics.width(),
+                metrics.height(),
+                metrics.blurVariance(),
+                metrics.exposureScore(),
+                metrics.vegetationCoverage());
     }
 }

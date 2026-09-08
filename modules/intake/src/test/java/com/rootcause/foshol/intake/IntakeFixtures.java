@@ -19,6 +19,10 @@ public final class IntakeFixtures {
     private IntakeFixtures() {}
 
     public static byte[] sharpJpeg() {
+        return jpeg(checkerboard(320, 320, new Color(0, 180, 0), new Color(0, 90, 0), 8));
+    }
+
+    public static byte[] nonCropJpeg() {
         return jpeg(checkerboard(320, 320, Color.BLACK, Color.WHITE, 8));
     }
 
@@ -35,11 +39,11 @@ public final class IntakeFixtures {
     }
 
     public static byte[] tinyPng() {
-        return png(checkerboard(160, 160, Color.BLACK, Color.WHITE, 8));
+        return png(checkerboard(160, 160, new Color(0, 180, 0), new Color(0, 90, 0), 8));
     }
 
     public static byte[] pngBytes() {
-        return png(checkerboard(320, 320, Color.BLACK, Color.WHITE, 8));
+        return png(checkerboard(320, 320, new Color(0, 180, 0), new Color(0, 90, 0), 8));
     }
 
     public static byte[] pdf() {

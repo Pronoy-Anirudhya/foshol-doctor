@@ -1,7 +1,10 @@
 package com.rootcause.foshol.intake.infrastructure;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.intake.domain.CaseAudio;
 import com.rootcause.foshol.intake.domain.CaseImage;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
@@ -35,6 +38,13 @@ final class DiagnosisCaseMapper {
                 entity.getNoteBn(),
                 entity.getDistrictCode(),
                 entity.getCorrelationId(),
+                entity.getFieldArea(),
+                FieldAreaUnit.valueOf(entity.getFieldAreaUnit()),
+                entity.getCropQuantity(),
+                entity.getCropQuantityUnit() == null
+                        ? null
+                        : CropQuantityUnit.valueOf(entity.getCropQuantityUnit()),
+                MetricsSource.valueOf(entity.getMetricsSource()),
                 entity.getVersion(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
@@ -45,6 +55,11 @@ final class DiagnosisCaseMapper {
     static void copyInto(DiagnosisCase domain, DiagnosisCaseEntity entity) {
         entity.setStatus(domain.status().name());
         entity.setDecisionPath(domain.decisionPath() == null ? null : domain.decisionPath().name());
+        entity.setFieldArea(domain.fieldArea());
+        entity.setFieldAreaUnit(domain.fieldAreaUnit().name());
+        entity.setCropQuantity(domain.cropQuantity());
+        entity.setCropQuantityUnit(domain.cropQuantityUnit() == null ? null : domain.cropQuantityUnit().name());
+        entity.setMetricsSource(domain.metricsSource().name());
         entity.setUpdatedAt(domain.updatedAt());
         if (domain.audio() != null && entity.getAudio() != null) {
             entity.getAudio().setTranscriptBn(domain.audio().transcriptBn());
@@ -63,6 +78,11 @@ final class DiagnosisCaseMapper {
                 domain.noteBn(),
                 domain.districtCode(),
                 domain.correlationId(),
+                domain.fieldArea(),
+                domain.fieldAreaUnit().name(),
+                domain.cropQuantity(),
+                domain.cropQuantityUnit() == null ? null : domain.cropQuantityUnit().name(),
+                domain.metricsSource().name(),
                 domain.version(),
                 domain.createdAt(),
                 domain.updatedAt());

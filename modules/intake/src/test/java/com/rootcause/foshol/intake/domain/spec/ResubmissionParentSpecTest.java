@@ -3,6 +3,8 @@ package com.rootcause.foshol.intake.domain.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.intake.domain.CaseImage;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
@@ -50,6 +52,11 @@ class ResubmissionParentSpecTest {
                 null,
                 "DHA",
                 "corr",
+                BigDecimal.ONE,
+                FieldAreaUnit.DECIMAL,
+                null,
+                null,
+                MetricsSource.FORM,
                 0,
                 Instant.parse("2026-01-01T00:00:00Z"),
                 Instant.parse("2026-01-01T00:00:00Z"),

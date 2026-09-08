@@ -9,7 +9,8 @@ public enum QualityReason {
     TOO_DARK,
     TOO_BRIGHT,
     TOO_SMALL,
-    UNREADABLE;
+    UNREADABLE,
+    NOT_A_CROP;
 
     public String httpReason() {
         return switch (this) {
@@ -26,6 +27,7 @@ public enum QualityReason {
             case TOO_BRIGHT -> "intake.quality.tooBright";
             case TOO_SMALL -> "intake.quality.tooSmall";
             case UNREADABLE -> "intake.quality.unreadable";
+            case NOT_A_CROP -> "intake.quality.notACrop";
         };
     }
 }

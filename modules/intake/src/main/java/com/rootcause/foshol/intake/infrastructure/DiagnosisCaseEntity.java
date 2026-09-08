@@ -8,6 +8,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,21 @@ public class DiagnosisCaseEntity {
     @Column(name = "correlation_id", nullable = false, length = 36)
     private String correlationId;
 
+    @Column(name = "field_area", nullable = false, precision = 12, scale = 3)
+    private BigDecimal fieldArea;
+
+    @Column(name = "field_area_unit", nullable = false, length = 16)
+    private String fieldAreaUnit;
+
+    @Column(name = "crop_quantity", precision = 12, scale = 3)
+    private BigDecimal cropQuantity;
+
+    @Column(name = "crop_quantity_unit", length = 16)
+    private String cropQuantityUnit;
+
+    @Column(name = "metrics_source", nullable = false, length = 24)
+    private String metricsSource;
+
     @Version
     @Column(nullable = false)
     private int version;
@@ -72,6 +88,11 @@ public class DiagnosisCaseEntity {
             String noteBn,
             String districtCode,
             String correlationId,
+            BigDecimal fieldArea,
+            String fieldAreaUnit,
+            BigDecimal cropQuantity,
+            String cropQuantityUnit,
+            String metricsSource,
             int version,
             Instant createdAt,
             Instant updatedAt) {
@@ -84,6 +105,11 @@ public class DiagnosisCaseEntity {
         this.noteBn = noteBn;
         this.districtCode = districtCode;
         this.correlationId = correlationId;
+        this.fieldArea = fieldArea;
+        this.fieldAreaUnit = fieldAreaUnit;
+        this.cropQuantity = cropQuantity;
+        this.cropQuantityUnit = cropQuantityUnit;
+        this.metricsSource = metricsSource;
         this.version = version;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -131,6 +157,46 @@ public class DiagnosisCaseEntity {
 
     public String getCorrelationId() {
         return correlationId;
+    }
+
+    public BigDecimal getFieldArea() {
+        return fieldArea;
+    }
+
+    public void setFieldArea(BigDecimal fieldArea) {
+        this.fieldArea = fieldArea;
+    }
+
+    public String getFieldAreaUnit() {
+        return fieldAreaUnit;
+    }
+
+    public void setFieldAreaUnit(String fieldAreaUnit) {
+        this.fieldAreaUnit = fieldAreaUnit;
+    }
+
+    public BigDecimal getCropQuantity() {
+        return cropQuantity;
+    }
+
+    public void setCropQuantity(BigDecimal cropQuantity) {
+        this.cropQuantity = cropQuantity;
+    }
+
+    public String getCropQuantityUnit() {
+        return cropQuantityUnit;
+    }
+
+    public void setCropQuantityUnit(String cropQuantityUnit) {
+        this.cropQuantityUnit = cropQuantityUnit;
+    }
+
+    public String getMetricsSource() {
+        return metricsSource;
+    }
+
+    public void setMetricsSource(String metricsSource) {
+        this.metricsSource = metricsSource;
     }
 
     public int getVersion() {

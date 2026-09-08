@@ -1,6 +1,8 @@
 package com.rootcause.foshol.intake.web;
 
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.Role;
 import com.rootcause.foshol.intake.application.IntakeException;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
@@ -14,6 +16,7 @@ import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;
 import com.rootcause.foshol.intake.application.query.PresignedUrlView;
 import com.rootcause.foshol.intake.infrastructure.WebIntakeAdapter;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +57,10 @@ public class CaseController {
             @RequestParam UUID cropId,
             @RequestParam(required = false) String noteBn,
             @RequestParam(required = false) UUID parentCaseId,
+            @RequestParam BigDecimal fieldArea,
+            @RequestParam FieldAreaUnit fieldAreaUnit,
+            @RequestParam(required = false) BigDecimal cropQuantity,
+            @RequestParam(required = false) CropQuantityUnit cropQuantityUnit,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @RequestPart(value = "audio", required = false) MultipartFile audio,
             @RequestParam(value = "audioDurationMs", required = false) Integer audioDurationMs)
@@ -63,6 +70,10 @@ public class CaseController {
                 cropId,
                 noteBn,
                 parentCaseId,
+                fieldArea,
+                fieldAreaUnit,
+                cropQuantity,
+                cropQuantityUnit,
                 audioDurationMs,
                 images,
                 audio,

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.common.cqrs.CqrsBuses;
@@ -24,6 +25,7 @@ import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.infrastructure.InMemoryObjectStore;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -96,6 +98,7 @@ class IntakeIntegrationTest {
         registry.add(ConfigKeys.INTAKE_QUALITY_EXPOSURE_MIN, () -> "0.15");
         registry.add(ConfigKeys.INTAKE_QUALITY_EXPOSURE_MAX, () -> "0.90");
         registry.add(ConfigKeys.INTAKE_QUALITY_MIN_EDGE_PX, () -> "224");
+        registry.add(ConfigKeys.INTAKE_QUALITY_VEGETATION_COVERAGE_MIN, () -> "0.12");
     }
 
     private static String flywayDir() {
@@ -141,6 +144,10 @@ class IntakeIntegrationTest {
                 CROP,
                 null,
                 null,
+                BigDecimal.ONE,
+                FieldAreaUnit.DECIMAL,
+                null,
+                null,
                 List.of(new IntakeImage("", "image/jpeg", IntakeFixtures.sharpJpeg())),
                 null,
                 UUID.randomUUID()));
@@ -160,6 +167,10 @@ class IntakeIntegrationTest {
         assertThatThrownBy(() -> submit.handle(new IntakeRequest(
                         FARMER,
                         CROP,
+                        null,
+                        null,
+                        BigDecimal.ONE,
+                        FieldAreaUnit.DECIMAL,
                         null,
                         null,
                         List.of(new IntakeImage("", "image/png", IntakeFixtures.blurredJpeg())),

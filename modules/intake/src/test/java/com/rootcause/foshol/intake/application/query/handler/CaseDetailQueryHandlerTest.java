@@ -53,7 +53,12 @@ class CaseDetailQueryHandlerTest {
                 null,
                 List.of(),
                 null,
-                Instant.parse("2026-01-01T00:00:00Z"));
+                Instant.parse("2026-01-01T00:00:00Z"),
+                new java.math.BigDecimal("1"),
+                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                null,
+                null,
+                com.rootcause.foshol.common.MetricsSource.FORM);
         when(queries.findFarmerId(caseId)).thenReturn(Optional.of(UUID.randomUUID()));
         when(queries.findDetail(caseId)).thenReturn(Optional.of(view));
         CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries);
