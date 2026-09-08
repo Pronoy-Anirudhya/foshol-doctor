@@ -75,6 +75,32 @@ class KnowledgeQueryApiAdapterTest {
     }
 
     @Test
+    void mapsRemedyRateColumnsOntoApiView() {
+        when(listActiveRemedies.handle(new ListActiveRemediesQuery(BLAST)))
+                .thenReturn(List.of(new RemedyReadModel(
+                        REMEDY,
+                        BLAST,
+                        RemedyType.CHEMICAL,
+                        "title",
+                        List.of("step"),
+                        "dosage",
+                        14,
+                        "LOW",
+                        "HIGH",
+                        "source",
+                        1,
+                        new java.math.BigDecimal("50"),
+                        com.rootcause.foshol.common.RemedyRateUnit.ML,
+                        com.rootcause.foshol.common.RemedyRateBasis.PER_DECIMAL,
+                        "note")));
+        RemedyView remedy = api.listActiveRemedies(BLAST).getFirst();
+        assertThat(remedy.rateAmount()).isEqualByComparingTo("50");
+        assertThat(remedy.rateUnit()).isEqualTo(com.rootcause.foshol.common.RemedyRateUnit.ML);
+        assertThat(remedy.rateBasis()).isEqualTo(com.rootcause.foshol.common.RemedyRateBasis.PER_DECIMAL);
+        assertThat(remedy.rateNotesBn()).isEqualTo("note");
+    }
+
+    @Test
     void mapsDiseaseAndNeverNullRemedySteps() {
         when(findDiseaseById.handle(new FindDiseaseByIdQuery(BLAST)))
                 .thenReturn(Optional.of(new DiseaseReadModel(
@@ -91,7 +117,11 @@ class KnowledgeQueryApiAdapterTest {
                         "LOW",
                         "LOW",
                         "source",
-                        1)));
+                        1,
+                        null,
+                        null,
+                        null,
+                        null)));
         DiseaseView disease = api.findDiseaseById(BLAST).orElseThrow();
         assertThat(disease.healthy()).isFalse();
         assertThat(disease.cropId()).isEqualTo(RICE);

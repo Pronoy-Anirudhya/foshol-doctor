@@ -36,6 +36,8 @@ public final class ErrorCodes {
     public static final String ERR_IMAGE_COUNT = "ERR_IMAGE_COUNT";
     public static final String ERR_IMAGE_NOT_FOUND = "ERR_IMAGE_NOT_FOUND";
     public static final String ERR_IMAGE_QUALITY_REJECTED = "ERR_IMAGE_QUALITY_REJECTED";
+    public static final String ERR_IMAGE_NOT_A_CROP = "ERR_IMAGE_NOT_A_CROP";
+    public static final String ERR_FIELD_METRICS_INVALID = "ERR_FIELD_METRICS_INVALID";
     public static final String ERR_IMAGE_TOO_LARGE = "ERR_IMAGE_TOO_LARGE";
     public static final String ERR_PARENT_CASE_INVALID = "ERR_PARENT_CASE_INVALID";
     public static final String ERR_STORAGE_UNAVAILABLE = "ERR_STORAGE_UNAVAILABLE";

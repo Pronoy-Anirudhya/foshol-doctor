@@ -3,7 +3,9 @@ package com.rootcause.foshol.intake.application.command.handler;
 import com.rootcause.foshol.common.BanglaNormalizer;
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.common.events.CaseSubmitted;
@@ -43,6 +45,7 @@ import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -115,6 +118,7 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
             @Value("${" + ConfigKeys.INTAKE_QUALITY_EXPOSURE_MIN + "}") double exposureMin,
             @Value("${" + ConfigKeys.INTAKE_QUALITY_EXPOSURE_MAX + "}") double exposureMax,
             @Value("${" + ConfigKeys.INTAKE_QUALITY_MIN_EDGE_PX + "}") int minEdgePx,
+            @Value("${" + ConfigKeys.INTAKE_QUALITY_VEGETATION_COVERAGE_MIN + "}") double vegetationCoverageMin,
             @Value("${" + ConfigKeys.STORAGE_DERIVATIVE_MAX_EDGE_PX + "}") int derivativeMaxEdgePx,
             @Value("${" + ConfigKeys.INTAKE_ALLOWED_IMAGE_TYPES + "}") String allowedImageTypes,
             @Value("${" + ConfigKeys.INTAKE_ALLOWED_AUDIO_TYPES + "}") String allowedAudioTypes) {
@@ -137,7 +141,8 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
         this.derivativeMaxEdgePx = derivativeMaxEdgePx;
         this.allowedImageTypes = csv(allowedImageTypes);
         this.allowedAudioTypes = csv(allowedAudioTypes);
-        this.qualitySpec = new ImageQualitySpec(blurMin, exposureMin, exposureMax, minEdgePx);
+        this.qualitySpec =
+                new ImageQualitySpec(blurMin, exposureMin, exposureMax, minEdgePx, vegetationCoverageMin);
     }
 
     public SubmitCaseResult handle(IntakeRequest request) {
@@ -151,6 +156,7 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
         if (command.idempotencyKey() == null) {
             throw new IntakeException(ErrorCodes.ERR_IDEMPOTENCY_KEY_MISSING, 400, "Idempotency-Key is required.");
         }
+        validateFieldMetrics(command.fieldArea(), command.fieldAreaUnit(), command.cropQuantity(), command.cropQuantityUnit());
         List<IntakeImage> images = command.images() == null ? List.of() : command.images();
         if (images.size() < minImages || images.size() > maxImages) {
             throw new IntakeException(ErrorCodes.ERR_IMAGE_COUNT, 400, "Image count is outside the allowed range.");
@@ -175,6 +181,10 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
                 crop.id(),
                 note == null ? "" : note,
                 parentId == null ? null : parentId.value(),
+                command.fieldArea(),
+                command.fieldAreaUnit(),
+                command.cropQuantity(),
+                command.cropQuantityUnit(),
                 prepared.stream().map(PreparedImage::sha).toList(),
                 audio == null ? null : audio.sha());
         Optional<IdempotencyRecord> existing = cases.findIdempotency(command.idempotencyKey());
@@ -197,6 +207,10 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
                     now,
                     domainImages,
                     domainAudio,
+                    command.fieldArea(),
+                    command.fieldAreaUnit(),
+                    command.cropQuantity(),
+                    command.cropQuantityUnit(),
                     minImages,
                     maxImages);
             String body = "{\"caseId\":\""
@@ -267,6 +281,25 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
         return CaseId.of(parentCaseId);
     }
 
+    private static void validateFieldMetrics(
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit) {
+        if (fieldArea == null || fieldAreaUnit == null || fieldArea.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IntakeException(
+                    ErrorCodes.ERR_FIELD_METRICS_INVALID, 400, "Field area and unit are required and must be positive.");
+        }
+        if (cropQuantity != null && cropQuantityUnit == null) {
+            throw new IntakeException(
+                    ErrorCodes.ERR_FIELD_METRICS_INVALID, 400, "Crop quantity unit is required when quantity is set.");
+        }
+        if (cropQuantity == null && cropQuantityUnit != null) {
+            throw new IntakeException(
+                    ErrorCodes.ERR_FIELD_METRICS_INVALID, 400, "Crop quantity is required when unit is set.");
+        }
+    }
+
     private List<PreparedImage> prepareImages(List<IntakeImage> images) {
         List<PreparedImage> prepared = new ArrayList<>();
         List<Map<String, Object>> errors = new ArrayList<>();
@@ -287,10 +320,14 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
             try {
                 probe = qualityPort.probe(bytes);
             } catch (RuntimeException ex) {
-                probe = new ImageQualityPort.ImageProbe(0, 0, 0.0, 0.0);
+                probe = new ImageQualityPort.ImageProbe(0, 0, 0.0, 0.0, 0.0);
             }
-            ImageMetrics metrics =
-                    new ImageMetrics(probe.width(), probe.height(), probe.blurVariance(), probe.exposureScore());
+            ImageMetrics metrics = new ImageMetrics(
+                    probe.width(),
+                    probe.height(),
+                    probe.blurVariance(),
+                    probe.exposureScore(),
+                    probe.vegetationCoverage());
             QualityVerdict verdict = qualitySpec.verdict(metrics);
             if (!verdict.accepted()) {
                 errors.add(error(i, verdict.reason()));

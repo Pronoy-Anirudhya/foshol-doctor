@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
@@ -73,6 +74,10 @@ class ChangeCaseStatusCommandHandlerTest {
                 "corr",
                 Instant.parse("2026-01-01T00:00:00Z"),
                 List.of(image),
+                null,
+                BigDecimal.ONE,
+                FieldAreaUnit.DECIMAL,
+                null,
                 null,
                 1,
                 3);

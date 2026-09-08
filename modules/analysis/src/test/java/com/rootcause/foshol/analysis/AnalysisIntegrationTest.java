@@ -252,7 +252,11 @@ class AnalysisIntegrationTest {
                 null,
                 "LOW",
                 "HIGH",
-                "TODO(content-owner)")));
+                "TODO(content-owner)",
+                null,
+                null,
+                null,
+                null)));
         when(knowledge.listActiveRemedies(BLAST)).thenReturn(List.of());
         when(knowledge.listActiveRemedies(HEALTHY)).thenReturn(List.of());
         when(knowledge.listSymptoms())
@@ -313,7 +317,12 @@ class AnalysisIntegrationTest {
                 images(),
                 audio(),
                 "corr-it",
-                Instant.parse("2026-09-07T00:00:00Z"));
+                Instant.parse("2026-09-07T00:00:00Z"),
+                new BigDecimal("1"),
+                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                null,
+                null,
+                com.rootcause.foshol.common.MetricsSource.FORM);
     }
 
     private static List<CaseImageRef> images() {

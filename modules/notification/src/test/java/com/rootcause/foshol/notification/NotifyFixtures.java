@@ -44,8 +44,8 @@ public final class NotifyFixtures {
                 1,
                 null,
                 List.of(
-                        new RemedyRefView(Uuid7.create(), RemedyType.CULTURAL, "r1", List.of(), null, null, ""),
-                        new RemedyRefView(Uuid7.create(), RemedyType.CULTURAL, "r2", List.of(), null, null, "")),
+                        new RemedyRefView(Uuid7.create(), RemedyType.CULTURAL, "r1", List.of(), null, null, "", null, null, null, null, null),
+                        new RemedyRefView(Uuid7.create(), RemedyType.CULTURAL, "r2", List.of(), null, null, "", null, null, null, null, null)),
                 T0);
     }
 

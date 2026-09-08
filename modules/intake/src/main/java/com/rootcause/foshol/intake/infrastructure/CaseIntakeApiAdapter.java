@@ -1,8 +1,12 @@
 package com.rootcause.foshol.intake.infrastructure;
 
+import com.rootcause.foshol.common.CropQuantityUnit;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
+import com.rootcause.foshol.intake.application.command.RecordFieldMetricsCommand;
 import com.rootcause.foshol.intake.application.command.RecordTranscriptCommand;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import java.math.BigDecimal;
@@ -37,5 +41,17 @@ public class CaseIntakeApiAdapter implements CaseIntakeApi {
     @Override
     public void recordTranscript(UUID caseId, String transcriptBn, BigDecimal asrConfidence) {
         commands.handle(new RecordTranscriptCommand(caseId, transcriptBn, asrConfidence));
+    }
+
+    @Override
+    public void recordFieldMetrics(
+            UUID caseId,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
+            MetricsSource source) {
+        commands.handle(new RecordFieldMetricsCommand(
+                caseId, fieldArea, fieldAreaUnit, cropQuantity, cropQuantityUnit, source));
     }
 }

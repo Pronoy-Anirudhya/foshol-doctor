@@ -6,7 +6,10 @@ import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.CandidateSource;
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.common.Uuid7;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
@@ -270,7 +273,12 @@ class ReviewTaskUniversalityIT {
                         List.of(),
                         null,
                         "c",
-                        T0));
+                        T0,
+                        new BigDecimal("1"),
+                        com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                        null,
+                        null,
+                        com.rootcause.foshol.common.MetricsSource.FORM));
         return id;
     }
 
@@ -323,6 +331,15 @@ class ReviewTaskUniversalityIT {
 
                 @Override
                 public void recordTranscript(UUID caseId, String transcriptBn, BigDecimal asrConfidence) {}
+
+                @Override
+                public void recordFieldMetrics(
+                        UUID caseId,
+                        BigDecimal fieldArea,
+                        FieldAreaUnit fieldAreaUnit,
+                        BigDecimal cropQuantity,
+                        CropQuantityUnit cropQuantityUnit,
+                        MetricsSource source) {}
             };
         }
 
@@ -395,9 +412,11 @@ class ReviewTaskUniversalityIT {
                     }
                     return List.of(
                             new RemedyView(
-                                    REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", ""),
+                                    REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "",
+                                    null, null, null, null),
                             new RemedyView(
-                                    REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", ""));
+                                    REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "",
+                                    null, null, null, null));
                 }
 
                 @Override

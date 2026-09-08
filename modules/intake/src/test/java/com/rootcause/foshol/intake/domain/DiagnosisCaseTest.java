@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.rootcause.foshol.common.CaseStatus;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
 import com.rootcause.foshol.intake.domain.vo.ImageId;
@@ -35,6 +36,10 @@ class DiagnosisCaseTest {
                 "corr",
                 NOW,
                 List.of(first, second),
+                null,
+                BigDecimal.ONE,
+                FieldAreaUnit.DECIMAL,
+                null,
                 null,
                 1,
                 3);
@@ -77,6 +82,10 @@ class DiagnosisCaseTest {
                 "corr",
                 NOW,
                 List.of(image(true, 1, "0.500")),
+                null,
+                BigDecimal.ONE,
+                FieldAreaUnit.DECIMAL,
+                null,
                 null,
                 1,
                 3);

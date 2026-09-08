@@ -1,5 +1,7 @@
 package com.rootcause.foshol.knowledge.infrastructure;
 
+import com.rootcause.foshol.common.RemedyRateBasis;
+import com.rootcause.foshol.common.RemedyRateUnit;
 import com.rootcause.foshol.common.RemedyType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.Immutable;
@@ -58,6 +61,20 @@ public class RemedyEntity {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "rate_amount", precision = 12, scale = 4)
+    private BigDecimal rateAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rate_unit", length = 8)
+    private RemedyRateUnit rateUnit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rate_basis", length = 16)
+    private RemedyRateBasis rateBasis;
+
+    @Column(name = "rate_notes_bn")
+    private String rateNotesBn;
 
     protected RemedyEntity() {}
 
@@ -111,5 +128,21 @@ public class RemedyEntity {
 
     public Instant getDeletedAt() {
         return deletedAt;
+    }
+
+    public BigDecimal getRateAmount() {
+        return rateAmount;
+    }
+
+    public RemedyRateUnit getRateUnit() {
+        return rateUnit;
+    }
+
+    public RemedyRateBasis getRateBasis() {
+        return rateBasis;
+    }
+
+    public String getRateNotesBn() {
+        return rateNotesBn;
     }
 }

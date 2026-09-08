@@ -4,5 +4,6 @@ public interface ImageQualityPort {
 
     ImageProbe probe(byte[] bytes);
 
-    record ImageProbe(int width, int height, double blurVariance, double exposureScore) {}
+    record ImageProbe(
+            int width, int height, double blurVariance, double exposureScore, double vegetationCoverage) {}
 }

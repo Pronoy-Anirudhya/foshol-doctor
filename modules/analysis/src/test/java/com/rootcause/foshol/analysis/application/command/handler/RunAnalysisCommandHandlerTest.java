@@ -242,7 +242,8 @@ class RunAnalysisCommandHandlerTest {
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
-                "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)")));
+                "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
+                null, null, null, null)));
         CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
         when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
         when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
@@ -286,7 +287,7 @@ class RunAnalysisCommandHandlerTest {
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
-                "t", List.of("s"), null, null, "LOW", "HIGH", "ref")));
+                "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null)));
     }
 
     private RunAnalysisCommand command(CaseAudioRef audio) {
@@ -307,7 +308,12 @@ class RunAnalysisCommandHandlerTest {
                 images(),
                 audio,
                 "corr-1",
-                Instant.now());
+                Instant.now(),
+                new BigDecimal("1"),
+                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                null,
+                null,
+                com.rootcause.foshol.common.MetricsSource.FORM);
     }
 
     private static List<CaseImageRef> images() {

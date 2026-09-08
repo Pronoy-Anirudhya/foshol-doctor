@@ -9,7 +9,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseSubmitted;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.identity.api.FarmerView;
@@ -26,16 +28,19 @@ import com.rootcause.foshol.intake.application.port.ImageTransformPort;
 import com.rootcause.foshol.intake.application.port.ObjectStorePort;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.IdempotencyRecord;
+import com.rootcause.foshol.intake.domain.QualityReason;
 import com.rootcause.foshol.intake.infrastructure.ImageMetricsCalculator;
 import com.rootcause.foshol.intake.IntakeFixtures;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -86,7 +91,11 @@ class SubmitCaseCommandHandlerTest {
                 bytes -> {
                     var metrics = ImageMetricsCalculator.calculate(bytes);
                     return new ImageQualityPort.ImageProbe(
-                            metrics.width(), metrics.height(), metrics.blurVariance(), metrics.exposureScore());
+                            metrics.width(),
+                            metrics.height(),
+                            metrics.blurVariance(),
+                            metrics.exposureScore(),
+                            metrics.vegetationCoverage());
                 },
                 transform,
                 farmers,
@@ -105,6 +114,7 @@ class SubmitCaseCommandHandlerTest {
                 0.15,
                 0.90,
                 224,
+                0.12,
                 1024,
                 "image/jpeg,image/png,image/webp",
                 "audio/wav,audio/webm,audio/ogg,audio/mp4");
@@ -144,6 +154,38 @@ class SubmitCaseCommandHandlerTest {
                 });
         verify(store, never()).put(anyString(), any(), anyString());
         verify(cases, never()).save(any());
+    }
+
+    @Test
+    void rejectsLowVegetationWithoutStoring() {
+        assertThatThrownBy(() -> handler.handle(command(List.of(IntakeFixtures.nonCropJpeg()), null)))
+                .isInstanceOf(IntakeException.class)
+                .satisfies(ex -> {
+                    IntakeException intake = (IntakeException) ex;
+                    assertThat(intake.errorCode()).isEqualTo(ErrorCodes.ERR_IMAGE_QUALITY_REJECTED);
+                    assertThat(intake.status()).isEqualTo(422);
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> errors = (List<Map<String, Object>>) intake.extra();
+                    assertThat(errors.getFirst().get("reason")).isEqualTo(QualityReason.NOT_A_CROP.httpReason());
+                });
+        verify(store, never()).put(anyString(), any(), anyString());
+        verify(cases, never()).save(any());
+    }
+
+    @Test
+    void rejectsMissingFieldMetrics() {
+        assertThatThrownBy(() -> handler.handle(command(
+                        UUID.randomUUID(),
+                        List.of(IntakeFixtures.sharpJpeg()),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)))
+                .isInstanceOf(IntakeException.class)
+                .extracting(ex -> ((IntakeException) ex).errorCode())
+                .isEqualTo(ErrorCodes.ERR_FIELD_METRICS_INVALID);
+        verify(store, never()).put(anyString(), any(), anyString());
     }
 
     @Test
@@ -223,10 +265,32 @@ class SubmitCaseCommandHandlerTest {
     }
 
     private SubmitCaseCommand command(UUID key, List<byte[]> images, byte[] audio) {
+        return command(key, images, audio, BigDecimal.ONE, FieldAreaUnit.DECIMAL, null, null);
+    }
+
+    private SubmitCaseCommand command(
+            UUID key,
+            List<byte[]> images,
+            byte[] audio,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit) {
         List<IntakeImage> parts = images.stream()
                 .map(bytes -> new IntakeImage("", "application/octet-stream", bytes))
                 .toList();
         IntakeAudio intakeAudio = audio == null ? null : new IntakeAudio("", "audio/wav", audio, 0);
-        return new SubmitCaseCommand(FARMER, CROP, null, null, parts, intakeAudio, key);
+        return new SubmitCaseCommand(
+                FARMER,
+                CROP,
+                null,
+                null,
+                fieldArea,
+                fieldAreaUnit,
+                cropQuantity,
+                cropQuantityUnit,
+                parts,
+                intakeAudio,
+                key);
     }
 }

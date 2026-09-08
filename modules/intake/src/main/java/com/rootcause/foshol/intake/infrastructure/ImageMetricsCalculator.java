@@ -15,15 +15,17 @@ public final class ImageMetricsCalculator {
         try {
             image = ImageIO.read(new ByteArrayInputStream(bytes));
         } catch (IOException ex) {
-            return new ImageMetrics(0, 0, 0, 0);
+            return new ImageMetrics(0, 0, 0, 0, 0);
         }
         if (image == null) {
-            return new ImageMetrics(0, 0, 0, 0);
+            return new ImageMetrics(0, 0, 0, 0, 0);
         }
         int width = image.getWidth();
         int height = image.getHeight();
-        int[] grey = new int[width * height];
+        int pixels = width * height;
+        int[] grey = new int[pixels];
         long sum = 0;
+        int vegetationPixels = 0;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = image.getRGB(x, y);
@@ -33,9 +35,13 @@ public final class ImageMetricsCalculator {
                 int value = (int) Math.round(0.299 * r + 0.587 * g + 0.114 * b);
                 grey[y * width + x] = value;
                 sum += value;
+                if (g > r * 1.1 && g > b * 1.1 && g > 40) {
+                    vegetationPixels++;
+                }
             }
         }
-        double exposure = width * height == 0 ? 0 : (sum / (double) (width * height)) / 255.0;
+        double exposure = pixels == 0 ? 0 : (sum / (double) pixels) / 255.0;
+        double vegetation = pixels == 0 ? 0 : vegetationPixels / (double) pixels;
         int count = 0;
         double mean = 0;
         double[] samples = new double[Math.max(1, (width - 2) * (height - 2))];
@@ -52,7 +58,7 @@ public final class ImageMetricsCalculator {
             }
         }
         if (count == 0) {
-            return new ImageMetrics(width, height, 0, exposure);
+            return new ImageMetrics(width, height, 0, exposure, vegetation);
         }
         mean /= count;
         double var = 0;
@@ -61,6 +67,6 @@ public final class ImageMetricsCalculator {
             var += d * d;
         }
         var /= count;
-        return new ImageMetrics(width, height, var, exposure);
+        return new ImageMetrics(width, height, var, exposure, vegetation);
     }
 }

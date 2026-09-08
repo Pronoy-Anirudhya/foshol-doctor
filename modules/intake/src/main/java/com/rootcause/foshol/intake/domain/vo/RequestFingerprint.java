@@ -1,5 +1,8 @@
 package com.rootcause.foshol.intake.domain.vo;
 
+import com.rootcause.foshol.common.CropQuantityUnit;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -15,6 +18,10 @@ public record RequestFingerprint(Sha256 hash) {
             UUID cropId,
             String normalisedNote,
             UUID parentCaseId,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
             List<Sha256> imageHashes,
             Sha256 audioHash) {
         Objects.requireNonNull(farmerId, "farmerId");
@@ -26,7 +33,11 @@ public record RequestFingerprint(Sha256 hash) {
         payload.append(farmerId).append('\n');
         payload.append(cropId).append('\n');
         payload.append(note).append('\n');
-        payload.append(parent);
+        payload.append(parent).append('\n');
+        payload.append(fieldArea == null ? "" : fieldArea.toPlainString()).append('\n');
+        payload.append(fieldAreaUnit == null ? "" : fieldAreaUnit.name()).append('\n');
+        payload.append(cropQuantity == null ? "" : cropQuantity.toPlainString()).append('\n');
+        payload.append(cropQuantityUnit == null ? "" : cropQuantityUnit.name());
         for (Sha256 imageHash : imageHashes) {
             payload.append('\n').append(imageHash.hex());
         }

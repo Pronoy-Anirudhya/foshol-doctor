@@ -1,6 +1,9 @@
 package com.rootcause.foshol.knowledge.application.query;
 
+import com.rootcause.foshol.common.RemedyRateBasis;
+import com.rootcause.foshol.common.RemedyRateUnit;
 import com.rootcause.foshol.common.RemedyType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,4 +18,8 @@ public record RemedyReadModel(
         String costTier,
         String efficacy,
         String sourceRef,
-        int displayOrder) {}
+        int displayOrder,
+        BigDecimal rateAmount,
+        RemedyRateUnit rateUnit,
+        RemedyRateBasis rateBasis,
+        String rateNotesBn) {}

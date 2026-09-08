@@ -15,5 +15,12 @@ class ImageMetricsCalculatorTest {
         assertThat(sharp.width()).isGreaterThanOrEqualTo(224);
         assertThat(sharp.blurVariance()).isGreaterThan(blurred.blurVariance());
         assertThat(sharp.exposureScore()).isBetween(0.15, 0.90);
+        assertThat(sharp.vegetationCoverage()).isGreaterThan(0.12);
+    }
+
+    @Test
+    void nonCropHasLowVegetationCoverage() {
+        ImageMetrics nonCrop = ImageMetricsCalculator.calculate(IntakeFixtures.nonCropJpeg());
+        assertThat(nonCrop.vegetationCoverage()).isLessThan(0.12);
     }
 }

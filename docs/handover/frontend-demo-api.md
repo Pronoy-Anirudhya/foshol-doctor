@@ -115,7 +115,8 @@ translate agronomic strings in the client (`COMMON-CON-003`).
 ```
 
 `429` may include `Retry-After` (seconds). Quality failures on submit use `QualityGateProblem` with
-`rejectedImages[].reason` ∈ `BLURRY` \| `UNDEREXPOSED` \| `OVEREXPOSED` \| `TOO_SMALL` \| `UNREADABLE`.
+`rejectedImages[].reason` ∈ `BLURRY` \| `UNDEREXPOSED` \| `OVEREXPOSED` \| `TOO_SMALL` \| `UNREADABLE` \|
+`NOT_A_CROP`.
 
 ---
 
@@ -240,8 +241,10 @@ the server gate is authoritative.
 on retry of the same draft**; new key only when crop/images/audio/note change. Same key + different
 body → **409**.
 
-Multipart fields: `cropId` (required UUID), `images` (1–3 files), optional `noteBn` (max 2000),
-optional `parentCaseId` (resubmit after reject), optional `audio`.
+Multipart fields: `cropId` (required UUID), **`fieldArea`** (required number), **`fieldAreaUnit`**
+(required ∈ `DECIMAL` \| `SQ_M` \| `SQ_FT` \| `HECTARE` \| `ACRE`), `images` (1–3 files), optional
+`cropQuantity` / `cropQuantityUnit` (`KG` \| `TON` \| `PLANTS` \| `BIGHAS_EQUIV`), optional `noteBn`
+(max 2000), optional `parentCaseId` (resubmit after reject), optional `audio`.
 
 ```http
 POST /api/v1/cases
@@ -250,6 +253,10 @@ Idempotency-Key: 3fa85f64-5717-4562-b3fc-2c963f66afa6
 Content-Type: multipart/form-data
 
 cropId = 01800000-0000-7000-8000-000000000001
+fieldArea = 2
+fieldAreaUnit = DECIMAL
+cropQuantity = (optional)
+cropQuantityUnit = (optional)
 noteBn = (optional Bangla)
 images = <file>   (repeat the part for each photo)
 audio  = <file>   (optional)
@@ -489,9 +496,13 @@ Optional `state`: `PENDING` \| `CLAIMED` \| `DONE` \| `REJECTED`.
 }
 ```
 
-`case` is `CaseDetail`; `analysis` is `AnalysisDetail` (thresholds for the wow-factor bars). Prefill
-the editor from `suggestedDiseaseId` + `suggestedRemedies`; the officer may change them. `priorAdvisory`
-is set on resubmissions.
+`case` is `CaseDetail` (includes `fieldArea`, `fieldAreaUnit`, optional crop quantity, and
+`metricsSource`); `analysis` is `AnalysisDetail` (thresholds for the wow-factor bars). Prefill
+the editor from `suggestedDiseaseId` + `suggestedRemedies`; the officer may change them.
+`suggestedRemedies` are for the **rank-1** disease only — analysis `candidates` remain on the payload
+for context. When a remedy has human-owned rate columns and the case has field area, each suggested
+remedy may include `computedDose` `{ amount, unit, basis, fromArea, fromAreaUnit }`; rates are often
+null in demo seed data until content-owner C15. `priorAdvisory` is set on resubmissions.
 
 Images: same **302** content URL as the farmer, using ids from `case.images`. Grad-CAM: `/gradcam`.
 

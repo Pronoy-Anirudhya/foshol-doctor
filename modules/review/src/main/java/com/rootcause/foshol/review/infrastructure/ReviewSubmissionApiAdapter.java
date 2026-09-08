@@ -88,7 +88,12 @@ public class ReviewSubmissionApiAdapter implements ReviewSubmissionApi {
                     kb == null ? List.of() : kb.stepsBn(),
                     kb == null ? null : kb.dosageBn(),
                     kb == null ? null : kb.phiDays(),
-                    kb == null ? "" : kb.sourceRef()));
+                    kb == null ? "" : kb.sourceRef(),
+                    kb == null ? null : kb.rateAmount(),
+                    kb == null ? null : kb.rateUnit(),
+                    kb == null ? null : kb.rateBasis(),
+                    kb == null ? null : kb.rateNotesBn(),
+                    null));
         }
         Advisory advisory = AdvisoryMapper.toDomain(entity, remedies);
         String officerName = officers.findById(advisory.officerId()).map(o -> o.name()).orElse("");

@@ -94,6 +94,7 @@ public class IntakeExceptionHandler {
             case "OVEREXPOSED" -> QualityReason.TOO_BRIGHT;
             case "BLURRY" -> QualityReason.BLURRY;
             case "TOO_SMALL" -> QualityReason.TOO_SMALL;
+            case "NOT_A_CROP" -> QualityReason.NOT_A_CROP;
             default -> QualityReason.UNREADABLE;
         };
         Locale locale = LocaleContextHolder.getLocale();

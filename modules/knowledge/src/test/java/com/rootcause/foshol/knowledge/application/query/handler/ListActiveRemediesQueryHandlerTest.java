@@ -23,9 +23,9 @@ class ListActiveRemediesQueryHandlerTest {
         UUID first = UUID.fromString("01800000-0000-7000-8000-000000000701");
         UUID second = UUID.fromString("01800000-0000-7000-8000-000000000702");
         RemedyReadModel a = new RemedyReadModel(
-                first, disease, RemedyType.CULTURAL, "a", List.of("a"), null, null, "LOW", "LOW", "src", 1);
+                first, disease, RemedyType.CULTURAL, "a", List.of("a"), null, null, "LOW", "LOW", "src", 1, null, null, null, null);
         RemedyReadModel b = new RemedyReadModel(
-                second, disease, RemedyType.ORGANIC, "b", List.of("b"), null, null, "LOW", "LOW", "src", 2);
+                second, disease, RemedyType.ORGANIC, "b", List.of("b"), null, null, "LOW", "LOW", "src", 2, null, null, null, null);
         when(reads.listActiveRemedies(disease)).thenReturn(List.of(a, b));
         ListActiveRemediesQueryHandler handler = new ListActiveRemediesQueryHandler(reads);
         assertThat(handler.handle(new ListActiveRemediesQuery(disease))).containsExactly(a, b);

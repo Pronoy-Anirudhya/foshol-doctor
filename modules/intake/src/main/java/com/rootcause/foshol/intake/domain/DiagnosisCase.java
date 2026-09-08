@@ -1,7 +1,10 @@
 package com.rootcause.foshol.intake.domain;
 
 import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.CropQuantityUnit;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.MetricsSource;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.domain.spec.TransitionAllowedSpec;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
@@ -25,6 +28,11 @@ public final class DiagnosisCase {
     private final String noteBn;
     private final String districtCode;
     private final String correlationId;
+    private BigDecimal fieldArea;
+    private FieldAreaUnit fieldAreaUnit;
+    private BigDecimal cropQuantity;
+    private CropQuantityUnit cropQuantityUnit;
+    private MetricsSource metricsSource;
     private int version;
     private final Instant createdAt;
     private Instant updatedAt;
@@ -41,6 +49,11 @@ public final class DiagnosisCase {
             String noteBn,
             String districtCode,
             String correlationId,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
+            MetricsSource metricsSource,
             int version,
             Instant createdAt,
             Instant updatedAt,
@@ -55,6 +68,11 @@ public final class DiagnosisCase {
         this.noteBn = noteBn;
         this.districtCode = Objects.requireNonNull(districtCode, "districtCode");
         this.correlationId = Objects.requireNonNull(correlationId, "correlationId");
+        this.fieldArea = Objects.requireNonNull(fieldArea, "fieldArea");
+        this.fieldAreaUnit = Objects.requireNonNull(fieldAreaUnit, "fieldAreaUnit");
+        this.cropQuantity = cropQuantity;
+        this.cropQuantityUnit = cropQuantityUnit;
+        this.metricsSource = Objects.requireNonNull(metricsSource, "metricsSource");
         this.version = version;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
@@ -74,6 +92,10 @@ public final class DiagnosisCase {
             Instant submittedAt,
             List<CaseImage> images,
             CaseAudio audio,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
             int minImages,
             int maxImages) {
         DiagnosisCase diagnosisCase = new DiagnosisCase(
@@ -86,6 +108,11 @@ public final class DiagnosisCase {
                 noteBn,
                 districtCode,
                 correlationId,
+                fieldArea,
+                fieldAreaUnit,
+                cropQuantity,
+                cropQuantityUnit,
+                MetricsSource.FORM,
                 0,
                 submittedAt,
                 submittedAt,
@@ -105,6 +132,11 @@ public final class DiagnosisCase {
             String noteBn,
             String districtCode,
             String correlationId,
+            BigDecimal fieldArea,
+            FieldAreaUnit fieldAreaUnit,
+            BigDecimal cropQuantity,
+            CropQuantityUnit cropQuantityUnit,
+            MetricsSource metricsSource,
             int version,
             Instant createdAt,
             Instant updatedAt,
@@ -120,6 +152,11 @@ public final class DiagnosisCase {
                 noteBn,
                 districtCode,
                 correlationId,
+                fieldArea,
+                fieldAreaUnit,
+                cropQuantity,
+                cropQuantityUnit,
+                metricsSource,
                 version,
                 createdAt,
                 updatedAt,
@@ -154,6 +191,62 @@ public final class DiagnosisCase {
             throw new AudioNotFoundException(id);
         }
         audio = audio.withTranscript(transcriptBn, asrConfidence);
+    }
+
+    public void recordFieldMetrics(
+            BigDecimal incomingArea,
+            FieldAreaUnit incomingAreaUnit,
+            BigDecimal incomingQuantity,
+            CropQuantityUnit incomingQuantityUnit,
+            MetricsSource source) {
+        Objects.requireNonNull(source, "source");
+        if (source == MetricsSource.FORM) {
+            Objects.requireNonNull(incomingArea, "fieldArea");
+            Objects.requireNonNull(incomingAreaUnit, "fieldAreaUnit");
+            fieldArea = incomingArea;
+            fieldAreaUnit = incomingAreaUnit;
+            if (incomingQuantity != null) {
+                cropQuantity = incomingQuantity;
+                cropQuantityUnit = Objects.requireNonNull(incomingQuantityUnit, "cropQuantityUnit");
+            }
+            metricsSource = metricsSource == MetricsSource.SPEECH || metricsSource == MetricsSource.FORM_AND_SPEECH
+                    ? MetricsSource.FORM_AND_SPEECH
+                    : MetricsSource.FORM;
+            return;
+        }
+        boolean formOwnsArea = metricsSource == MetricsSource.FORM
+                || metricsSource == MetricsSource.FORM_AND_SPEECH;
+        if (!formOwnsArea) {
+            if (incomingArea != null && incomingAreaUnit != null) {
+                fieldArea = incomingArea;
+                fieldAreaUnit = incomingAreaUnit;
+            }
+            if (incomingQuantity != null) {
+                cropQuantity = incomingQuantity;
+                cropQuantityUnit = Objects.requireNonNull(incomingQuantityUnit, "cropQuantityUnit");
+            }
+            metricsSource = MetricsSource.SPEECH;
+            return;
+        }
+        boolean filledQuantity = false;
+        boolean differs = false;
+        if (incomingArea != null
+                && (fieldArea.compareTo(incomingArea) != 0 || fieldAreaUnit != incomingAreaUnit)) {
+            differs = true;
+        }
+        if (cropQuantity == null && incomingQuantity != null) {
+            cropQuantity = incomingQuantity;
+            cropQuantityUnit = Objects.requireNonNull(incomingQuantityUnit, "cropQuantityUnit");
+            filledQuantity = true;
+        } else if (incomingQuantity != null
+                && cropQuantity != null
+                && (cropQuantity.compareTo(incomingQuantity) != 0
+                        || cropQuantityUnit != incomingQuantityUnit)) {
+            differs = true;
+        }
+        if (filledQuantity || differs) {
+            metricsSource = MetricsSource.FORM_AND_SPEECH;
+        }
     }
 
     public CaseImage image(UUID imageId) {
@@ -206,6 +299,26 @@ public final class DiagnosisCase {
         return correlationId;
     }
 
+    public BigDecimal fieldArea() {
+        return fieldArea;
+    }
+
+    public FieldAreaUnit fieldAreaUnit() {
+        return fieldAreaUnit;
+    }
+
+    public BigDecimal cropQuantity() {
+        return cropQuantity;
+    }
+
+    public CropQuantityUnit cropQuantityUnit() {
+        return cropQuantityUnit;
+    }
+
+    public MetricsSource metricsSource() {
+        return metricsSource;
+    }
+
     public int version() {
         return version;
     }
@@ -242,6 +355,15 @@ public final class DiagnosisCase {
         }
         if (correlationId.isBlank()) {
             throw new IllegalStateException("correlation id is required");
+        }
+        if (fieldArea.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("field area must be positive");
+        }
+        if (cropQuantity != null && cropQuantityUnit == null) {
+            throw new IllegalStateException("crop quantity unit is required when quantity is set");
+        }
+        if (cropQuantity == null && cropQuantityUnit != null) {
+            throw new IllegalStateException("crop quantity unit requires a quantity");
         }
         if (images.isEmpty()) {
             throw new IllegalStateException("a case must carry at least one image");

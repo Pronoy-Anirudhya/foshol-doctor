@@ -5,13 +5,16 @@ import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.common.AiMode;
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.DoseCalculator;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.review.api.AdvisoryView;
+import com.rootcause.foshol.review.api.ComputedDoseView;
 import com.rootcause.foshol.review.api.RemedyRefView;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort.QueueTaskRow;
@@ -88,8 +91,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
         List<RemedyRefView> suggestedRemedies = suggested == null
                 ? List.of()
                 : knowledge.listActiveRemedies(suggested).stream()
-                        .map(r -> new RemedyRefView(
-                                r.id(), r.type(), r.titleBn(), r.stepsBn(), r.dosageBn(), r.phiDays(), r.sourceRef()))
+                        .map(r -> toSuggestedRef(r, summary))
                         .toList();
         AdvisoryView published = advisories.findPublishedByCaseId(row.caseId())
                 .map(a -> new AdvisoryView(
@@ -142,5 +144,33 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
                 task.claimExpiresAt(claimTtl),
                 published,
                 task.version());
+    }
+
+    static RemedyRefView toSuggestedRef(RemedyView remedy, CaseSummary summary) {
+        DoseCalculator.ComputedDose dose = summary == null
+                ? null
+                : DoseCalculator.compute(
+                        summary.fieldArea(),
+                        summary.fieldAreaUnit(),
+                        remedy.rateAmount(),
+                        remedy.rateUnit(),
+                        remedy.rateBasis());
+        ComputedDoseView computed = dose == null
+                ? null
+                : new ComputedDoseView(
+                        dose.amount(), dose.unit(), dose.basis(), dose.fromArea(), dose.fromAreaUnit());
+        return new RemedyRefView(
+                remedy.id(),
+                remedy.type(),
+                remedy.titleBn(),
+                remedy.stepsBn(),
+                remedy.dosageBn(),
+                remedy.phiDays(),
+                remedy.sourceRef(),
+                remedy.rateAmount(),
+                remedy.rateUnit(),
+                remedy.rateBasis(),
+                remedy.rateNotesBn(),
+                computed);
     }
 }
