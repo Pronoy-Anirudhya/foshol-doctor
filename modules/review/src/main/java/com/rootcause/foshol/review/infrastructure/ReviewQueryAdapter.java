@@ -111,13 +111,27 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 """,
                 (rs, i) -> new AdminStatsView(
                         rs.getLong("cases_today"),
-                        (BigDecimal) rs.getObject("approval_rate"),
-                        (BigDecimal) rs.getObject("median_minutes"),
-                        (BigDecimal) rs.getObject("agreement_rate"),
+                        decimal(rs, "approval_rate"),
+                        decimal(rs, "median_minutes"),
+                        decimal(rs, "agreement_rate"),
                         rs.getLong("agreement_sample"),
                         confidenceHigh,
                         confidenceLow),
                 Timestamp.from(dayStartUtc));
+    }
+
+    private static BigDecimal decimal(ResultSet rs, String column) throws SQLException {
+        Object value = rs.getObject(column);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof BigDecimal bd) {
+            return bd;
+        }
+        if (value instanceof Number n) {
+            return BigDecimal.valueOf(n.doubleValue());
+        }
+        return new BigDecimal(value.toString());
     }
 
     private OfficerQueueRow mapRow(ResultSet rs, int rowNum) throws SQLException {
