@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,22 +52,47 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtFilter,
+            ProblemAuthenticationEntryPoint authenticationEntryPoint,
+            ProblemAccessDeniedHandler accessDeniedHandler)
+            throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .anonymous(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/**")
                         .permitAll()
                         .requestMatchers("/actuator/health")
+                        .permitAll()
+                        .requestMatchers("/error")
                         .permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
+                        .requestMatchers("/api/v1/admin/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/api/v1/review/**")
+                        .hasAnyRole("OFFICER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/advisories/**")
+                        .hasAnyRole("OFFICER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/cases")
+                        .hasRole("FARMER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/cases")
+                        .hasRole("FARMER")
+                        .requestMatchers("/api/v1/notifications")
+                        .hasRole("FARMER")
                         .requestMatchers("/api/v1/**")
-                        .authenticated()
+                        .hasAnyRole("FARMER", "OFFICER", "ADMIN")
                         .anyRequest()
-                        .permitAll())
+                        .denyAll())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
