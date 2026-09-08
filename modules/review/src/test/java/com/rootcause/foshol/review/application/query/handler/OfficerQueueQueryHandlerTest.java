@@ -21,9 +21,9 @@ class OfficerQueueQueryHandlerTest {
 
     @Test
     void sortParameterIsRejected() {
-        OfficerQueueQueryHandler handler = new OfficerQueueQueryHandler(reads);
+        OfficerQueueQueryHandler handler = new OfficerQueueQueryHandler(reads, org.mockito.Mockito.mock(com.rootcause.foshol.identity.api.OfficerLookupApi.class));
         assertThatThrownBy(() -> handler.handle(new OfficerQueueQuery(
-                        "PENDING", false, Uuid7.create(), 0, 20, "confidence", "desc")))
+                        "PENDING", false, Uuid7.create(), "DHA", 0, 20, "confidence", "desc")))
                 .extracting(ex -> ((ReviewException) ex).errorCode())
                 .isEqualTo(ErrorCodes.ERR_QUEUE_SORT_NOT_SUPPORTED);
         verifyNoInteractions(reads);

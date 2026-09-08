@@ -1,5 +1,6 @@
 package com.rootcause.foshol.review.application.query.handler;
 
+import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
@@ -18,9 +19,11 @@ public class OfficerQueueQueryHandler implements QueryHandler<OfficerQueueQuery,
     }
 
     private final ReviewQueryPort reads;
+    private final OfficerLookupApi officers;
 
-    public OfficerQueueQueryHandler(ReviewQueryPort reads) {
+    public OfficerQueueQueryHandler(ReviewQueryPort reads, OfficerLookupApi officers) {
         this.reads = reads;
+        this.officers = officers;
     }
 
     @Transactional(readOnly = true)
@@ -29,6 +32,21 @@ public class OfficerQueueQueryHandler implements QueryHandler<OfficerQueueQuery,
         if (query.sort() != null || query.order() != null) {
             throw ReviewException.queueSortNotSupported();
         }
-        return reads.findQueue(query);
+        String district = query.districtCode();
+        if (district == null || district.isBlank()) {
+            district = officers
+                    .findById(query.officerId())
+                    .map(o -> o.districtCode())
+                    .orElseThrow(ReviewException::taskNotFound);
+        }
+        return reads.findQueue(new OfficerQueueQuery(
+                query.state(),
+                query.mine(),
+                query.officerId(),
+                district,
+                query.page(),
+                query.size(),
+                query.sort(),
+                query.order()));
     }
 }

@@ -30,7 +30,7 @@ public class ReviewQueueController {
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "order", required = false) String order,
             Authentication authentication) {
-        return queries.handle(new OfficerQueueQuery(
-                state, mine, ReviewAuth.subjectId(authentication), page, size, sort, order));
+        var officerId = ReviewAuth.subjectId(authentication);
+        return queries.handle(new OfficerQueueQuery(state, mine, officerId, null, page, size, sort, order));
     }
 }

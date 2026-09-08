@@ -160,8 +160,10 @@ class ReviewTaskUniversalityIT {
         listener.onFailed(new AnalysisFailed(failed, FARMER, "ERR_SIDECAR_UNAVAILABLE", "c", T0));
         listener.onCompleted(completed(primary, DecisionPath.PRIMARY, "0.91"));
         assertThat(tasks.count()).isEqualTo(5);
+        assertThat(jdbc.queryForObject("select count(*) from geo_division", Long.class)).isEqualTo(8L);
+        assertThat(jdbc.queryForObject("select count(*) from geo_district", Long.class)).isEqualTo(64L);
         assertThat(jdbc.queryForObject("select count(*) from review_task", Long.class)).isEqualTo(5L);
-        var page = queue.handle(new OfficerQueueQuery("PENDING", false, OFFICER, 0, 20, null, null));
+        var page = queue.handle(new OfficerQueueQuery("PENDING", false, OFFICER, "DHA", 0, 20, null, null));
         assertThat(page.content())
                 .extracting(OfficerQueueRow::topConfidence)
                 .containsExactly(null, new BigDecimal("0.3000"), new BigDecimal("0.6200"), new BigDecimal("0.6200"), new BigDecimal("0.9100"));
@@ -200,29 +202,31 @@ class ReviewTaskUniversalityIT {
         assertThat(swept.state()).isEqualTo(ReviewState.PENDING);
         assertThat(swept.requeueCount()).isEqualTo((short) 1);
 
-        var admin = stats.handle(new AdminStatsQuery());
+        var admin = stats.handle(new AdminStatsQuery(OFFICER));
         assertThat(admin.confidenceHigh()).isEqualByComparingTo("0.75");
         assertThat(admin.agreementSampleSize()).isGreaterThanOrEqualTo(1);
     }
 
     private void seedIdentities() {
         jdbc.update(
-                "insert into farmer (id, name, phone_hash, phone_enc, district_code, preferred_language) values (?,?,?,?,?,?) on conflict do nothing",
+                "insert into farmer (id, name, phone_hash, phone_enc, district_code, division_code, preferred_language) values (?,?,?,?,?,?,?) on conflict do nothing",
                 FARMER,
                 "Farmer A",
                 "a".repeat(64),
                 new byte[] {1},
-                "DHK01",
+                "DHA",
+                "DHK",
                 "bn");
         jdbc.update(
-                "insert into field_officer (id, name, username, password_hash, phone_hash, phone_enc, district_code, role, active) values (?,?,?,?,?,?,?,?,true) on conflict do nothing",
+                "insert into field_officer (id, name, username, password_hash, phone_hash, phone_enc, district_code, division_code, role, active) values (?,?,?,?,?,?,?,?,?,true) on conflict do nothing",
                 OFFICER,
                 "Officer A",
                 "officer.a",
                 "hash",
                 "b".repeat(64),
                 new byte[] {1},
-                "DHK01",
+                "DHA",
+                "DHK",
                 "OFFICER");
         jdbc.update(
                 """
@@ -245,12 +249,13 @@ class ReviewTaskUniversalityIT {
     private UUID insertCase() {
         UUID id = Uuid7.create();
         jdbc.update(
-                "insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, correlation_id) values (?,?,?,?,?,?)",
+                "insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, division_code, correlation_id) values (?,?,?,?,?,?,?)",
                 id,
                 FARMER,
                 CROP,
                 "ANALYSED",
-                "DHK01",
+                "DHA",
+                "DHK",
                 id.toString());
         jdbc.update(
                 "insert into case_candidate (id, case_id, disease_id, confidence, rank, source) values (?,?,?,?,1,'MODEL')",
@@ -265,7 +270,8 @@ class ReviewTaskUniversalityIT {
                         FARMER,
                         CROP,
                         "rice",
-                        "DHK01",
+                        "DHA",
+                        "DHK",
                         com.rootcause.foshol.common.CaseStatus.ANALYSED,
                         DecisionPath.PRIMARY,
                         null,
@@ -327,6 +333,11 @@ class ReviewTaskUniversalityIT {
                 @Override
                 public boolean isOwnedBy(UUID caseId, UUID farmerId) {
                     return findById(caseId).map(c -> c.farmerId().equals(farmerId)).orElse(false);
+                }
+
+                @Override
+                public boolean officerSharesDistrict(UUID caseId, UUID officerId) {
+                    return findById(caseId).map(c -> "DHA".equals(c.districtCode())).orElse(false);
                 }
 
                 @Override
@@ -436,7 +447,7 @@ class ReviewTaskUniversalityIT {
             return new FarmerLookupApi() {
                 @Override
                 public Optional<FarmerView> findById(UUID farmerId) {
-                    return Optional.of(new FarmerView(FARMER, "Farmer A", "DHK01", "bn"));
+                    return Optional.of(new FarmerView(FARMER, "Farmer A", "DHA", "bn", "DHK"));
                 }
 
                 @Override
@@ -451,7 +462,7 @@ class ReviewTaskUniversalityIT {
             return new OfficerLookupApi() {
                 @Override
                 public Optional<OfficerView> findById(UUID officerId) {
-                    return Optional.of(new OfficerView(OFFICER, "Officer A", "DHK01", "OFFICER", true));
+                    return Optional.of(new OfficerView(OFFICER, "Officer A", "DHA", "OFFICER", true, "DHK"));
                 }
 
                 @Override

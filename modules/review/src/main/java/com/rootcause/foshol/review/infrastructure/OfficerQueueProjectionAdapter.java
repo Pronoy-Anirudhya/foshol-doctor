@@ -23,18 +23,19 @@ public class OfficerQueueProjectionAdapter implements OfficerQueueProjectionPort
         jdbc.update(
                 """
                 insert into p_officer_queue (
-                    case_id, review_task_id, farmer_name, crop_code, crop_name_bn, district_code,
+                    case_id, review_task_id, farmer_name, crop_code, crop_name_bn, district_code, division_code,
                     decision_path, top_disease_id, top_disease_name_bn, top_confidence, image_count,
                     has_audio, analysis_mode, state, officer_id, is_resubmission, submitted_at,
                     sla_due_at, updated_at)
-                values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 row.caseId(),
                 row.reviewTaskId(),
                 nullToEmpty(row.farmerName()),
                 nullToEmpty(row.cropCode()),
                 nullToEmpty(row.cropNameBn()),
-                truncateDistrict(row.districtCode()),
+                nullToEmpty(row.districtCode()),
+                nullToEmpty(row.divisionCode()),
                 row.decisionPath() == null ? null : row.decisionPath().name(),
                 row.topDiseaseId(),
                 row.topDiseaseNameBn(),
@@ -69,10 +70,5 @@ public class OfficerQueueProjectionAdapter implements OfficerQueueProjectionPort
 
     private static String nullToEmpty(String value) {
         return value == null ? "" : value;
-    }
-
-    private static String truncateDistrict(String value) {
-        String v = nullToEmpty(value);
-        return v.length() <= 8 ? v : v.substring(0, 8);
     }
 }

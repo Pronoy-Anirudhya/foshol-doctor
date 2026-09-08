@@ -67,6 +67,9 @@ class ApproveCaseCommandHandlerTest {
     @Mock
     private ApplicationEventPublisher events;
 
+    @Mock
+    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+
     private ApproveCaseCommandHandler handler;
 
     @BeforeEach
@@ -79,6 +82,7 @@ class ApproveCaseCommandHandlerTest {
                 knowledge,
                 officers,
                 cases,
+                districtGuard,
                 events,
                 Clock.fixed(ReviewFixtures.T0.plusSeconds(1), ZoneOffset.UTC),
                 Duration.ofMinutes(15));
@@ -197,6 +201,7 @@ class ApproveCaseCommandHandlerTest {
                 knowledge,
                 officers,
                 cases,
+                districtGuard,
                 events,
                 Clock.fixed(ReviewFixtures.T0.plus(Duration.ofMinutes(16)), ZoneOffset.UTC),
                 Duration.ofMinutes(15));

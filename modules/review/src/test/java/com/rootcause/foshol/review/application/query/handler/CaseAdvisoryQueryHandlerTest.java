@@ -78,11 +78,31 @@ class CaseAdvisoryQueryHandlerTest {
         when(advisories.findHistoryByCaseId(caseId)).thenReturn(List.of());
         when(advisories.findPublishedByCaseId(caseId)).thenReturn(Optional.empty());
         when(officers.findById(officer))
-                .thenReturn(Optional.of(new OfficerView(officer, "Officer A", "DHK01", "OFFICER", true)));
+                .thenReturn(Optional.of(new OfficerView(officer, "Officer A", "DHK01", "OFFICER", true, "DHK")));
+        when(cases.findById(caseId)).thenReturn(Optional.of(new com.rootcause.foshol.intake.api.CaseSummary(
+                caseId,
+                Uuid7.create(),
+                Uuid7.create(),
+                "rice",
+                "DHK01",
+                "DHK",
+                com.rootcause.foshol.common.CaseStatus.REJECTED,
+                null,
+                null,
+                null,
+                List.of(),
+                null,
+                "c",
+                Instant.parse("2026-01-01T00:00:00Z"),
+                java.math.BigDecimal.ONE,
+                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                null,
+                null,
+                com.rootcause.foshol.common.MetricsSource.FORM)));
         CaseAdvisoryQueryHandler handler =
                 new CaseAdvisoryQueryHandler(advisories, rejections, cases, knowledge, officers);
         CaseAdvisoryResult result =
-                handler.handle(new CaseAdvisoryQuery(caseId, new Actor(Uuid7.create(), Role.OFFICER)));
+                handler.handle(new CaseAdvisoryQuery(caseId, new Actor(officer, Role.OFFICER)));
         assertThat(result.published()).isNull();
         assertThat(result.rejection().messageBn()).isEqualTo("ছবি");
     }

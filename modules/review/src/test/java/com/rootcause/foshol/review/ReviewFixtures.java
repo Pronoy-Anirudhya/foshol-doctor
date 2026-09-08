@@ -59,15 +59,15 @@ public final class ReviewFixtures {
     }
 
     public static OfficerView officer() {
-        return new OfficerView(OFFICER_A, "Officer A", "DHK01", "OFFICER", true);
+        return new OfficerView(OFFICER_A, "Officer A", "DHK01", "OFFICER", true, "DHK");
     }
 
     public static OfficerView secondOfficer() {
-        return new OfficerView(OFFICER_B, "Officer B", "DHK01", "OFFICER", true);
+        return new OfficerView(OFFICER_B, "Officer B", "DHK01", "OFFICER", true, "DHK");
     }
 
     public static FarmerView farmer() {
-        return new FarmerView(FARMER, "Farmer A", "DHK01", "bn");
+        return new FarmerView(FARMER, "Farmer A", "DHK01", "bn", "DHK");
     }
 
     public static DiseaseView diseaseD() {
