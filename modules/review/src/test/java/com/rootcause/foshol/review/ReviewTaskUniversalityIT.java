@@ -205,6 +205,7 @@ class ReviewTaskUniversalityIT {
         var admin = stats.handle(new AdminStatsQuery(OFFICER));
         assertThat(admin.confidenceHigh()).isEqualByComparingTo("0.75");
         assertThat(admin.agreementSampleSize()).isGreaterThanOrEqualTo(1);
+        assertThat(admin.casesLifetime()).isGreaterThanOrEqualTo(1);
     }
 
     private void seedIdentities() {
