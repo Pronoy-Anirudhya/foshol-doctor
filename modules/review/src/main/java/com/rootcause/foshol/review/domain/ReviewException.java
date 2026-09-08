@@ -65,6 +65,22 @@ public class ReviewException extends RuntimeException {
                 ErrorCodes.ERR_QUEUE_SORT_NOT_SUPPORTED, 400, "Queue ordering is not client-controllable.");
     }
 
+    public static ReviewException transferToSelf() {
+        return new ReviewException(ErrorCodes.ERR_TRANSFER_TO_SELF, 400, "A task cannot be transferred to the holder.");
+    }
+
+    public static ReviewException transferTargetInvalid() {
+        return new ReviewException(ErrorCodes.ERR_TRANSFER_TARGET_INVALID, 404, "Transfer target is not a valid officer.");
+    }
+
+    public static ReviewException bulkTooLarge() {
+        return new ReviewException(ErrorCodes.ERR_BULK_TOO_LARGE, 400, "The bulk request exceeds the configured maximum.");
+    }
+
+    public static ReviewException bulkEmpty() {
+        return new ReviewException(ErrorCodes.ERR_BAD_REQUEST, 400, "The bulk request has no items.");
+    }
+
     public static ReviewException invalidRejectionMessage() {
         return new ReviewException(ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection message must be non-blank and at most 500 characters.");
     }

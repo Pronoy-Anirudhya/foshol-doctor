@@ -23,4 +23,39 @@ public interface ReviewTaskJpaRepository extends JpaRepository<ReviewTaskEntity,
                     """,
             nativeQuery = true)
     List<ReviewTaskEntity> lockExpiredClaims(@Param("cutoff") Instant cutoff);
+
+    @Query(
+            value =
+                    """
+                    SELECT t.* FROM review_task t
+                    WHERE t.state = 'PENDING' AND t.assignment_due_at <= :now
+                    FOR UPDATE SKIP LOCKED
+                    """,
+            nativeQuery = true)
+    List<ReviewTaskEntity> lockOverdueAssignments(@Param("now") Instant now);
+
+    @Query(
+            value =
+                    """
+                    SELECT t.* FROM review_task t
+                    WHERE t.state = 'CLAIMED' AND t.resolution_due_at IS NOT NULL AND t.resolution_due_at <= :now
+                    FOR UPDATE SKIP LOCKED
+                    """,
+            nativeQuery = true)
+    List<ReviewTaskEntity> lockOverdueResolutions(@Param("now") Instant now);
+
+    @Query(
+            value =
+                    """
+                    SELECT t.* FROM review_task t
+                    WHERE t.state = 'CLAIMED'
+                      AND t.resolution_due_at IS NOT NULL
+                      AND t.kpi_warn_emitted_at IS NULL
+                      AND t.resolution_due_at > :now
+                      AND t.resolution_due_at <= :warnCutoff
+                    FOR UPDATE SKIP LOCKED
+                    """,
+            nativeQuery = true)
+    List<ReviewTaskEntity> lockResolutionWarnings(
+            @Param("warnCutoff") Instant warnCutoff, @Param("now") Instant now);
 }

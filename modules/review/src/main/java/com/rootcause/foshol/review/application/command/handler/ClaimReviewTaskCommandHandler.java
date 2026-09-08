@@ -2,6 +2,7 @@ package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.common.ConfigKeys;
 import com.rootcause.foshol.review.application.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
@@ -32,6 +33,7 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
     private final ReviewTaskRepository tasks;
     private final OfficerQueueProjectionPort queue;
     private final ReviewDistrictGuard districtGuard;
+    private final ReviewKpiCalendar kpi;
     private final Clock clock;
     private final Duration claimTtl;
 
@@ -39,11 +41,13 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
             ReviewTaskRepository tasks,
             OfficerQueueProjectionPort queue,
             ReviewDistrictGuard districtGuard,
+            ReviewKpiCalendar kpi,
             Clock clock,
             @Value("${" + ConfigKeys.REVIEW_CLAIM_TTL + ":PT15M}") Duration claimTtl) {
         this.tasks = tasks;
         this.queue = queue;
         this.districtGuard = districtGuard;
+        this.kpi = kpi;
         this.clock = clock;
         this.claimTtl = claimTtl;
     }
@@ -53,13 +57,14 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
     public ClaimReviewTaskResult handle(ClaimReviewTaskCommand command) {
         districtGuard.requireTaskInCallerDistrict(command.officerId(), command.taskId());
         ReviewTask task = tasks.findById(command.taskId()).orElseThrow(ReviewException::taskNotFound);
-        task.claim(command.officerId(), clock.instant(), claimTtl);
+        task.claim(command.officerId(), clock.instant(), claimTtl, kpi.resolutionDue(clock.instant()));
         try {
             tasks.save(task);
         } catch (OptimisticLockingFailureException ex) {
             throw ReviewException.claimConflict();
         }
         queue.updateState(task.caseId(), task.state(), task.officerId(), clock.instant());
+        queue.updateKpiClocks(task.caseId(), task.assignmentDueAt(), task.resolutionDueAt(), clock.instant());
         log.info("review task claimed taskId={} caseId={}", task.id(), task.caseId());
         return new ClaimReviewTaskResult(
                 task.id(),
@@ -69,6 +74,8 @@ public class ClaimReviewTaskCommandHandler implements CommandHandler<ClaimReview
                 task.claimedAt(),
                 task.claimExpiresAt(claimTtl),
                 task.slaDueAt(),
+                task.assignmentDueAt(),
+                task.resolutionDueAt(),
                 task.requeueCount(),
                 task.version());
     }

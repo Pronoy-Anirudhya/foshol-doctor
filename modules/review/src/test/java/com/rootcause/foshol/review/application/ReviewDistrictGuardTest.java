@@ -65,6 +65,8 @@ class ReviewDistrictGuardTest {
                 false,
                 (short) 0,
                 t0,
-                t0);
+                t0,
+                t0,
+                null);
     }
 }

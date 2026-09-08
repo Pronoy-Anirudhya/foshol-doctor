@@ -115,7 +115,9 @@ class ReviewTaskDetailQueryHandlerTest {
                 false,
                 (short) 0,
                 T0,
-                T0.plus(Duration.ofHours(4)));
+                T0.plus(Duration.ofHours(4)),
+                T0.plus(Duration.ofHours(1)),
+                null);
         when(reads.findQueueRow(TASK)).thenReturn(Optional.of(row));
         when(tasks.findById(TASK)).thenReturn(Optional.of(
                 ReviewTask.createPending(TASK, CASE, new BigDecimal("0.91"), T0.plus(Duration.ofHours(4)), T0)));

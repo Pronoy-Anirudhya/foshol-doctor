@@ -15,6 +15,7 @@ import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
+import com.rootcause.foshol.review.application.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjection;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
@@ -45,6 +46,7 @@ public class CreateReviewTaskOnAnalysisListener {
     private final KnowledgeQueryApi knowledge;
     private final Clock clock;
     private final Duration sla;
+    private final ReviewKpiCalendar kpi;
 
     public CreateReviewTaskOnAnalysisListener(
             ReviewTaskRepository tasks,
@@ -53,6 +55,7 @@ public class CreateReviewTaskOnAnalysisListener {
             FarmerLookupApi farmers,
             KnowledgeQueryApi knowledge,
             Clock clock,
+            ReviewKpiCalendar kpi,
             @Value("${" + ConfigKeys.REVIEW_SLA + ":PT4H}") Duration sla) {
         this.tasks = tasks;
         this.queue = queue;
@@ -60,6 +63,7 @@ public class CreateReviewTaskOnAnalysisListener {
         this.farmers = farmers;
         this.knowledge = knowledge;
         this.clock = clock;
+        this.kpi = kpi;
         this.sla = sla;
     }
 
@@ -77,7 +81,9 @@ public class CreateReviewTaskOnAnalysisListener {
                 event.caseId(),
                 event.top1Confidence(),
                 event.occurredAt().plus(sla),
-                clock.instant());
+                clock.instant(),
+                clock.instant(),
+                kpi.assignmentDue(clock.instant()));
         tasks.save(task);
         CandidateView top = top(event.candidates());
         writeQueue(
@@ -105,7 +111,13 @@ public class CreateReviewTaskOnAnalysisListener {
         }
         log.info("creating review task after analysis failure caseId={}", event.caseId());
         ReviewTask task = ReviewTask.createPending(
-                Uuid7.create(), event.caseId(), null, event.occurredAt().plus(sla), clock.instant());
+                Uuid7.create(),
+                event.caseId(),
+                null,
+                event.occurredAt().plus(sla),
+                clock.instant(),
+                clock.instant(),
+                kpi.assignmentDue(clock.instant()));
         tasks.save(task);
         writeQueue(
                 task,
@@ -197,7 +209,9 @@ public class CreateReviewTaskOnAnalysisListener {
                         null,
                         resubmission,
                         submittedAt,
-                        task.slaDueAt()),
+                        task.slaDueAt(),
+                        task.assignmentDueAt(),
+                        task.resolutionDueAt()),
                 clock.instant());
     }
 

@@ -16,6 +16,10 @@ public final class ReviewTaskMapper {
                 entity.getPriorityConfidence(),
                 entity.getClaimedAt(),
                 entity.getSlaDueAt(),
+                entity.getAssignmentOpenedAt(),
+                entity.getAssignmentDueAt(),
+                entity.getResolutionDueAt(),
+                entity.getKpiWarnEmittedAt(),
                 entity.getRequeueCount(),
                 entity.getVersion(),
                 entity.getCreatedAt(),
@@ -32,6 +36,10 @@ public final class ReviewTaskMapper {
         entity.setPriorityConfidence(task.priorityConfidence());
         entity.setClaimedAt(task.claimedAt());
         entity.setSlaDueAt(task.slaDueAt());
+        entity.setAssignmentOpenedAt(task.assignmentOpenedAt());
+        entity.setAssignmentDueAt(task.assignmentDueAt());
+        entity.setResolutionDueAt(task.resolutionDueAt());
+        entity.setKpiWarnEmittedAt(task.kpiWarnEmittedAt());
         entity.setRequeueCount(task.requeueCount());
         entity.setCreatedAt(task.createdAt());
         entity.setCreatedBy(task.createdBy());

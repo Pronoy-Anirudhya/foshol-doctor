@@ -58,6 +58,7 @@ class CreateReviewTaskOnAnalysisListenerTest {
                 farmers,
                 knowledge,
                 Clock.fixed(ReviewFixtures.T0, ZoneOffset.UTC),
+                com.rootcause.foshol.review.application.ReviewKpiCalendar.alwaysOpenUtc(),
                 Duration.ofHours(4));
         lenient().when(tasks.findByCaseId(any())).thenReturn(Optional.empty());
         lenient().when(tasks.save(any())).thenAnswer(inv -> inv.getArgument(0));

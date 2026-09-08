@@ -44,6 +44,7 @@ class SweepExpiredClaimsCommandHandlerTest {
         SweepExpiredClaimsCommandHandler handler = new SweepExpiredClaimsCommandHandler(
                 tasks,
                 queue,
+                com.rootcause.foshol.review.application.ReviewKpiCalendar.alwaysOpenUtc(),
                 Clock.fixed(ReviewFixtures.T0.plus(Duration.ofMinutes(16)), ZoneOffset.UTC),
                 Duration.ofMinutes(15));
         int swept = handler.handle();

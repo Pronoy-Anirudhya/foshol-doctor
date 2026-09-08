@@ -34,6 +34,8 @@ public record ReviewTaskDetailView(
         short requeueCount,
         Instant submittedAt,
         Instant slaDueAt,
+        Instant assignmentDueAt,
+        Instant resolutionDueAt,
         BigDecimal top1Confidence,
         BigDecimal top2Confidence,
         BigDecimal margin,

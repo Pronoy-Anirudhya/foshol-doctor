@@ -34,6 +34,18 @@ public class ReviewTaskEntity {
     @Column(name = "sla_due_at", nullable = false)
     private Instant slaDueAt;
 
+    @Column(name = "assignment_opened_at", nullable = false)
+    private Instant assignmentOpenedAt;
+
+    @Column(name = "assignment_due_at", nullable = false)
+    private Instant assignmentDueAt;
+
+    @Column(name = "resolution_due_at")
+    private Instant resolutionDueAt;
+
+    @Column(name = "kpi_warn_emitted_at")
+    private Instant kpiWarnEmittedAt;
+
     @Column(name = "requeue_count", nullable = false)
     private short requeueCount;
 
@@ -109,6 +121,38 @@ public class ReviewTaskEntity {
 
     public void setSlaDueAt(Instant slaDueAt) {
         this.slaDueAt = slaDueAt;
+    }
+
+    public Instant getAssignmentOpenedAt() {
+        return assignmentOpenedAt;
+    }
+
+    public void setAssignmentOpenedAt(Instant assignmentOpenedAt) {
+        this.assignmentOpenedAt = assignmentOpenedAt;
+    }
+
+    public Instant getAssignmentDueAt() {
+        return assignmentDueAt;
+    }
+
+    public void setAssignmentDueAt(Instant assignmentDueAt) {
+        this.assignmentDueAt = assignmentDueAt;
+    }
+
+    public Instant getResolutionDueAt() {
+        return resolutionDueAt;
+    }
+
+    public void setResolutionDueAt(Instant resolutionDueAt) {
+        this.resolutionDueAt = resolutionDueAt;
+    }
+
+    public Instant getKpiWarnEmittedAt() {
+        return kpiWarnEmittedAt;
+    }
+
+    public void setKpiWarnEmittedAt(Instant kpiWarnEmittedAt) {
+        this.kpiWarnEmittedAt = kpiWarnEmittedAt;
     }
 
     public short getRequeueCount() {

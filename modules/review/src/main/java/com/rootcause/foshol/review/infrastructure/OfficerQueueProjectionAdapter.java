@@ -26,8 +26,8 @@ public class OfficerQueueProjectionAdapter implements OfficerQueueProjectionPort
                     case_id, review_task_id, farmer_name, crop_code, crop_name_bn, district_code, division_code,
                     decision_path, top_disease_id, top_disease_name_bn, top_confidence, image_count,
                     has_audio, analysis_mode, state, officer_id, is_resubmission, submitted_at,
-                    sla_due_at, updated_at)
-                values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    sla_due_at, assignment_due_at, resolution_due_at, updated_at)
+                values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 row.caseId(),
                 row.reviewTaskId(),
@@ -48,6 +48,8 @@ public class OfficerQueueProjectionAdapter implements OfficerQueueProjectionPort
                 row.resubmission(),
                 Timestamp.from(row.submittedAt()),
                 Timestamp.from(row.slaDueAt()),
+                row.assignmentDueAt() == null ? null : Timestamp.from(row.assignmentDueAt()),
+                row.resolutionDueAt() == null ? null : Timestamp.from(row.resolutionDueAt()),
                 Timestamp.from(now));
     }
 
@@ -57,6 +59,20 @@ public class OfficerQueueProjectionAdapter implements OfficerQueueProjectionPort
                 "update p_officer_queue set state = ?, officer_id = ?, updated_at = ? where case_id = ?",
                 state.name(),
                 officerId,
+                Timestamp.from(now),
+                caseId);
+    }
+
+    @Override
+    public void updateKpiClocks(UUID caseId, Instant assignmentDueAt, Instant resolutionDueAt, Instant now) {
+        jdbc.update(
+                """
+                update p_officer_queue
+                set assignment_due_at = ?, resolution_due_at = ?, updated_at = ?
+                where case_id = ?
+                """,
+                assignmentDueAt == null ? null : Timestamp.from(assignmentDueAt),
+                resolutionDueAt == null ? null : Timestamp.from(resolutionDueAt),
                 Timestamp.from(now),
                 caseId);
     }

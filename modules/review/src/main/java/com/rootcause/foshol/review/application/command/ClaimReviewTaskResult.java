@@ -12,5 +12,7 @@ public record ClaimReviewTaskResult(
         Instant claimedAt,
         Instant claimExpiresAt,
         Instant slaDueAt,
+        Instant assignmentDueAt,
+        Instant resolutionDueAt,
         short requeueCount,
         int version) {}

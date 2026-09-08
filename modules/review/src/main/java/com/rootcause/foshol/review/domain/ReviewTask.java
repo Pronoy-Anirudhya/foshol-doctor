@@ -15,6 +15,10 @@ public final class ReviewTask {
     private final BigDecimal priorityConfidence;
     private Instant claimedAt;
     private final Instant slaDueAt;
+    private Instant assignmentOpenedAt;
+    private Instant assignmentDueAt;
+    private Instant resolutionDueAt;
+    private Instant kpiWarnEmittedAt;
     private short requeueCount;
     private final int version;
     private final Instant createdAt;
@@ -30,6 +34,10 @@ public final class ReviewTask {
             BigDecimal priorityConfidence,
             Instant claimedAt,
             Instant slaDueAt,
+            Instant assignmentOpenedAt,
+            Instant assignmentDueAt,
+            Instant resolutionDueAt,
+            Instant kpiWarnEmittedAt,
             short requeueCount,
             int version,
             Instant createdAt,
@@ -43,6 +51,10 @@ public final class ReviewTask {
         this.priorityConfidence = priorityConfidence;
         this.claimedAt = claimedAt;
         this.slaDueAt = slaDueAt;
+        this.assignmentOpenedAt = assignmentOpenedAt;
+        this.assignmentDueAt = assignmentDueAt;
+        this.resolutionDueAt = resolutionDueAt;
+        this.kpiWarnEmittedAt = kpiWarnEmittedAt;
         this.requeueCount = requeueCount;
         this.version = version;
         this.createdAt = createdAt;
@@ -53,6 +65,17 @@ public final class ReviewTask {
 
     public static ReviewTask createPending(
             UUID id, UUID caseId, BigDecimal priorityConfidence, Instant slaDueAt, Instant now) {
+        return createPending(id, caseId, priorityConfidence, slaDueAt, now, now, slaDueAt);
+    }
+
+    public static ReviewTask createPending(
+            UUID id,
+            UUID caseId,
+            BigDecimal priorityConfidence,
+            Instant slaDueAt,
+            Instant now,
+            Instant assignmentOpenedAt,
+            Instant assignmentDueAt) {
         return new ReviewTask(
                 id,
                 caseId,
@@ -61,6 +84,10 @@ public final class ReviewTask {
                 priorityConfidence,
                 null,
                 slaDueAt,
+                assignmentOpenedAt,
+                assignmentDueAt,
+                null,
+                null,
                 (short) 0,
                 0,
                 now,
@@ -70,6 +97,10 @@ public final class ReviewTask {
     }
 
     public void claim(UUID officerId, Instant now, Duration ttl) {
+        claim(officerId, now, ttl, null);
+    }
+
+    public void claim(UUID officerId, Instant now, Duration ttl, Instant resolutionDueAt) {
         if (isTerminal()) {
             throw ReviewException.terminal();
         }
@@ -82,20 +113,37 @@ public final class ReviewTask {
             }
             throw ReviewException.claimConflict();
         }
+        boolean firstOfWindow = this.resolutionDueAt == null;
         this.state = ReviewState.CLAIMED;
         this.officerId = officerId;
         this.claimedAt = now;
         this.updatedAt = now;
         this.updatedBy = officerId.toString();
+        if (firstOfWindow && resolutionDueAt != null) {
+            this.resolutionDueAt = resolutionDueAt;
+        }
+    }
+
+    public void transfer(UUID fromOfficerId, UUID toOfficerId, Instant now, Duration ttl) {
+        requireLiveClaim(fromOfficerId, now, ttl);
+        if (fromOfficerId.equals(toOfficerId)) {
+            throw ReviewException.transferToSelf();
+        }
+        this.officerId = toOfficerId;
+        this.claimedAt = now;
+        this.kpiWarnEmittedAt = null;
+        this.updatedAt = now;
+        this.updatedBy = fromOfficerId.toString();
     }
 
     public void release(UUID officerId, Instant now, Duration ttl) {
+        release(officerId, now, ttl, now, assignmentDueAt);
+    }
+
+    public void release(
+            UUID officerId, Instant now, Duration ttl, Instant assignmentOpenedAt, Instant assignmentDueAt) {
         requireLiveClaim(officerId, now, ttl);
-        this.state = ReviewState.PENDING;
-        this.officerId = null;
-        this.claimedAt = null;
-        this.updatedAt = now;
-        this.updatedBy = officerId.toString();
+        reopenAssignment(now, assignmentOpenedAt, assignmentDueAt, officerId.toString());
     }
 
     public void markDone(Instant now, String actor) {
@@ -128,16 +176,22 @@ public final class ReviewTask {
     }
 
     public boolean sweepExpired(Instant now, Duration ttl) {
+        return sweepExpired(now, ttl, now, assignmentDueAt);
+    }
+
+    public boolean sweepExpired(Instant now, Duration ttl, Instant assignmentOpenedAt, Instant assignmentDueAt) {
         if (state != ReviewState.CLAIMED || !isClaimExpired(now, ttl)) {
             return false;
         }
-        this.state = ReviewState.PENDING;
-        this.officerId = null;
-        this.claimedAt = null;
+        reopenAssignment(now, assignmentOpenedAt, assignmentDueAt, "system");
         this.requeueCount = (short) (requeueCount + 1);
+        return true;
+    }
+
+    public void markKpiWarned(Instant now) {
+        this.kpiWarnEmittedAt = now;
         this.updatedAt = now;
         this.updatedBy = "system";
-        return true;
     }
 
     public void requireLiveClaim(UUID officerId, Instant now, Duration ttl) {
@@ -197,6 +251,22 @@ public final class ReviewTask {
         return slaDueAt;
     }
 
+    public Instant assignmentOpenedAt() {
+        return assignmentOpenedAt;
+    }
+
+    public Instant assignmentDueAt() {
+        return assignmentDueAt;
+    }
+
+    public Instant resolutionDueAt() {
+        return resolutionDueAt;
+    }
+
+    public Instant kpiWarnEmittedAt() {
+        return kpiWarnEmittedAt;
+    }
+
     public short requeueCount() {
         return requeueCount;
     }
@@ -219,5 +289,17 @@ public final class ReviewTask {
 
     public String updatedBy() {
         return updatedBy;
+    }
+
+    private void reopenAssignment(Instant now, Instant openedAt, Instant dueAt, String actor) {
+        this.state = ReviewState.PENDING;
+        this.officerId = null;
+        this.claimedAt = null;
+        this.resolutionDueAt = null;
+        this.kpiWarnEmittedAt = null;
+        this.assignmentOpenedAt = openedAt;
+        this.assignmentDueAt = dueAt;
+        this.updatedAt = now;
+        this.updatedBy = actor;
     }
 }
