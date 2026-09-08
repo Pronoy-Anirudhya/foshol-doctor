@@ -4,6 +4,7 @@ import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.RejectionView;
+import com.rootcause.foshol.review.application.BulkReviewService;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
 import com.rootcause.foshol.review.application.command.ApproveCaseResult;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
@@ -11,6 +12,8 @@ import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
 import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
+import com.rootcause.foshol.review.application.command.TransferReviewTaskCommand;
+import com.rootcause.foshol.review.application.command.BulkOperationResult;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailView;
 import jakarta.validation.Valid;
@@ -36,10 +39,12 @@ public class ReviewTaskController {
 
     private final QueryBus queries;
     private final CommandBus commands;
+    private final BulkReviewService bulk;
 
-    public ReviewTaskController(QueryBus queries, CommandBus commands) {
+    public ReviewTaskController(QueryBus queries, CommandBus commands, BulkReviewService bulk) {
         this.queries = queries;
         this.commands = commands;
+        this.bulk = bulk;
     }
 
     @GetMapping("/{taskId}")
@@ -56,6 +61,59 @@ public class ReviewTaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void release(@PathVariable UUID taskId, Authentication authentication) {
         commands.handle(new ReleaseReviewTaskCommand(taskId, ReviewAuth.subjectId(authentication)));
+    }
+
+    @PostMapping("/{taskId}/transfer")
+    public ClaimReviewTaskResult transfer(
+            @PathVariable UUID taskId,
+            @RequestBody TransferReviewTaskRequest request,
+            Authentication authentication) {
+        return commands.handle(new TransferReviewTaskCommand(
+                taskId, ReviewAuth.subjectId(authentication), request.targetOfficerId(), request.expectedVersion()));
+    }
+
+    @PostMapping("/bulk-transfer")
+    public BulkOperationResult bulkTransfer(
+            @RequestBody BulkTransferRequest request, Authentication authentication) {
+        UUID caller = ReviewAuth.subjectId(authentication);
+        return bulk.transfer(
+                caller,
+                request.targetOfficerId(),
+                request.items() == null
+                        ? List.of()
+                        : request.items().stream()
+                                .map(i -> new BulkReviewService.BulkTaskRef(i.taskId(), i.expectedVersion()))
+                                .toList());
+    }
+
+    @PostMapping("/bulk-approve")
+    public BulkOperationResult bulkApprove(@RequestBody BulkApproveRequest request, Authentication authentication) {
+        UUID caller = ReviewAuth.subjectId(authentication);
+        return bulk.approve(
+                caller,
+                request.items() == null
+                        ? List.of()
+                        : request.items().stream()
+                                .map(i -> new BulkReviewService.BulkApproveItem(
+                                        i.taskId(),
+                                        i.diseaseId(),
+                                        i.remedyIds(),
+                                        i.officerNoteBn(),
+                                        i.expectedVersion()))
+                                .toList());
+    }
+
+    @PostMapping("/bulk-reject")
+    public BulkOperationResult bulkReject(@RequestBody BulkRejectRequest request, Authentication authentication) {
+        UUID caller = ReviewAuth.subjectId(authentication);
+        return bulk.reject(
+                caller,
+                request.items() == null
+                        ? List.of()
+                        : request.items().stream()
+                                .map(i -> new BulkReviewService.BulkRejectItem(
+                                        i.taskId(), i.reasonCode(), i.messageBn(), i.expectedVersion()))
+                                .toList());
     }
 
     @PostMapping("/{taskId}/approve")

@@ -127,6 +127,28 @@ class ReviewTaskTest {
     }
 
     @Test
+    void transferKeepsResolutionDueAndClearsWarnFlag() {
+        ReviewTask task = pending();
+        Instant resolution = T0.plus(Duration.ofHours(2));
+        task.claim(OFFICER_A, T0, TTL, resolution);
+        task.markKpiWarned(T0.plus(Duration.ofMinutes(1)));
+        task.transfer(OFFICER_A, OFFICER_B, T0.plus(Duration.ofMinutes(2)), TTL);
+        assertThat(task.officerId()).isEqualTo(OFFICER_B);
+        assertThat(task.claimedAt()).isEqualTo(T0.plus(Duration.ofMinutes(2)));
+        assertThat(task.resolutionDueAt()).isEqualTo(resolution);
+        assertThat(task.kpiWarnEmittedAt()).isNull();
+    }
+
+    @Test
+    void firstClaimSetsResolutionDueHolderRefreshDoesNot() {
+        ReviewTask task = pending();
+        Instant firstDue = T0.plus(Duration.ofHours(2));
+        task.claim(OFFICER_A, T0, TTL, firstDue);
+        task.claim(OFFICER_A, T0.plus(Duration.ofMinutes(3)), TTL, T0.plus(Duration.ofHours(9)));
+        assertThat(task.resolutionDueAt()).isEqualTo(firstDue);
+    }
+
+    @Test
     void slaDueAtIsImmutableOnClaim() {
         Instant sla = T0.plus(Duration.ofHours(4));
         ReviewTask task = ReviewTask.createPending(Uuid7.create(), Uuid7.create(), BigDecimal.ONE, sla, T0);

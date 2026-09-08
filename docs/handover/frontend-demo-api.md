@@ -651,6 +651,7 @@ the visible view** (`WEB-FR-358`). Replay of missed frames is not guaranteed.
 | `case-status` | Farmer (own cases) | `notificationId`, `caseId`, `correlationId`, `fromStatus`, `toStatus` |
 | `advisory` | Farmer | `notificationId`, `caseId`, `correlationId`, `advisoryId?`, `type` (`ADVISORY_PUBLISHED` \| `ADVISORY_REVISED` \| `CASE_REJECTED`), `titleBn`, `bodyBn` |
 | `queue` | Officer / admin | `caseId`, `toStatus`, `correlationId` |
+| `kpi` | Assigned officer / admin | `caseId`, `reviewTaskId`, `kind` (`RESOLUTION_WARN`), `dueAt`, `correlationId` |
 | `resync` | Reconnect | `{}` |
 | `reconnect` | Before timeout close | `{}` |
 
@@ -671,9 +672,17 @@ On `advisory` with `ADVISORY_PUBLISHED` / `ADVISORY_REVISED`: toast, then
 `GET /api/v1/cases/{caseId}/advisory`.  
 On `CASE_REJECTED`: toast, refresh case.  
 On `queue`: **keep server order** — patch the matching row or refetch `GET /api/v1/review/queue`
-for the current page; do not re-sort. Heartbeats are **comment** frames, not events. If the stream
+for the current page; do not re-sort. On `kpi`: increment the officer bell and deep-link to
+`GET /api/v1/review/tasks/{reviewTaskId}`. On `resync` also call `GET /api/v1/review/kpi-warnings`
+(do not poll it). Heartbeats are **comment** frames, not events. If the stream
 is down, use the officer **manual refresh** (`WEB-FR-205`). **Do not poll on a timer** (`WEB-FR-356`,
 `WEB-FR-359`).
+
+Assignment KPI: 1 working hour unclaimed after the review task is created (Sunday–Thursday 10:00–17:00
+`Asia/Dhaka` unless config changes). Resolution KPI: 2 working hours after first claim; transfer does
+**not** reset that clock. Claim TTL remains `foshol.review.claim.ttl` (`PT15M` by default); set it ≥
+resolution SLA if officers must hold a case for the full resolution window without re-claiming.
+Queue rows include `assignmentDueAt` and `resolutionDueAt` in addition to farmer-wait `slaDueAt`.
 
 `queue` frames are **not** stored in the `notification` table (`NOTIFY-FR-034`: that table is
 farmer-addressed; `farmer_id` is `NOT NULL`). Absence of a row does not mean the officer stream is
@@ -762,13 +771,18 @@ Without the sidecar, a UI case is `UNDETERMINED` and still reaches the officer q
 | GET | `/api/v1/cases/{caseId}/advisory` | card | — | — | yes |
 | GET | `/api/v1/cases/{caseId}/advisories` | history | — | — | revise beat |
 | GET | `/api/v1/review/queue` | — | yes | yes | yes |
+| GET | `/api/v1/review/officers` | — | yes | yes | transfer picker |
+| GET | `/api/v1/review/kpi-warnings` | — | yes | yes | bell resync |
 | GET | `/api/v1/review/tasks/{taskId}` | — | yes | yes | yes |
-| POST | `…/claim` `…/release` | — | yes | yes | yes |
+| POST | `…/claim` `…/release` `…/transfer` | — | yes | yes | yes |
+| POST | `…/bulk-transfer` `…/bulk-approve` `…/bulk-reject` | — | yes | yes | optional |
 | POST | `…/symptoms` | — | yes | yes | optional |
 | POST | `…/approve` | — | yes | yes | yes |
 | POST | `…/reject` | — | yes | yes | optional |
 | POST | `/api/v1/advisories/{id}/revise` | — | yes | yes | optional |
 | GET | `/api/v1/admin/stats` | — | — | yes | admin beat |
+| GET | `/api/v1/admin/kpis` | — | — | yes | KPI dashboard |
+| GET | `/api/v1/admin/kpis/breaches` | — | — | yes | KPI drill-down |
 | GET | `/api/v1/stream` | yes | yes | yes | yes |
 
 ---

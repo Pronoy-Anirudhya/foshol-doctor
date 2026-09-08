@@ -26,4 +26,6 @@ public record OfficerQueueProjection(
         UUID officerId,
         boolean resubmission,
         Instant submittedAt,
-        Instant slaDueAt) {}
+        Instant slaDueAt,
+        Instant assignmentDueAt,
+        Instant resolutionDueAt) {}

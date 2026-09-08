@@ -65,6 +65,15 @@ public final class ConfigKeys {
     public static final String REVIEW_CLAIM_TTL = "foshol.review.claim.ttl";
     public static final String REVIEW_SLA = "foshol.review.sla";
     public static final String REVIEW_SWEEPER_INTERVAL = "foshol.review.sweeper.interval";
+    public static final String REVIEW_KPI_ASSIGNMENT_SLA = "foshol.review.kpi.assignment-sla";
+    public static final String REVIEW_KPI_RESOLUTION_SLA = "foshol.review.kpi.resolution-sla";
+    public static final String REVIEW_KPI_WARN_BEFORE = "foshol.review.kpi.warn-before";
+    public static final String REVIEW_KPI_WORK_START = "foshol.review.kpi.work-start";
+    public static final String REVIEW_KPI_WORK_END = "foshol.review.kpi.work-end";
+    public static final String REVIEW_KPI_WORK_DAYS = "foshol.review.kpi.work-days";
+    public static final String REVIEW_KPI_ZONE = "foshol.review.kpi.zone";
+    public static final String REVIEW_KPI_SWEEPER_INTERVAL = "foshol.review.kpi.sweeper.interval";
+    public static final String REVIEW_BULK_MAX_SIZE = "foshol.review.bulk.max-size";
     public static final String CHANNELS_SSE_ENABLED = "foshol.channels.sse.enabled";
     public static final String CHANNELS_SSE_HEARTBEAT = "foshol.channels.sse.heartbeat";
     public static final String CHANNELS_SSE_TIMEOUT = "foshol.channels.sse.timeout";

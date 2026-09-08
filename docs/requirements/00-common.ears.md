@@ -1198,6 +1198,15 @@ public record AdvisoryRevised(UUID advisoryId, UUID supersededAdvisoryId, UUID c
 public record CaseRejected(UUID caseId, UUID farmerId, UUID officerId, String officerName,
                            RejectionReason reasonCode, String messageBn,
                            String correlationId, Instant occurredAt) {}
+
+public record KpiBreached(KpiKind kind, UUID caseId, UUID reviewTaskId, String districtCode,
+                          UUID officerId, Instant dueAt, String correlationId, Instant occurredAt) {}
+
+public record KpiWarningIssued(UUID caseId, UUID reviewTaskId, UUID officerId, Instant dueAt,
+                                String correlationId, Instant occurredAt) {}
+
+public record ReviewTaskTransferred(UUID caseId, UUID reviewTaskId, UUID fromOfficerId, UUID toOfficerId,
+                                   String districtCode, String correlationId, Instant occurredAt) {}
 ```
 
 **Publish / consume map.**
@@ -1211,6 +1220,9 @@ public record CaseRejected(UUID caseId, UUID farmerId, UUID officerId, String of
 | `AdvisoryApproved` | review | notification (notifies the farmer), intake (status `ADVISED`) |
 | `AdvisoryRevised` | review | notification (second notification) |
 | `CaseRejected` | review | notification, intake (status `REJECTED`) |
+| `KpiBreached` | review | notification (no farmer row; dashboard is query-based) |
+| `KpiWarningIssued` | review | notification (`kpi` SSE to the assigned officer) |
+| `ReviewTaskTransferred` | review | notification (district `queue` nudge) |
 
 > **`[DERIVED]` — `CaseAnalysed` removed.** Plan §2.4 lists `intake` publishing both `CaseSubmitted`
 > and `CaseAnalysed`. `CaseAnalysed` would duplicate `AnalysisCompleted`, which the analysis module
@@ -1432,7 +1444,7 @@ module may return any code, but only A1 may add to the class.
 | **A2 · intake** | `ERR_AUDIO_NOT_FOUND` · `ERR_AUDIO_TOO_LARGE` · `ERR_AUDIO_TOO_LONG` · `ERR_AUDIO_UNREADABLE` · `ERR_CASE_RATE_LIMITED` · `ERR_CROP_NOT_FOUND` · `ERR_IDEMPOTENCY_KEY_CONFLICT` · `ERR_IDEMPOTENCY_KEY_INVALID` · `ERR_IDEMPOTENCY_KEY_MISSING` · `ERR_IMAGE_COUNT` · `ERR_IMAGE_NOT_FOUND` · `ERR_IMAGE_QUALITY_REJECTED` · `ERR_IMAGE_TOO_LARGE` · `ERR_PARENT_CASE_INVALID` · `ERR_STORAGE_UNAVAILABLE` · `ERR_UNSUPPORTED_MEDIA_TYPE` |
 | **A3 · analysis** | `ERR_ALL_LABELS_UNMAPPED` · `ERR_ANALYSIS_NOT_FOUND` · `ERR_EMBEDDING_DIMENSION` · `ERR_FIXTURE_MISSING` · `ERR_NO_REMEDY_FOR_DIAGNOSIS` · `ERR_SIDECAR_UNAVAILABLE` · `ERR_SPEECH_BRANCH_TIMEOUT` · `ERR_UNKNOWN_SYMPTOM` · `ERR_VISION_BRANCH_TIMEOUT` |
 | **A4 · knowledge** | `ERR_DISEASE_NOT_FOUND` · `ERR_KB_CONTENT_INVALID` · `ERR_KB_EMBEDDING_MISSING` |
-| **A5 · review** | `ERR_ADVISORY_NOT_FOUND` · `ERR_ADVISORY_REQUIRES_REMEDY` · `ERR_CLAIM_CONFLICT` · `ERR_CLAIM_NOT_HELD` · `ERR_QUEUE_SORT_NOT_SUPPORTED` · `ERR_REMEDY_DISEASE_MISMATCH` · `ERR_REMEDY_PHI_MISSING` · `ERR_REVIEW_TASK_NOT_FOUND` · `ERR_TASK_TERMINAL` |
+| **A5 · review** | `ERR_ADVISORY_NOT_FOUND` · `ERR_ADVISORY_REQUIRES_REMEDY` · `ERR_CLAIM_CONFLICT` · `ERR_CLAIM_NOT_HELD` · `ERR_QUEUE_SORT_NOT_SUPPORTED` · `ERR_REMEDY_DISEASE_MISMATCH` · `ERR_REMEDY_PHI_MISSING` · `ERR_REVIEW_TASK_NOT_FOUND` · `ERR_TASK_TERMINAL` · `ERR_TRANSFER_TO_SELF` · `ERR_TRANSFER_TARGET_INVALID` · `ERR_BULK_TOO_LARGE` · `ERR_BULK_DUPLICATE` |
 | **A5 · notification** | `ERR_STREAM_LIMIT_EXCEEDED` · `ERR_STREAM_SUBJECT_MISMATCH` |
 | **A7 · sidecar** | `ERR_SIDECAR_BAD_REQUEST` · `ERR_SIDECAR_BUSY` · `ERR_SIDECAR_EMBED_DIM_MISMATCH` · `ERR_SIDECAR_FIXTURE_MISSING` · `ERR_SIDECAR_INFERENCE_FAILED` · `ERR_SIDECAR_MODEL_UNAVAILABLE` · `ERR_SIDECAR_PAYLOAD_TOO_LARGE` · `ERR_SIDECAR_UNDECODABLE` · `ERR_SIDECAR_UNKNOWN_CROP` · `ERR_SIDECAR_UNSUPPORTED_MEDIA` · `ERR_SIDECAR_WARMING_UP` |
 
@@ -1541,6 +1553,15 @@ foshol.knowledge.match.inconclusive-score-min=0.30
 foshol.review.claim.ttl=PT15M
 foshol.review.sla=PT4H
 foshol.review.sweeper.interval=PT1M
+foshol.review.kpi.assignment-sla=PT1H
+foshol.review.kpi.resolution-sla=PT2H
+foshol.review.kpi.warn-before=PT15M
+foshol.review.kpi.work-start=10:00
+foshol.review.kpi.work-end=17:00
+foshol.review.kpi.work-days=SUNDAY,MONDAY,TUESDAY,WEDNESDAY,THURSDAY
+foshol.review.kpi.zone=Asia/Dhaka
+foshol.review.kpi.sweeper.interval=PT1M
+foshol.review.bulk.max-size=50
 
 # ── notification ────────────────────────────────────────────────────────────
 foshol.channels.sse.enabled=true

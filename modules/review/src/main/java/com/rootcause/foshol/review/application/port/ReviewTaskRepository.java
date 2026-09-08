@@ -16,5 +16,11 @@ public interface ReviewTaskRepository {
 
     List<ReviewTask> lockExpiredClaims(Instant cutoff);
 
+    List<ReviewTask> lockOverdueAssignments(Instant now);
+
+    List<ReviewTask> lockOverdueResolutions(Instant now);
+
+    List<ReviewTask> lockResolutionWarnings(Instant warnCutoff, Instant now);
+
     long count();
 }

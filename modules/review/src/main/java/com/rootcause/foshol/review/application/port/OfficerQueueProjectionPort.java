@@ -10,5 +10,7 @@ public interface OfficerQueueProjectionPort {
 
     void updateState(UUID caseId, ReviewState state, UUID officerId, Instant now);
 
+    void updateKpiClocks(UUID caseId, Instant assignmentDueAt, Instant resolutionDueAt, Instant now);
+
     boolean existsByCaseId(UUID caseId);
 }

@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.ReviewState;
 import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.review.application.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
@@ -50,7 +52,8 @@ class ClaimReviewTaskCommandHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new ClaimReviewTaskCommandHandler(tasks, queue, districtGuard, Clock.fixed(T0, ZoneOffset.UTC), TTL);
+        handler = new ClaimReviewTaskCommandHandler(
+                tasks, queue, districtGuard, ReviewKpiCalendar.alwaysOpenUtc(), Clock.fixed(T0, ZoneOffset.UTC), TTL);
     }
 
     @Test

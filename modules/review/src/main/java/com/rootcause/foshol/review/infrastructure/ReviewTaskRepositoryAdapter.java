@@ -43,6 +43,21 @@ public class ReviewTaskRepositoryAdapter implements ReviewTaskRepository {
     }
 
     @Override
+    public List<ReviewTask> lockOverdueAssignments(Instant now) {
+        return jpa.lockOverdueAssignments(now).stream().map(ReviewTaskMapper::toDomain).toList();
+    }
+
+    @Override
+    public List<ReviewTask> lockOverdueResolutions(Instant now) {
+        return jpa.lockOverdueResolutions(now).stream().map(ReviewTaskMapper::toDomain).toList();
+    }
+
+    @Override
+    public List<ReviewTask> lockResolutionWarnings(Instant warnCutoff, Instant now) {
+        return jpa.lockResolutionWarnings(warnCutoff, now).stream().map(ReviewTaskMapper::toDomain).toList();
+    }
+
+    @Override
     public long count() {
         return jpa.count();
     }

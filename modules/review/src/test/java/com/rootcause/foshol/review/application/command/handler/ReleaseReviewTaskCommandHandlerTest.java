@@ -42,8 +42,13 @@ class ReleaseReviewTaskCommandHandlerTest {
         task.claim(officer, t0, Duration.ofMinutes(15));
         when(tasks.findById(task.id())).thenReturn(Optional.of(task));
         when(tasks.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        ReleaseReviewTaskCommandHandler handler =
-                new ReleaseReviewTaskCommandHandler(tasks, queue, mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class), Clock.fixed(t0.plusSeconds(1), ZoneOffset.UTC), Duration.ofMinutes(15));
+        ReleaseReviewTaskCommandHandler handler = new ReleaseReviewTaskCommandHandler(
+                tasks,
+                queue,
+                mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class),
+                com.rootcause.foshol.review.application.ReviewKpiCalendar.alwaysOpenUtc(),
+                Clock.fixed(t0.plusSeconds(1), ZoneOffset.UTC),
+                Duration.ofMinutes(15));
         handler.handle(new ReleaseReviewTaskCommand(task.id(), officer));
         verify(queue).updateState(eq(task.caseId()), eq(ReviewState.PENDING), eq(null), any());
     }

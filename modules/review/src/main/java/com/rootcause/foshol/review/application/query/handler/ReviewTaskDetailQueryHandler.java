@@ -133,6 +133,8 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
                 row.requeueCount(),
                 row.submittedAt(),
                 row.slaDueAt(),
+                task.assignmentDueAt(),
+                task.resolutionDueAt(),
                 analysis == null ? null : analysis.top1Confidence(),
                 analysis == null ? null : analysis.top2Confidence(),
                 analysis == null ? null : analysis.margin(),

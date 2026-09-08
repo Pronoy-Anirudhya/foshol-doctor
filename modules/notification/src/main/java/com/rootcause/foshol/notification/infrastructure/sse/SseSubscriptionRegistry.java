@@ -28,6 +28,7 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
     public static final String EVENT_ADVISORY = "advisory";
     public static final String EVENT_CASE_STATUS = "case-status";
     public static final String EVENT_QUEUE = "queue";
+    public static final String EVENT_KPI = "kpi";
     public static final String EVENT_RESYNC = "resync";
     public static final String EVENT_RECONNECT = "reconnect";
 
@@ -132,6 +133,34 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
                 sub.emitter()
                         .send(SseEmitter.event()
                                 .name(EVENT_QUEUE)
+                                .id(Long.toString(sub.nextId()))
+                                .data(data, MediaType.APPLICATION_JSON));
+            } catch (IOException ex) {
+                remove(sub);
+            }
+        }
+    }
+
+    @Override
+    public void emitKpi(UUID officerId, UUID caseId, UUID reviewTaskId, Instant dueAt, String correlationId) {
+        if (officerId == null) {
+            return;
+        }
+        Map<String, String> data = new LinkedHashMap<>();
+        data.put("caseId", caseId.toString());
+        data.put("reviewTaskId", reviewTaskId.toString());
+        data.put("kind", "RESOLUTION_WARN");
+        data.put("dueAt", dueAt.toString());
+        data.put("correlationId", correlationId == null ? "" : correlationId);
+        List<SseSubscription> targets = bySubject.getOrDefault(officerId, new CopyOnWriteArrayList<>());
+        for (SseSubscription sub : targets) {
+            if (sub.role() != Role.OFFICER && sub.role() != Role.ADMIN) {
+                continue;
+            }
+            try {
+                sub.emitter()
+                        .send(SseEmitter.event()
+                                .name(EVENT_KPI)
                                 .id(Long.toString(sub.nextId()))
                                 .data(data, MediaType.APPLICATION_JSON));
             } catch (IOException ex) {

@@ -63,6 +63,10 @@ public final class ErrorCodes {
     public static final String ERR_REMEDY_PHI_MISSING = "ERR_REMEDY_PHI_MISSING";
     public static final String ERR_REVIEW_TASK_NOT_FOUND = "ERR_REVIEW_TASK_NOT_FOUND";
     public static final String ERR_TASK_TERMINAL = "ERR_TASK_TERMINAL";
+    public static final String ERR_TRANSFER_TO_SELF = "ERR_TRANSFER_TO_SELF";
+    public static final String ERR_TRANSFER_TARGET_INVALID = "ERR_TRANSFER_TARGET_INVALID";
+    public static final String ERR_BULK_TOO_LARGE = "ERR_BULK_TOO_LARGE";
+    public static final String ERR_BULK_DUPLICATE = "ERR_BULK_DUPLICATE";
     public static final String ERR_STREAM_LIMIT_EXCEEDED = "ERR_STREAM_LIMIT_EXCEEDED";
     public static final String ERR_STREAM_SUBJECT_MISMATCH = "ERR_STREAM_SUBJECT_MISMATCH";
     public static final String ERR_SIDECAR_BAD_REQUEST = "ERR_SIDECAR_BAD_REQUEST";
