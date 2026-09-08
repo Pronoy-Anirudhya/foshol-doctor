@@ -40,7 +40,7 @@ public class StreamController {
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('FARMER','OFFICER','ADMIN')")
     public SseEmitter stream(
             Authentication authentication,
             @RequestHeader(name = "Last-Event-ID", required = false) String lastEventId) {
