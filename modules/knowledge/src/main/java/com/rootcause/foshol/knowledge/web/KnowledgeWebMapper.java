@@ -49,7 +49,11 @@ public final class KnowledgeWebMapper {
                 row.costTier(),
                 row.efficacy(),
                 row.sourceRef(),
-                row.displayOrder());
+                row.displayOrder(),
+                row.rateAmount(),
+                row.rateUnit(),
+                row.rateBasis(),
+                row.rateNotesBn());
     }
 
     public static SymptomResponse toSymptomResponse(SymptomReadModel row) {

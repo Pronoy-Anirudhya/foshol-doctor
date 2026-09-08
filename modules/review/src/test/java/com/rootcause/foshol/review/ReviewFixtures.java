@@ -83,19 +83,19 @@ public final class ReviewFixtures {
     }
 
     public static RemedyView r1() {
-        return new RemedyView(REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "");
+        return new RemedyView(REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
     }
 
     public static RemedyView r2() {
-        return new RemedyView(REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "");
+        return new RemedyView(REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "", null, null, null, null);
     }
 
     public static RemedyView r3() {
-        return new RemedyView(REMEDY_R3, DISEASE_E, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "");
+        return new RemedyView(REMEDY_R3, DISEASE_E, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
     }
 
     public static RemedyView chemicalWithoutPhi() {
-        return new RemedyView(REMEDY_NO_PHI, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, null, "LOW", "LOW", "");
+        return new RemedyView(REMEDY_NO_PHI, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
     }
 
     public static AnalysisView analysisView(UUID caseId) {

@@ -28,7 +28,8 @@ public final class AdvisoryViewMapper {
             if (match != null) {
                 ordered.add(toRef(match));
             } else {
-                ordered.add(new RemedyRefView(item.remedyId(), null, "", List.of(), null, null, ""));
+                ordered.add(new RemedyRefView(
+                        item.remedyId(), null, "", List.of(), null, null, "", null, null, null, null, null));
             }
         }
         return new AdvisoryView(
@@ -54,6 +55,11 @@ public final class AdvisoryViewMapper {
                 remedy.stepsBn(),
                 remedy.dosageBn(),
                 remedy.phiDays(),
-                remedy.sourceRef());
+                remedy.sourceRef(),
+                remedy.rateAmount(),
+                remedy.rateUnit(),
+                remedy.rateBasis(),
+                remedy.rateNotesBn(),
+                null);
     }
 }

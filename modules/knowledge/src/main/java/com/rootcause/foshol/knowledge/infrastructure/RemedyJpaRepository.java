@@ -12,7 +12,8 @@ public interface RemedyJpaRepository extends JpaRepository<RemedyEntity, UUID> {
             select r.id as id, r.diseaseId as diseaseId, r.type as type, r.titleBn as titleBn,
                    r.stepsBn as stepsBn, r.dosageBn as dosageBn, r.phiDays as phiDays,
                    r.costTier as costTier, r.efficacy as efficacy, r.sourceRef as sourceRef,
-                   r.displayOrder as displayOrder
+                   r.displayOrder as displayOrder, r.rateAmount as rateAmount, r.rateUnit as rateUnit,
+                   r.rateBasis as rateBasis, r.rateNotesBn as rateNotesBn
             from RemedyEntity r
             where r.diseaseId = :diseaseId and r.active = true and r.deletedAt is null
             order by r.displayOrder asc, r.id asc

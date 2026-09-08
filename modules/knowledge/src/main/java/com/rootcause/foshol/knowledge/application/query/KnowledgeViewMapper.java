@@ -38,7 +38,11 @@ public final class KnowledgeViewMapper {
                 row.phiDays(),
                 row.costTier(),
                 row.efficacy(),
-                row.sourceRef());
+                row.sourceRef(),
+                row.rateAmount(),
+                row.rateUnit(),
+                row.rateBasis(),
+                row.rateNotesBn());
     }
 
     public static SymptomRefView toSymptomRefView(SymptomReadModel row) {
