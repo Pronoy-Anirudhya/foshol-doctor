@@ -234,6 +234,8 @@ invoke_multipart() {
   local args=(-sS -D /tmp/foshol-api-headers -o /tmp/foshol-api-body -w '\nHTTP %{http_code}\n'
     -H "$header" -H "Idempotency-Key: ${key}"
     -F "cropId=${crop}"
+    -F "fieldArea=2"
+    -F "fieldAreaUnit=DECIMAL"
     -F "noteBn=ডেমো কেস টার্মিনাল থেকে"
     -F "images=@${image};type=image/jpeg")
   if [[ -n "$audio" ]]; then
