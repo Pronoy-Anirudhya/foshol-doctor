@@ -14,7 +14,7 @@ from tests.conftest import png_bytes
 
 VIT_ID = "wambugu71/crop_leaf_diseases_vit"
 VIT_REV = "7d5b32bcd6f83a2f57e7e0346358fad276296877"
-LIVE_ROUTES = "rice=rice,potato=rice,corn=rice,wheat=rice"
+LIVE_ROUTES = "rice=rice,tomato=rice,potato=rice,corn=rice,wheat=rice"
 
 
 @dataclass
@@ -41,11 +41,11 @@ def live_env(monkeypatch):
     reset_settings()
 
 
-def test_live_routes_vit_crops_and_rejects_tomato(live_env):
+def test_live_routes_vit_crops_including_tomato(live_env):
     from app.config import get_settings
 
     settings = get_settings()
-    for crop in ("rice", "potato", "corn", "wheat"):
+    for crop in ("rice", "tomato", "potato", "corn", "wheat"):
         route = route_crop(
             settings,
             crop,
@@ -59,7 +59,7 @@ def test_live_routes_vit_crops_and_rejects_tomato(live_env):
     with pytest.raises(SidecarError) as raised:
         route_crop(
             settings,
-            "tomato",
+            "banana",
             None,
             primary_usable=True,
             fallback_usable=False,
