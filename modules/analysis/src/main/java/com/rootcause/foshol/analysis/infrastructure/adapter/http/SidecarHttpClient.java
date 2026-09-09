@@ -52,15 +52,28 @@ public class SidecarHttpClient {
 
     public JsonNode postMultipart(
             String path, byte[] image, String filename, String cropCode, String correlationId) {
-        ByteArrayResource file = new ByteArrayResource(image) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("image", namedResource(image, filename));
+        body.add("crop_code", cropCode);
+        return exchangeMultipart(path, body, correlationId);
+    }
+
+    public JsonNode postMultipartAudio(String path, byte[] audio, String filename, String correlationId) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("audio", namedResource(audio, filename));
+        return exchangeMultipart(path, body, correlationId);
+    }
+
+    private static ByteArrayResource namedResource(byte[] bytes, String filename) {
+        return new ByteArrayResource(bytes) {
             @Override
             public String getFilename() {
                 return filename;
             }
         };
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("image", file);
-        body.add("crop_code", cropCode);
+    }
+
+    private JsonNode exchangeMultipart(String path, MultiValueMap<String, Object> body, String correlationId) {
         try {
             String response = restClient.post()
                     .uri(path)
