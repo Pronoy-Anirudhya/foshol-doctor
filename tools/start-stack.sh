@@ -67,11 +67,36 @@ wait_for_postgres() {
 }
 
 reset_postgres_data() {
-  echo "local Flyway history does not match current migrations; resetting ./.data/postgres"
+  echo "resetting ./.data/postgres so Flyway can apply from empty"
   docker compose stop postgres >/dev/null
   rm -rf "$ROOT/.data/postgres"
   docker compose up -d postgres
   wait_for_postgres "postgres after reset" || exit 1
+}
+
+confirm_postgres_reset() {
+  echo >&2
+  echo "Flyway history in ./.data/postgres does not match the migration files." >&2
+  echo "Spring cannot start until that directory is reset." >&2
+  echo "This wipes local Postgres. MinIO is left alone." >&2
+  echo "If you confirm: dump data first, reset, boot (Flyway applies schema), then restore that dump." >&2
+  echo "The dump stays in .data/backups/ even if restore later fails." >&2
+  echo >&2
+  local answer="${FOSHOL_RESET_POSTGRES:-}"
+  if [[ -z "$answer" ]]; then
+    if [[ ! -t 0 ]]; then
+      echo "stdin is not a terminal. Re-run interactively, or set FOSHOL_RESET_POSTGRES=yes to confirm." >&2
+      exit 1
+    fi
+    read -r -p "Backup, reset Postgres, and restore data after a successful boot? [y/N] " answer
+  fi
+  case "$answer" in
+    y | Y | yes | YES) return 0 ;;
+    *)
+      echo "aborted; database unchanged" >&2
+      exit 1
+      ;;
+  esac
 }
 
 # Parallel feature branches reused V110 (officer-queue vs farmer provision). Bind-mounted
@@ -164,8 +189,12 @@ fi
 
 wait_for_postgres || exit 1
 
+POSTGRES_RESTORE_FILE=""
 echo "checking Flyway history"
 if ! flyway_history_matches; then
+  confirm_postgres_reset
+  POSTGRES_RESTORE_FILE="$("$ROOT/tools/postgres-data-backup.sh" dump)"
+  echo "backup written to ${POSTGRES_RESTORE_FILE}"
   reset_postgres_data
 fi
 
@@ -204,6 +233,31 @@ fi
 java_pid() {
   pgrep -f 'com.rootcause.foshol.FosholDoctorApplication' | head -n 1 || true
 }
+
+gradle_pid() {
+  pgrep -f 'gradlew :app:bootRun' | head -n 1 || true
+}
+
+stop_pid() {
+  local pid="$1"
+  [[ -z "$pid" ]] && return 0
+  kill "$pid" 2>/dev/null || true
+}
+
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "stopping Spring so Flyway can apply on the empty database"
+  stop_pid "$(java_pid)"
+  stop_pid "$(gradle_pid)"
+  for _ in $(seq 1 20); do
+    if [[ -z "$(java_pid)" && -z "$(gradle_pid)" ]]; then
+      break
+    fi
+    sleep 1
+  done
+  [[ -n "$(java_pid)" ]] && kill -9 "$(java_pid)" 2>/dev/null || true
+  [[ -n "$(gradle_pid)" ]] && kill -9 "$(gradle_pid)" 2>/dev/null || true
+  rm -f "$APP_PID_FILE"
+fi
 
 if [[ -f "$APP_PID_FILE" ]]; then
   old="$(cat "$APP_PID_FILE" 2>/dev/null || true)"
@@ -254,12 +308,20 @@ until curl -sf "${BASE_URL}/actuator/health" >/dev/null 2>&1; do
 done
 echo " ok"
 
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "restoring Postgres data from ${POSTGRES_RESTORE_FILE}"
+  "$ROOT/tools/postgres-data-backup.sh" restore "$POSTGRES_RESTORE_FILE"
+fi
+
 echo
 echo "stack is up"
 echo "  API     ${BASE_URL}"
 echo "  health  $(curl -sf "${BASE_URL}/actuator/health")"
 echo "  MinIO   http://127.0.0.1:9000  (console :9001)"
 echo "  profile ${PROFILES}"
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "  backup  ${POSTGRES_RESTORE_FILE}"
+fi
 echo
 echo "farmer  +8801711111111  OTP 123456  (Dhaka / DHA)"
 echo "officer officer / password   (Dhaka; also officer-dha)"
