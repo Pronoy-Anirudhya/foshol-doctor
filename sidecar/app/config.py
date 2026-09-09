@@ -213,7 +213,7 @@ def load_settings() -> Settings:
         explain_max_edge_px=_read_int("FOSHOL_SIDECAR_EXPLAIN_MAX_EDGE_PX", 1024),
         embed_max_batch=_read_int("FOSHOL_SIDECAR_EMBED_MAX_BATCH", 32),
         embed_max_chars=_read_int("FOSHOL_SIDECAR_EMBED_MAX_CHARS", 2000),
-        torch_threads=_read_int("FOSHOL_SIDECAR_TORCH_THREADS", 2),
+        torch_threads=_read_int("FOSHOL_SIDECAR_TORCH_THREADS", 4),
         fixture_dir=fixture_dir,
         models=models,
     )
