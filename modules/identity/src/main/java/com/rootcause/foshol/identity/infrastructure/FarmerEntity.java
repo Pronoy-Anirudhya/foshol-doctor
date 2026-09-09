@@ -36,6 +36,12 @@ public class FarmerEntity {
     @Column(name = "preferred_language", nullable = false, length = 2)
     private String preferredLanguage;
 
+    @Column(name = "registered_by")
+    private UUID registeredBy;
+
+    @Column(name = "registration_source", nullable = false, length = 16)
+    private String registrationSource;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -54,6 +60,21 @@ public class FarmerEntity {
             String preferredLanguage,
             Instant createdAt,
             Instant updatedAt) {
+        this(id, name, phoneHash, phoneEnc, districtCode, divisionCode, preferredLanguage, null, "MIGRATION", createdAt, updatedAt);
+    }
+
+    public FarmerEntity(
+            UUID id,
+            String name,
+            String phoneHash,
+            byte[] phoneEnc,
+            String districtCode,
+            String divisionCode,
+            String preferredLanguage,
+            UUID registeredBy,
+            String registrationSource,
+            Instant createdAt,
+            Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.phoneHash = phoneHash;
@@ -61,6 +82,8 @@ public class FarmerEntity {
         this.districtCode = districtCode;
         this.divisionCode = divisionCode;
         this.preferredLanguage = preferredLanguage;
+        this.registeredBy = registeredBy;
+        this.registrationSource = registrationSource;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -87,5 +110,17 @@ public class FarmerEntity {
 
     public String getPreferredLanguage() {
         return preferredLanguage;
+    }
+
+    public UUID getRegisteredBy() {
+        return registeredBy;
+    }
+
+    public String getRegistrationSource() {
+        return registrationSource;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }
