@@ -66,8 +66,8 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
       timeout: 5s
-      retries: 30
-      start_period: 180s
+      retries: 120
+      start_period: 600s
 
   caddy:
     image: caddy:2.9-alpine

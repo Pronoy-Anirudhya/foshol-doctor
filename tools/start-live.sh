@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Start the LIVE stack: Postgres, MinIO, the ViT sidecar, then Spring (profile local).
+# Start the LIVE stack: Postgres, MinIO, the ViT+ASR+LaBSE sidecar, then Spring (profile local).
 # Replay/demo remains: ./tools/start-stack.sh
 #
-# First run builds the sidecar image (torch) and downloads ViT weights into
-# ~/.cache/huggingface. Later runs reuse both.
+# First run builds the sidecar image (torch) and downloads ViT, Whisper, and LaBSE
+# weights into ~/.cache/huggingface. Later runs reuse the cache.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,7 +18,7 @@ export TRANSFORMERS_OFFLINE=0
 export FOSHOL_SPRING_PROFILES=local
 export HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-300}"
 SIDECAR_URL="${SIDECAR_URL:-http://127.0.0.1:8000}"
-SIDECAR_TIMEOUT="${SIDECAR_TIMEOUT:-600}"
+SIDECAR_TIMEOUT="${SIDECAR_TIMEOUT:-1800}"
 
 need() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -74,7 +74,7 @@ if ! docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2
   exit 1
 fi
 
-echo -n "waiting for sidecar ${SIDECAR_URL}/health (first run downloads ViT weights)"
+echo -n "waiting for sidecar ${SIDECAR_URL}/health (first run downloads ViT, Whisper, and LaBSE weights)"
 deadline=$((SECONDS + SIDECAR_TIMEOUT))
 until curl -sf "${SIDECAR_URL}/health" >/dev/null 2>&1; do
   if (( SECONDS >= deadline )); then

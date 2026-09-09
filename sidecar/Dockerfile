@@ -4,19 +4,22 @@ WORKDIR /app
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin foshol \
     && apt-get update \
-    && apt-get install -y --no-install-recommends libgomp1 \
+    && apt-get install -y --no-install-recommends libgomp1 ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --upgrade pip
 
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir \
         fastapi==0.115.12 \
         uvicorn==0.34.2 \
         pydantic==2.11.4 \
         python-multipart==0.0.20 \
         pillow==11.2.1 \
         transformers==4.51.3 \
-    && pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+        faster-whisper==1.1.1 \
+        ctranslate2==4.5.0 \
+        sentence-transformers==3.4.1
 
 COPY --chown=foshol:foshol app /app/app
 COPY --chown=foshol:foshol fixtures /app/fixtures
@@ -44,7 +47,7 @@ ENV PYTHONUNBUFFERED=1 \
 USER foshol
 EXPOSE 8000
 
-HEALTHCHECK --interval=10s --timeout=5s --retries=30 --start-period=180s \
+HEALTHCHECK --interval=10s --timeout=5s --retries=120 --start-period=600s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
