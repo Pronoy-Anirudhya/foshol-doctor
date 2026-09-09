@@ -284,19 +284,17 @@ read time.)*
 `REVIEW-FR-016` **THE review module SHALL NOT persist a raw model label string on `p_officer_queue`**
 (`COMMON-DATA-016`).
 
-### 4.3 Queue ordering — least-confident-first, and not negotiable
+### 4.3 Queue ordering — newest submitted first, and not negotiable
 
-`REVIEW-FR-030` **THE review module SHALL order the officer queue by `state`, then
-`top_confidence ASC NULLS FIRST`, then `submitted_at ASC`, and SHALL use no other ordering.**
-The order is backed by `ix_officer_queue_priority` (`00-common.ears.md` §4.9), whose column list is
-identical by design.
+`REVIEW-FR-030` **THE review module SHALL order the officer queue by `submitted_at DESC`
+(newest case first), and SHALL use no other ordering.**
+The order is backed by `ix_officer_queue_latest` on `p_officer_queue (submitted_at DESC)`
+(`V111__officer_queue_latest_first.sql`). Farmer and admin lists already use the same newest-first
+rule; the officer queue SHALL match them.
 
-*Why this is fixed and on stage:* the queue puts **the cases the model was least sure about at the
-top**, and the cases it could not read at all above those. An officer working top-down spends their
-scarcest resource — attention — where the machine was weakest. A confidence-descending queue would
-do the exact opposite: it would show the officer a screen of easy confirmations while the genuinely
-ambiguous cases aged out of view. This is a one-line ORDER BY and it is the clearest single
-expression of "the AI is a triage accelerator, the human is the decision".
+*Why this is fixed:* officers working the shared pool see the latest intake first, consistent with
+the farmer and admin consoles. Client `sort` / `order` query parameters remain rejected
+(`REVIEW-FR-031`).
 
 `REVIEW-FR-031` **IF a request to `GET /api/v1/review/queue` carries a `sort` or `order` query
 parameter, THEN THE review module SHALL return `400` with code `ERR_QUEUE_SORT_NOT_SUPPORTED`.**
@@ -815,7 +813,7 @@ Each maps one-to-one onto a test method.
 | `REVIEW-FR-003` | one case per decision path plus one with an open sidecar circuit plus one wholly-unmapped case | all analyses complete | `count(review_task) = count(diagnosis_case)`, and every case id appears exactly once |
 | `REVIEW-FR-004` | a task already created for case X | `AnalysisCompleted` for X is republished | still exactly one `review_task` and one `p_officer_queue` row; no second event side effect |
 | `REVIEW-FR-005` | `KnowledgeQueryApi` stubbed to throw | `AnalysisCompleted` is published | the `review_task` row exists; `crop_name_bn` is empty; one `WARN` was logged |
-| `REVIEW-FR-030` | five queue rows with confidences `0.91, 0.62, null, 0.30, 0.62` | the queue is read | order is `null, 0.30, 0.62 (earlier submitted_at), 0.62, 0.91` |
+| `REVIEW-FR-030` | five queue rows with distinct `submitted_at` values | the queue is read | order is newest `submitted_at` first (`submitted_at DESC`) |
 | `REVIEW-FR-031` | any officer | `GET /review/queue?sort=confidence,desc` | `400` with code `ERR_QUEUE_SORT_NOT_SUPPORTED` |
 | `REVIEW-FR-040` | a `PENDING` task | officer A claims it | `CLAIMED`, `officer_id = A`, `claimed_at` set, `version` incremented, queue row updated |
 | `REVIEW-FR-041` | officers A and B holding the same stale `version` | both submit a claim | one succeeds; the other receives `409 ERR_CLAIM_CONFLICT`; the task is claimed exactly once |
@@ -897,7 +895,7 @@ migrations. It is the module's primary happy path **and** the proof of `REVIEW-F
    (`COMMON-NFR-035`).
 3. Publish `AnalysisFailed` for a fifth case.
 4. Assert `count(review_task) = 5` and that every case id appears exactly once.
-5. Read the queue and assert the order of `REVIEW-FR-030`, with the null-confidence rows first.
+5. Read the queue and assert the order of `REVIEW-FR-030`, newest `submitted_at` first.
 6. Claim, approve with an edited remedy set, assert `action = 'EDITED'`, task `DONE`,
    `AdvisoryApproved` recorded in the Modulith event publication registry.
 7. Revise; assert v2, `supersedes_id`, v1 unchanged, `AdvisoryRevised` recorded.

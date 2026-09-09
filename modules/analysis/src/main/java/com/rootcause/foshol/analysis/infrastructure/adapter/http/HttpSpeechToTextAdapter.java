@@ -1,7 +1,6 @@
 package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rootcause.foshol.analysis.application.port.SpeechToTextPort;
 import com.rootcause.foshol.analysis.application.port.TranscriptRequest;
 import com.rootcause.foshol.analysis.application.port.TranscriptResult;
@@ -25,15 +24,48 @@ public class HttpSpeechToTextAdapter implements SpeechToTextPort {
     @Override
     public TranscriptResult transcribe(TranscriptRequest request) {
         return sidecar.execute("asr", () -> {
-            ObjectNode body = http.object();
-            body.put("sha256", request.sha256());
-            body.put("audio_base64", http.readBase64(request.objectKey()));
-            JsonNode node = http.postJson("/v1/asr/transcribe", body, request.correlationId());
-            String transcript = node.has("transcript_bn") ? node.get("transcript_bn").asText() : node.path("transcriptBn").asText();
-            String model = node.has("model_id") ? node.get("model_id").asText() : node.path("modelId").asText();
-            BigDecimal conf = new BigDecimal(
-                    node.has("asr_confidence") ? node.get("asr_confidence").asText() : node.path("asrConfidence").asText("0"));
-            return new TranscriptResult(model, transcript, conf, node.path("latency_ms").asInt(node.path("latencyMs").asInt()));
+            byte[] audio = http.readBytes(request.objectKey());
+            JsonNode node = http.postMultipartAudio(
+                    "/v1/asr/transcribe", audio, "audio.bin", request.correlationId());
+            return new TranscriptResult(
+                    text(node, "model_id", "modelId"),
+                    text(node, "transcript", "transcript_bn", "transcriptBn"),
+                    decimal(node, "confidence", "asr_confidence", "asrConfidence"),
+                    latencyMs(node));
         });
+    }
+
+    private static String text(JsonNode node, String... names) {
+        for (String name : names) {
+            if (node.has(name) && !node.get(name).isNull()) {
+                return node.get(name).asText();
+            }
+        }
+        return "";
+    }
+
+    private static BigDecimal decimal(JsonNode node, String... names) {
+        for (String name : names) {
+            if (node.has(name) && !node.get(name).isNull()) {
+                return new BigDecimal(node.get(name).asText());
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private static int latencyMs(JsonNode node) {
+        if (node.has("inference_ms")) {
+            return node.get("inference_ms").asInt();
+        }
+        if (node.has("inferenceMs")) {
+            return node.get("inferenceMs").asInt();
+        }
+        if (node.has("latency_ms")) {
+            return node.get("latency_ms").asInt();
+        }
+        if (node.has("latencyMs")) {
+            return node.get("latencyMs").asInt();
+        }
+        return 0;
     }
 }

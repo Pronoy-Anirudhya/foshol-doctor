@@ -433,17 +433,17 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                 top1, top2, prescribable, kbInconclusive, settings.confidenceHigh(), settings.confidenceLow());
         String error = firstError(visionBundle, speechBundle, allUnmapped, routed);
         DecisionPath path = routed.path();
-        if (sidecarUnavailable(visionBundle, speechBundle) || allUnmapped || bothFailed(visionBundle, speechBundle)) {
+        if (sidecarUnavailable(visionBundle) || allUnmapped || bothFailed(visionBundle, speechBundle)) {
             path = DecisionPath.UNDETERMINED;
         }
         if (allUnmapped) {
             error = ErrorCodes.ERR_ALL_LABELS_UNMAPPED;
         }
-        if (sidecarUnavailable(visionBundle, speechBundle)
+        if (sidecarUnavailable(visionBundle)
                 && (error == null
                         || ErrorCodes.ERR_VISION_BRANCH_TIMEOUT.equals(error)
                         || ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT.equals(error))) {
-            error = sidecarError(visionBundle, speechBundle);
+            error = sidecarError(visionBundle);
         }
         if (visionBundle.outcome() == BranchOutcome.ABANDONED && error == null) {
             error = ErrorCodes.ERR_VISION_BRANCH_TIMEOUT;
@@ -457,7 +457,10 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         }
         List<CaseCandidate> persisted = new ArrayList<>();
         List<MappedCandidate> eventCandidates = visionCandidates;
-        if (path == DecisionPath.SECONDARY && speechBundle.match() != null) {
+        boolean mergeKnowledge = path == DecisionPath.SECONDARY
+                && speechBundle.match() != null
+                && !speechBundle.match().inconclusive();
+        if (mergeKnowledge) {
             List<MappedCandidate> kbMapped = kbMapped(speechBundle.match());
             Map<UUID, String> codes = new LinkedHashMap<>();
             for (MappedCandidate c : visionCandidates) {
@@ -497,7 +500,8 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                 speechBundle.asrModelId(),
                 speechBundle.embedModelId(),
                 visionBundle.gradcamKey());
-        List<CandidateView> views = toViews(eventCandidates, path == DecisionPath.SECONDARY ? CandidateSource.MERGED : CandidateSource.MODEL);
+        List<CandidateView> views = toViews(
+                eventCandidates, mergeKnowledge ? CandidateSource.MERGED : CandidateSource.MODEL);
         List<SymptomView> symptomViews = toSymptomViews(speechSymptoms, speechBundle);
         AnalysisCompleted completed = new AnalysisCompleted(
                 command.caseId(),
@@ -700,15 +704,13 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         return routed.errorCode();
     }
 
-    private static boolean sidecarUnavailable(VisionBundle vision, SpeechBundle speech) {
+    private static boolean sidecarUnavailable(VisionBundle vision) {
         return ErrorCodes.ERR_SIDECAR_UNAVAILABLE.equals(vision.errorCode())
-                || ErrorCodes.ERR_SIDECAR_UNAVAILABLE.equals(speech.errorCode())
                 || ErrorCodes.ERR_FIXTURE_MISSING.equals(vision.errorCode());
     }
 
-    private static String sidecarError(VisionBundle vision, SpeechBundle speech) {
-        if (ErrorCodes.ERR_FIXTURE_MISSING.equals(vision.errorCode())
-                || ErrorCodes.ERR_FIXTURE_MISSING.equals(speech.errorCode())) {
+    private static String sidecarError(VisionBundle vision) {
+        if (ErrorCodes.ERR_FIXTURE_MISSING.equals(vision.errorCode())) {
             return ErrorCodes.ERR_FIXTURE_MISSING;
         }
         return ErrorCodes.ERR_SIDECAR_UNAVAILABLE;

@@ -86,8 +86,13 @@ public class JdbcAnalysisReadRepository implements AnalysisReadRepository {
     private AnalysisView mapView(ResultSet rs) throws SQLException {
         UUID caseId = rs.getObject("case_id", UUID.class);
         DecisionPath path = DecisionPath.valueOf(rs.getString("decision_path"));
-        String source = path == DecisionPath.SECONDARY ? CandidateSource.MERGED.name() : CandidateSource.MODEL.name();
-        List<CandidateView> candidates = loadCandidates(caseId, source);
+        List<CandidateView> candidates = loadCandidates(caseId, CandidateSource.MODEL.name());
+        if (path == DecisionPath.SECONDARY) {
+            List<CandidateView> merged = loadCandidates(caseId, CandidateSource.MERGED.name());
+            if (!merged.isEmpty()) {
+                candidates = merged;
+            }
+        }
         List<SymptomView> symptoms = loadSymptoms(caseId);
         String raw = rs.getString("raw_output");
         String transcript = extractJsonString(raw, "transcriptBn");

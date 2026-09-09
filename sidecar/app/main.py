@@ -1,4 +1,4 @@
-"""FastAPI inference sidecar. Replay serves fixtures; LIVE loads the ViT once."""
+"""FastAPI inference sidecar. Replay serves fixtures; LIVE loads ViT, ASR, and LaBSE."""
 
 from __future__ import annotations
 
@@ -14,9 +14,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.asr import transcribe_live_unavailable, transcribe_replay
+from app.asr import install_live_asr, transcribe_live, transcribe_live_unavailable, transcribe_replay
 from app.config import REGISTRY_ROLES, Settings, get_settings
-from app.embed import embed_live_unavailable, embed_replay
+from app.embed import embed_live, embed_live_unavailable, embed_replay, install_live_embed
 from app.errors import ERR_SIDECAR_BAD_REQUEST, SidecarError, bad_request, busy, warming_up
 from app.live_vision import classify_live, install_live_vision
 from app.replay import FixtureStore
@@ -54,6 +54,10 @@ class AppState:
         self.labels: dict[str, list[str]] = {role: [] for role in REGISTRY_ROLES}
         self.vision_runtime = None
         self.classify_cache = None
+        self.asr_runtime = None
+        self.asr_cache = None
+        self.embed_runtime = None
+        self.embed_cache = None
 
 
 def _correlation_id(request: Request) -> str:
@@ -103,6 +107,8 @@ async def lifespan(app: FastAPI):
     else:
         sidecar.warm = False
         install_live_vision(sidecar)
+        install_live_asr(sidecar)
+        install_live_embed(sidecar)
         sidecar.warm = True
         model_id = getattr(sidecar.vision_runtime, "model_id", "-")
         log.info(
@@ -373,8 +379,17 @@ async def transcribe(
                 request.state.correlation_id,
             )
         else:
-            transcribe_live_unavailable()
-            raise AssertionError("unreachable")
+            if state.asr_runtime is None or state.asr_cache is None:
+                transcribe_live_unavailable()
+                raise AssertionError("unreachable")
+            body = transcribe_live(
+                state.settings,
+                state.asr_runtime,
+                state.asr_cache,
+                data,
+                language,
+                request.state.correlation_id,
+            )
     _log_line(
         correlation_id=request.state.correlation_id,
         endpoint="/v1/asr/transcribe",
@@ -399,8 +414,16 @@ async def embed(request: Request, payload: EmbedRequest) -> dict[str, Any]:
                 request.state.correlation_id,
             )
         else:
-            embed_live_unavailable()
-            raise AssertionError("unreachable")
+            if state.embed_runtime is None or state.embed_cache is None:
+                embed_live_unavailable()
+                raise AssertionError("unreachable")
+            body = embed_live(
+                state.settings,
+                state.embed_runtime,
+                state.embed_cache,
+                payload.texts,
+                request.state.correlation_id,
+            )
     _log_line(
         correlation_id=request.state.correlation_id,
         endpoint="/v1/embed",

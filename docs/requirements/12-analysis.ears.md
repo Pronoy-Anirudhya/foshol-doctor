@@ -151,7 +151,7 @@ Enums `DecisionPath`, `AiMode`, `CandidateSource`, `SymptomSource` live in `comm
 | Specification | Rule |
 |---|---|
 | `PrimaryPathSpec` | `top1 ≥ foshol.analysis.confidence.high` **and** the top-1 disease is prescribable (§4.5) |
-| `SecondaryPathSpec` | `foshol.analysis.confidence.low ≤ top1 < foshol.analysis.confidence.high` **and** the KB result is conclusive |
+| `SecondaryPathSpec` | `foshol.analysis.confidence.low ≤ top1 < foshol.analysis.confidence.high` (mapped top-1 present; a conclusive knowledge-base result is **not** required) |
 | `UndeterminedPathSpec` | negation of both — the catch-all, and the only path reachable from a degraded run |
 | `PrescribableSpec` | the disease is `healthy`, **or** `KnowledgeQueryApi.listActiveRemedies(diseaseId)` is non-empty |
 
@@ -405,21 +405,24 @@ model diagnosis on `AnalysisCompleted`.** *(Remedy retrieval for the officer's p
 `remedy` table would render an empty advisory, which is worse than sending the case to the officer
 undecided. Healthy classes are exempt because they legitimately carry no remedy.*
 
-`ANALYSIS-FR-053` **IF `foshol.analysis.confidence.low ≤ top1 < foshol.analysis.confidence.high` and
-the knowledge-base result is conclusive, THEN THE `ConfidenceRouter` SHALL route the case to
-`SECONDARY`.**
+`ANALYSIS-FR-053` **IF `foshol.analysis.confidence.low ≤ top1 < foshol.analysis.confidence.high`,
+THEN THE `ConfidenceRouter` SHALL route the case to `SECONDARY`.** *(A conclusive knowledge-base
+result is not required. Photo-only LIVE cases with a mapped top-1 in this band are `SECONDARY` with
+vision `MODEL` candidates.)*
 
 `ANALYSIS-FR-054` **IF `top1 < foshol.analysis.confidence.low`, THEN THE `ConfidenceRouter` SHALL
 route the case to `UNDETERMINED`.**
 
-`ANALYSIS-FR-055` **IF `SymptomMatchResult.inconclusive` is true while the case would otherwise be
-`SECONDARY`, THEN THE `ConfidenceRouter` SHALL route the case to `UNDETERMINED`.**
+`ANALYSIS-FR-055` **IF `SymptomMatchResult.inconclusive` is true while the case is otherwise
+`SECONDARY`, THEN THE `ConfidenceRouter` SHALL still route the case to `SECONDARY`.** *(The
+knowledge-base merge of `ANALYSIS-FR-060` runs only when the match is conclusive; an inconclusive
+match leaves the vision `MODEL` shortlist in place.)*
 
 `ANALYSIS-FR-056` **IF the speech branch produced no knowledge-base result at all — no audio on the
-case, or the branch was abandoned or failed — THEN THE analysis module SHALL treat the knowledge-base
-result as inconclusive.** *(`SECONDARY` exists to substitute knowledge for model confidence. With no
-knowledge signal there is nothing to substitute, so a mid-confidence case correctly reaches the
-officer with nothing prefilled.)*
+case, or the branch was abandoned or failed — THEN THE analysis module SHALL still route a mapped
+mid-band top-1 to `SECONDARY` and SHALL persist vision `MODEL` candidates only.** *(With no audio
+there is nothing to merge; speech, ASR or embedding failure SHALL NOT force `UNDETERMINED` when
+vision succeeded.)*
 
 `ANALYSIS-FR-057` **WHILE the path is `UNDETERMINED`, THE analysis module SHALL NOT nominate a
 diagnosis and SHALL publish `AnalysisCompleted` with whatever candidates were produced, which may be

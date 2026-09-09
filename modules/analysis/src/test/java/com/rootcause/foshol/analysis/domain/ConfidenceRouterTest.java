@@ -39,17 +39,15 @@ class ConfidenceRouterTest {
     }
 
     @Test
-    void secondaryWhenMidAndKbConclusive() {
+    void secondaryWhenMidBandRegardlessOfKb() {
         assertThat(ConfidenceRouter.route(new BigDecimal("0.60"), new BigDecimal("0.20"), true, false, HIGH, LOW).path())
                 .isEqualTo(DecisionPath.SECONDARY);
         assertThat(ConfidenceRouter.route(new BigDecimal("0.45"), new BigDecimal("0.20"), true, false, HIGH, LOW).path())
                 .isEqualTo(DecisionPath.SECONDARY);
-    }
-
-    @Test
-    void undeterminedWhenMidAndKbInconclusive() {
         assertThat(ConfidenceRouter.route(new BigDecimal("0.60"), new BigDecimal("0.20"), true, true, HIGH, LOW).path())
-                .isEqualTo(DecisionPath.UNDETERMINED);
+                .isEqualTo(DecisionPath.SECONDARY);
+        assertThat(ConfidenceRouter.route(new BigDecimal("0.7499"), new BigDecimal("0.10"), false, true, HIGH, LOW).path())
+                .isEqualTo(DecisionPath.SECONDARY);
     }
 
     @Test

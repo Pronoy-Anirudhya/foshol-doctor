@@ -69,7 +69,7 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 join review_task t on t.id = q.review_task_id
                 """
                         + where
-                        + " order by q.state, q.top_confidence asc nulls first, q.submitted_at asc limit ? offset ?",
+                        + " order by q.submitted_at desc limit ? offset ?",
                 this::mapRow,
                 pageArgs.toArray());
         return new OfficerQueuePage(content, page, size, totalElements, totalPages);
