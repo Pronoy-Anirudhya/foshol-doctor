@@ -43,10 +43,10 @@ services:
     build:
       context: ./sidecar
     environment:
-      FOSHOL_AI_MODE: replay
-      FOSHOL_AI_VISION_CROP_ROUTES: rice=rice,tomato=solanaceae,potato=solanaceae
-      FOSHOL_AI_VISION_RICE_MODEL_ID: kssrikar4/Rice-Leaf-Disease-Classification
-      FOSHOL_AI_VISION_RICE_MODEL_REVISION: 02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26
+      FOSHOL_AI_MODE: ${FOSHOL_AI_MODE:-replay}
+      FOSHOL_AI_VISION_CROP_ROUTES: ${FOSHOL_AI_VISION_CROP_ROUTES:-rice=rice,tomato=solanaceae,potato=solanaceae}
+      FOSHOL_AI_VISION_RICE_MODEL_ID: ${FOSHOL_AI_VISION_RICE_MODEL_ID:-kssrikar4/Rice-Leaf-Disease-Classification}
+      FOSHOL_AI_VISION_RICE_MODEL_REVISION: ${FOSHOL_AI_VISION_RICE_MODEL_REVISION:-02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26}
       FOSHOL_AI_VISION_RICE_FALLBACK_MODEL_ID: prithivMLmods/Rice-Leaf-Disease
       FOSHOL_AI_VISION_RICE_FALLBACK_MODEL_REVISION: 170d10e070c308e0e5337690d67371825591f35b
       FOSHOL_AI_VISION_SOLANACEAE_MODEL_ID: Daksh159/plant-disease-mobilenetv2
@@ -56,13 +56,18 @@ services:
       FOSHOL_AI_EMBED_MODEL_ID: sentence-transformers/LaBSE
       FOSHOL_AI_EMBED_MODEL_REVISION: 836121a0533e5664b21c7aacc5d22951f2b8b25b
       FOSHOL_SIDECAR_FIXTURE_DIR: /app/fixtures
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-1}
+      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-1}
+    volumes:
+      - ${HOME}/.cache/huggingface:/home/foshol/.cache/huggingface
     ports:
       - "8000:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
       timeout: 5s
-      retries: 12
+      retries: 30
+      start_period: 180s
 
   caddy:
     image: caddy:2.9-alpine

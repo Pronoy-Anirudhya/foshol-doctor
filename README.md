@@ -91,12 +91,35 @@ Flyway; later boots are faster.
 If MinIO was created with different keys than `.env`, the script resets `./.data/minio` and
 recreates the `foshol-cases` bucket.
 
-Live sidecar instead of replay fixtures (API client **and** Angular UI):
+Live sidecar instead of replay fixtures (API client **and** Angular UI). Demo/replay
+is unchanged: `./tools/start-stack.sh` still uses fixtures and does not need the sidecar.
+
+LIVE loads **only** `wambugu71/crop_leaf_diseases_vit` into memory and classifies rice,
+potato, corn and wheat against it. Tomato is not routed in LIVE.
 
 ```bash
+./tools/start-live.sh
+```
+
+That script starts Postgres, MinIO and the ViT sidecar together, then boots Spring with
+`local` (LIVE). Equivalent manual env:
+
+```bash
+FOSHOL_AI_MODE=live \
+FOSHOL_AI_VISION_RICE_MODEL_ID=wambugu71/crop_leaf_diseases_vit \
+FOSHOL_AI_VISION_RICE_MODEL_REVISION=7d5b32bcd6f83a2f57e7e0346358fad276296877 \
+FOSHOL_AI_VISION_CROP_ROUTES=rice=rice,potato=rice,corn=rice,wheat=rice \
+HF_HUB_OFFLINE=0 \
+TRANSFORMERS_OFFLINE=0 \
 docker compose --profile ai up -d sidecar
+
 FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
 ```
+
+The first LIVE start downloads weights into `~/.cache/huggingface` (mounted into the
+sidecar). Later starts reuse that cache. Health is `DEGRADED` while ASR/embed stay
+unloaded; classify still returns 200. `GET /health` is not `UP` until the ViT has
+loaded and warmed up.
 
 `application-local` sets `foshol.ai.mode=live` and still loads `db/seed` (farmer / officer / admin).
 Do **not** combine with the `demo` profile: `demo` sets `foshol.ai.mode=replay` and would win.
