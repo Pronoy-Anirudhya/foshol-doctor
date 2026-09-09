@@ -236,6 +236,26 @@ class RunAnalysisCommandHandlerTest {
     }
 
     @Test
+    void speechSidecarUndecodableKeepsHighVisionPrimary() {
+        stubHappyVision();
+        CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(objectStore.read(any())).thenReturn("fixture:asr:demo".getBytes());
+        when(speech.transcribe(any()))
+                .thenThrow(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNDECODABLE, "bad wav"));
+        when(explainability.explain(any()))
+                .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
+        handler.handle(command(audio));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().errorCode()).isEqualTo(ErrorCodes.ERR_SIDECAR_UNDECODABLE);
+        verify(events).publishCompleted(any(AnalysisCompleted.class));
+        verify(events, never()).publishFailed(any());
+    }
+
+    @Test
     void speechTimeoutAbandonsSpeechAndKeepsVision() throws Exception {
         handler = new RunAnalysisCommandHandler(
                 intake,
