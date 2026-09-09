@@ -1,4 +1,4 @@
-"""Vision classification routing, replay serving, and live-mode unavailability."""
+"""Vision classification routing, replay serving, and live-mode inference."""
 
 from __future__ import annotations
 

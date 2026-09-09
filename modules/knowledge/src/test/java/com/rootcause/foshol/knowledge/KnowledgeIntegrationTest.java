@@ -98,7 +98,7 @@ class KnowledgeIntegrationTest {
 
     @Test
     void seededTaxonomyMatcherAndLabelMap() {
-        assertThat(knowledgeQueryApi.listCrops()).hasSize(3);
+        assertThat(knowledgeQueryApi.listCrops()).hasSize(5);
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         Integer diseases = jdbc.queryForObject("select count(*) from disease where deleted_at is null", Integer.class);
         assertThat(diseases).isEqualTo(KnowledgeTaxonomy.DISEASE_CLASS_COUNT);
@@ -136,6 +136,16 @@ class KnowledgeIntegrationTest {
                         "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
                         "Brown Spot"))
                 .contains(UUID.fromString("01800000-0000-7000-8000-000000000101"));
+        assertThat(knowledgeQueryApi.resolveModelLabel(
+                        "wambugu71/crop_leaf_diseases_vit",
+                        "7d5b32bcd6f83a2f57e7e0346358fad276296877",
+                        "Rice___Leaf_Blast"))
+                .contains(UUID.fromString("01800000-0000-7000-8000-000000000103"));
+        assertThat(knowledgeQueryApi.resolveModelLabel(
+                        "wambugu71/crop_leaf_diseases_vit",
+                        "7d5b32bcd6f83a2f57e7e0346358fad276296877",
+                        "Invalid"))
+                .isEmpty();
         assertThatThrownBy(() -> symptomMatchApi.match(
                         new SymptomMatchRequest(UUID.fromString("01800000-0000-7000-8000-000000000099"), null, null, List.of())))
                 .isInstanceOf(KnowledgeException.class)

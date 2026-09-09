@@ -8,9 +8,13 @@ import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.ErrorCodes;
+import java.io.IOException;
 import java.util.Base64;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -41,9 +45,37 @@ public class SidecarHttpClient {
                     .retrieve()
                     .body(String.class);
             return mapper.readTree(response);
-        } catch (RestClientException | java.io.IOException ex) {
+        } catch (RestClientException | IOException ex) {
             throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar HTTP failed", ex);
         }
+    }
+
+    public JsonNode postMultipart(
+            String path, byte[] image, String filename, String cropCode, String correlationId) {
+        ByteArrayResource file = new ByteArrayResource(image) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        };
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("image", file);
+        body.add("crop_code", cropCode);
+        try {
+            String response = restClient.post()
+                    .uri(path)
+                    .header(CorrelationId.HEADER, correlationId)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+            return mapper.readTree(response);
+        } catch (RestClientException | IOException ex) {
+            throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar HTTP failed", ex);
+        }
+    }
+
+    public byte[] readBytes(String objectKey) {
+        return objectStore.read(objectKey);
     }
 
     public String readBase64(String objectKey) {

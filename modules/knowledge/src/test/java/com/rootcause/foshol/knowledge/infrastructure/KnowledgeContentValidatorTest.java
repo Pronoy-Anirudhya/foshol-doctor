@@ -13,7 +13,7 @@ class KnowledgeContentValidatorTest {
 
     @Test
     void wrongDiseaseCountFails() {
-        assertCode(empty().diseases(13), ErrorCodes.ERR_KB_CONTENT_INVALID);
+        assertCode(empty().diseases(14), ErrorCodes.ERR_KB_CONTENT_INVALID);
     }
 
     @Test
@@ -61,11 +61,11 @@ class KnowledgeContentValidatorTest {
     }
 
     private static Fixture empty() {
-        return new Fixture(14, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), 0, 0, 0, 0);
+        return new Fixture(20, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), 0, 0, 0, 0);
     }
 
     private static Fixture populated() {
-        return new Fixture(14, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), 1, 1, 1, 1);
+        return new Fixture(20, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), 1, 1, 1, 1);
     }
 
     private record Fixture(

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Start Postgres + MinIO, then boot the Spring API until /actuator/health is UP.
 # Default profiles: local,demo (datasource + replay fixtures, no sidecar required).
-# Angular UI demo (WEB-FR-112 re-encodes photos): start the sidecar, then
-#   docker compose --profile ai up -d sidecar
-#   FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
+# LIVE vision (ViT sidecar + Spring local): ./tools/start-live.sh
 # (local still seeds identities; do not add demo — it forces replay.)
 set -euo pipefail
 
