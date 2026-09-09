@@ -636,8 +636,8 @@ surface the server's `409` per `WEB-FR-235` and SHALL NOT retry automatically.**
 
 ### 4.6 Admin surface — stats strip, district case list, bulk reject
 
-`WEB-FR-300` **THE admin surface SHALL consist of a stats strip, a district case list, and bulk
-reject of selected cases.** Knowledge CRUD remains `[DEFERRED]` (`WEB-FR-900` … `WEB-FR-904`).
+`WEB-FR-300` **THE admin surface SHALL consist of a stats strip, a district case list, bulk
+reject of selected cases, and the district farmer directory and provision screens of `WEB-FR-310`.**
 
 `WEB-FR-301` **THE stats page SHALL display cases today, approval rate, median review time and
 model-vs-officer agreement rate**, sourced from the admin stats endpoint (`REVIEW-FR-070`).
@@ -647,8 +647,10 @@ model-vs-officer agreement rate**, sourced from the admin stats endpoint (`REVIE
 clarification 20: the two-threshold story is on screen without an editable control that would need
 write endpoints nobody is building.)*
 
-`WEB-FR-303` **THE admin surface SHALL issue writes only through bulk reject of selected district
-cases** (`REVIEW-FR-103`, `REVIEW-FR-104`). Thresholds and stats remain read-only.
+`WEB-FR-303` **THE admin surface SHALL issue writes through bulk reject of selected district
+cases** (`REVIEW-FR-103`, `REVIEW-FR-104`) **and through staff farmer provision** (`IDENTITY-FR-021`,
+`IDENTITY-FR-025`). Thresholds and stats remain read-only. Knowledge CRUD remains `[DEFERRED]`
+(`WEB-FR-900` … `WEB-FR-904`).
 
 `WEB-FR-304` **THE stats page SHALL display the timestamp of the data shown and SHALL offer a manual
 refresh.**
@@ -672,6 +674,32 @@ recomputed on the client.
 SHALL call `POST /api/v1/review/tasks/bulk-reject` with one shared `reasonCode` and `messageBn`
 supplied by the admin**, SHALL NOT invent Bangla rejection text (`COMMON-CON-003`), and SHALL show
 per-item success and failure from the response.
+
+### 4.6.1 Farmer directory and provision (`OFFICER` and `ADMIN`)
+
+Day-N additive. Officers register farmers in the field after a seed sale; admins use the same APIs
+from `/admin/farmers`. Seed commerce itself is out of scope.
+
+`WEB-FR-310` **THE officer console SHALL provide `/officer/farmers` and THE admin surface SHALL
+provide `/admin/farmers`, sharing one feature module.** Both surfaces SHALL call the same generated
+client operations (`registerFarmer`, `listFarmers`, `getFarmer`, `downloadFarmerImportTemplate`,
+`importFarmers`).
+
+`WEB-FR-311` **THE register form SHALL collect phone first, then name, then preferred language
+(`bn` default), with division and district locked to `GET /api/v1/me` and not editable.** Submitting
+SHALL send `Idempotency-Key` (UUID, one per attempt) on `POST /api/v1/farmers`.
+
+`WEB-FR-312` **THE directory SHALL list the caller's district via `GET /api/v1/farmers` in server
+order, with optional name search `q` and optional exact phone lookup `phone`, never both, and SHALL
+NEVER display a phone number from a response.** Duplicate register (`409` `ERR_FARMER_PHONE_EXISTS`)
+SHALL be shown as "already registered" without revealing another district.
+
+`WEB-FR-313` **THE bulk import screen SHALL download the CSV template, accept a UTF-8 CSV file, POST
+it to `/api/v1/farmers/import`, and render per-row `OK`/`FAILED` from `FarmerImportResult`.** The UI
+SHALL NOT invent extra CSV columns.
+
+`WEB-FR-314` **THE frontend SHALL lock geo pickers to the principal's `divisionCode` and
+`districtCode` even if the geo catalogue returns other districts.**
 
 #### `[DEFERRED]` — admin CRUD screens
 
@@ -849,6 +877,7 @@ exception is the SSE stream, which is not an OpenAPI operation (`WEB-FR-350`).
 | District KPI failures | `GET /api/v1/admin/kpis` | `ADMIN` | `14-review` |
 | District case list | `GET /api/v1/admin/cases` | `ADMIN` | `14-review` |
 | Bulk reject | `POST /api/v1/review/tasks/bulk-reject` | `ADMIN` | `14-review` |
+| District farmer directory · register · CSV import | `GET/POST /api/v1/farmers` · `/import` · `/import/template` | `OFFICER`, `ADMIN` | `10-identity` |
 | Live updates | `GET /api/v1/stream` | authenticated | `15-notification` |
 
 `WEB-API-002` **THE frontend SHALL treat `404` as "not found or not yours" and SHALL NOT infer
@@ -858,7 +887,8 @@ existence from it** (`COMMON-API-001`).
 on the officer queue — and SHALL read `content`, `page`, `size`, `totalElements` and `totalPages`
 from the envelope** (`COMMON` §8.2).
 
-`WEB-API-004` **THE frontend SHALL send `Idempotency-Key` only on `POST /api/v1/cases`.**
+`WEB-API-004` **THE frontend SHALL send `Idempotency-Key` on `POST /api/v1/cases` and on
+`POST /api/v1/farmers`.**
 
 `WEB-API-005` **IF the generated client and this table disagree, THEN THE frontend SHALL follow the
 generated client and THE agent SHALL record the discrepancy as a blocker.**
@@ -1070,7 +1100,7 @@ In addition to `00-common` §11, the frontend is done when **all** of the follow
 
 | Category | IDs | Count |
 |---|---|---|
-| Functional | `WEB-FR-001`…`006` · `010`…`013` · `100`…`101` · `110`…`112`, `114`…`115` · `120`…`125` · `130`…`136` · `140`…`141` · `150`…`158`, `160` · `200`…`202`, `204`…`205` · `210`…`217`, `219` · `220`…`224` · `230`…`235` · `240`…`244` · `300`…`305` · `350`…`359` · `400`…`404` · `900`…`904` · `910`…`913` | 102 |
+| Functional | `WEB-FR-001`…`006` · `010`…`013` · `100`…`101` · `110`…`112`, `114`…`115` · `120`…`125` · `130`…`136` · `140`…`141` · `150`…`158`, `160` · `200`…`202`, `204`…`205` · `210`…`217`, `219` · `220`…`224` · `230`…`235` · `240`…`244` · `300`…`305` · `310`…`314` · `350`…`359` · `400`…`404` · `900`…`904` · `910`…`913` | 107 |
 | Non-functional | `WEB-NFR-001`…`012`, `WEB-NFR-020` | 13 |
 | Data | `WEB-DATA-001`, `002`, `004`…`006`, `020`…`024` | 10 |
 | Security | `WEB-SEC-001`…`006` | 6 |
@@ -1078,7 +1108,7 @@ In addition to `00-common` §11, the frontend is done when **all** of the follow
 | UX | `WEB-UX-010`…`017` · `030`…`034` · `040`…`046` | 20 |
 | Test | `WEB-TEST-001`…`008` | 8 |
 | *of which `[DEFERRED]`* | `WEB-FR-900`…`904`, `910`…`913` | *9* |
-| **Total** | | **164** |
+| **Total** | | **169** |
 
 `[DERIVED]` items introduced here: **`WEB-NFR-011`** — the confidence thresholds must come from the
 API, with a blocker if no officer-visible endpoint exposes them; **`WEB-FR-124`** — a client-side

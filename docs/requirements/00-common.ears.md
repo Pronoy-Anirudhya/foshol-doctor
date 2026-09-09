@@ -409,6 +409,27 @@ lookup. `phone_enc` is AES-256-GCM ciphertext of the same number, key from
 `foshol.crypto.phone.key`. The plaintext phone number is never stored, never logged, and never
 appears in a URL.
 
+### 4.2.1 Day-N additive — farmer provision (`V110__farmer_provision.sql`)
+
+```sql
+ALTER TABLE farmer
+    ADD COLUMN registered_by uuid NULL REFERENCES field_officer (id),
+    ADD COLUMN registration_source varchar(16) NOT NULL DEFAULT 'MIGRATION';
+ALTER TABLE farmer
+    ADD CONSTRAINT ck_farmer_registration_source
+        CHECK (registration_source IN ('MIGRATION', 'MANUAL', 'CSV'));
+CREATE INDEX ix_farmer_district_created ON farmer (district_code, created_at DESC);
+
+CREATE TABLE farmer_provision_idempotency (
+    key          uuid         PRIMARY KEY,
+    officer_id   uuid         NOT NULL REFERENCES field_officer (id),
+    request_hash char(64)    NOT NULL,
+    farmer_id    uuid         NOT NULL REFERENCES farmer (id),
+    created_at   timestamptz  NOT NULL DEFAULT now(),
+    expires_at   timestamptz  NOT NULL
+);
+```
+
 ### 4.3 `V3__knowledge.sql` — owned by `knowledge`
 
 ```sql
@@ -1440,7 +1461,7 @@ module may return any code, but only A1 may add to the class.
 | Declared by | Codes |
 |---|---|
 | **A1 · common** | `ERR_CASE_NOT_FOUND` · `ERR_DEV_OTP_IN_NON_DEV_PROFILE` · `ERR_MODEL_LABEL_MAP_INVALID` · `ERR_MODEL_LABEL_MAP_MISSING` |
-| **A1 · identity** | `ERR_ACCOUNT_INACTIVE` · `ERR_FORBIDDEN` · `ERR_INVALID_CREDENTIALS` · `ERR_JWT_SECRET_TOO_SHORT` · `ERR_OTP_ATTEMPTS_EXCEEDED` · `ERR_OTP_DISABLED` · `ERR_OTP_EXPIRED` · `ERR_OTP_INVALID` · `ERR_OTP_RATE_LIMITED` · `ERR_PHONE_INVALID` · `ERR_PHONE_KEY_INVALID` · `ERR_SUBJECT_NOT_FOUND` · `ERR_TOKEN_EXPIRED` · `ERR_TOKEN_INVALID` |
+| **A1 · identity** | `ERR_ACCOUNT_INACTIVE` · `ERR_FORBIDDEN` · `ERR_INVALID_CREDENTIALS` · `ERR_JWT_SECRET_TOO_SHORT` · `ERR_OTP_ATTEMPTS_EXCEEDED` · `ERR_OTP_DISABLED` · `ERR_OTP_EXPIRED` · `ERR_OTP_INVALID` · `ERR_OTP_RATE_LIMITED` · `ERR_PHONE_INVALID` · `ERR_PHONE_KEY_INVALID` · `ERR_SUBJECT_NOT_FOUND` · `ERR_TOKEN_EXPIRED` · `ERR_TOKEN_INVALID` · `ERR_FARMER_PHONE_EXISTS` · `ERR_FARMER_NOT_FOUND` · `ERR_DISTRICT_SCOPE` · `ERR_GEO_INVALID` · `ERR_FARMER_IMPORT_INVALID` |
 | **A2 · intake** | `ERR_AUDIO_NOT_FOUND` · `ERR_AUDIO_TOO_LARGE` · `ERR_AUDIO_TOO_LONG` · `ERR_AUDIO_UNREADABLE` · `ERR_CASE_RATE_LIMITED` · `ERR_CROP_NOT_FOUND` · `ERR_IDEMPOTENCY_KEY_CONFLICT` · `ERR_IDEMPOTENCY_KEY_INVALID` · `ERR_IDEMPOTENCY_KEY_MISSING` · `ERR_IMAGE_COUNT` · `ERR_IMAGE_NOT_FOUND` · `ERR_IMAGE_QUALITY_REJECTED` · `ERR_IMAGE_TOO_LARGE` · `ERR_PARENT_CASE_INVALID` · `ERR_STORAGE_UNAVAILABLE` · `ERR_UNSUPPORTED_MEDIA_TYPE` |
 | **A3 · analysis** | `ERR_ALL_LABELS_UNMAPPED` · `ERR_ANALYSIS_NOT_FOUND` · `ERR_EMBEDDING_DIMENSION` · `ERR_FIXTURE_MISSING` · `ERR_NO_REMEDY_FOR_DIAGNOSIS` · `ERR_SIDECAR_UNAVAILABLE` · `ERR_SPEECH_BRANCH_TIMEOUT` · `ERR_UNKNOWN_SYMPTOM` · `ERR_VISION_BRANCH_TIMEOUT` |
 | **A4 · knowledge** | `ERR_DISEASE_NOT_FOUND` · `ERR_KB_CONTENT_INVALID` · `ERR_KB_EMBEDDING_MISSING` |
@@ -1493,6 +1514,9 @@ foshol.auth.otp.length=6
 foshol.auth.otp.rate-limit.max-requests=3
 foshol.auth.otp.rate-limit.window=PT10M
 foshol.crypto.phone.key=${FOSHOL_PHONE_KEY}
+foshol.identity.bulk.max-size=100
+foshol.identity.bulk.max-bytes=262144
+foshol.identity.idempotency.ttl=PT24H
 
 # ── storage ─────────────────────────────────────────────────────────────────
 foshol.storage.endpoint=http://localhost:9000

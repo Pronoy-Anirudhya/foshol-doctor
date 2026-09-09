@@ -39,6 +39,8 @@ public class IdentityExceptionHandler {
             case 401 -> "Unauthorized";
             case 403 -> "Forbidden";
             case 404 -> "Not Found";
+            case 409 -> "Conflict";
+            case 415 -> "Unsupported Media Type";
             case 429 -> "Too Many Requests";
             case 503 -> "Service Unavailable";
             default -> "Error";
