@@ -51,6 +51,127 @@ set +a
 export FOSHOL_JWT_SECRET FOSHOL_PHONE_KEY FOSHOL_DB_PASSWORD
 export FOSHOL_MINIO_ACCESS_KEY FOSHOL_MINIO_SECRET_KEY
 
+wait_for_postgres() {
+  local label="${1:-postgres}"
+  echo -n "waiting for ${label}"
+  for _ in $(seq 1 60); do
+    if docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
+      echo " ok"
+      return 0
+    fi
+    echo -n "."
+    sleep 1
+  done
+  echo " postgres did not become ready" >&2
+  return 1
+}
+
+reset_postgres_data() {
+  echo "resetting ./.data/postgres so Flyway can apply from empty"
+  docker compose stop postgres >/dev/null
+  rm -rf "$ROOT/.data/postgres"
+  docker compose up -d postgres
+  wait_for_postgres "postgres after reset" || exit 1
+}
+
+confirm_postgres_reset() {
+  echo >&2
+  echo "Flyway history in ./.data/postgres does not match the migration files." >&2
+  echo "Spring cannot start until that directory is reset." >&2
+  echo "This wipes local Postgres. MinIO is left alone." >&2
+  echo "If you confirm: dump data first, reset, boot (Flyway applies schema), then restore that dump." >&2
+  echo "The dump stays in .data/backups/ even if restore later fails." >&2
+  echo >&2
+  local answer="${FOSHOL_RESET_POSTGRES:-}"
+  if [[ -z "$answer" ]]; then
+    if [[ ! -t 0 ]]; then
+      echo "stdin is not a terminal. Re-run interactively, or set FOSHOL_RESET_POSTGRES=yes to confirm." >&2
+      exit 1
+    fi
+    read -r -p "Backup, reset Postgres, and restore data after a successful boot? [y/N] " answer
+  fi
+  case "$answer" in
+    y | Y | yes | YES) return 0 ;;
+    *)
+      echo "aborted; database unchanged" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# Parallel feature branches reused V110 (officer-queue vs farmer provision). Bind-mounted
+# ./.data/postgres keeps the old checksum, and Flyway validate refuses to boot. Same
+# recovery as the MinIO key mismatch below: wipe local data, do not repair history.
+flyway_history_matches() {
+  command -v python3 >/dev/null 2>&1 || {
+    echo "python3 not found; skipping Flyway history check" >&2
+    return 0
+  }
+  local dirs="migration"
+  if [[ "${PROFILES}" == *local* || "${PROFILES}" == *demo* ]]; then
+    dirs="migration,seed"
+  fi
+  local applied_history
+  applied_history="$(docker compose exec -T postgres psql -U foshol -d foshol -At -c \
+    "SELECT version || E'\t' || checksum FROM flyway_schema_history WHERE version IS NOT NULL" \
+    2>/dev/null || true)"
+  [[ -z "${applied_history}" ]] && return 0
+  FOSHOL_FLYWAY_HISTORY="${applied_history}" python3 - "$ROOT" "${dirs}" <<'PY'
+import os, pathlib, re, sys, zlib
+
+root = pathlib.Path(sys.argv[1])
+dirs = [d.strip() for d in sys.argv[2].split(",") if d.strip()]
+applied = {}
+for line in os.environ.get("FOSHOL_FLYWAY_HISTORY", "").splitlines():
+    line = line.strip().replace("\r", "")
+    if not line:
+        continue
+    version, checksum = line.split("\t", 1)
+    applied[version] = int(checksum)
+
+def flyway_checksum(path):
+    crc = 0
+    with open(path, "r", encoding="utf-8-sig", newline="") as handle:
+        for raw in handle:
+            line = raw[:-1] if raw.endswith("\n") else raw
+            if line.endswith("\r"):
+                line = line[:-1]
+            crc = zlib.crc32(line.encode("utf-8"), crc)
+    crc &= 0xFFFFFFFF
+    return crc - 0x100000000 if crc >= 0x80000000 else crc
+
+seen = set()
+failed = False
+for folder in dirs:
+    for path in sorted((root / "app/src/main/resources/db" / folder).glob("V*.sql")):
+        match = re.match(r"V(\d+)__", path.name)
+        if not match:
+            continue
+        version = str(int(match.group(1)))
+        seen.add(version)
+        if version not in applied:
+            continue
+        local = flyway_checksum(path)
+        if local != applied[version]:
+            print(
+                f"  mismatch version {version}: applied {applied[version]}, "
+                f"local {local} ({path.name})",
+                file=sys.stderr,
+            )
+            failed = True
+
+for version, checksum in applied.items():
+    if version not in seen:
+        print(
+            f"  mismatch version {version}: applied {checksum}, local file missing",
+            file=sys.stderr,
+        )
+        failed = True
+
+sys.exit(1 if failed else 0)
+PY
+}
+
 echo "starting postgres and minio"
 if ! docker compose up -d postgres minio; then
   occupant="$(docker ps --filter publish=5434 --format '{{.Names}}' | head -n 1 || true)"
@@ -66,18 +187,15 @@ if ! docker compose up -d postgres minio; then
   exit 1
 fi
 
-echo -n "waiting for postgres"
-for _ in $(seq 1 60); do
-  if docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
-    echo " ok"
-    break
-  fi
-  echo -n "."
-  sleep 1
-done
-if ! docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
-  echo " postgres did not become ready" >&2
-  exit 1
+wait_for_postgres || exit 1
+
+POSTGRES_RESTORE_FILE=""
+echo "checking Flyway history"
+if ! flyway_history_matches; then
+  confirm_postgres_reset
+  POSTGRES_RESTORE_FILE="$("$ROOT/tools/postgres-data-backup.sh" dump)"
+  echo "backup written to ${POSTGRES_RESTORE_FILE}"
+  reset_postgres_data
 fi
 
 echo -n "waiting for minio"
@@ -115,6 +233,31 @@ fi
 java_pid() {
   pgrep -f 'com.rootcause.foshol.FosholDoctorApplication' | head -n 1 || true
 }
+
+gradle_pid() {
+  pgrep -f 'gradlew :app:bootRun' | head -n 1 || true
+}
+
+stop_pid() {
+  local pid="$1"
+  [[ -z "$pid" ]] && return 0
+  kill "$pid" 2>/dev/null || true
+}
+
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "stopping Spring so Flyway can apply on the empty database"
+  stop_pid "$(java_pid)"
+  stop_pid "$(gradle_pid)"
+  for _ in $(seq 1 20); do
+    if [[ -z "$(java_pid)" && -z "$(gradle_pid)" ]]; then
+      break
+    fi
+    sleep 1
+  done
+  [[ -n "$(java_pid)" ]] && kill -9 "$(java_pid)" 2>/dev/null || true
+  [[ -n "$(gradle_pid)" ]] && kill -9 "$(gradle_pid)" 2>/dev/null || true
+  rm -f "$APP_PID_FILE"
+fi
 
 if [[ -f "$APP_PID_FILE" ]]; then
   old="$(cat "$APP_PID_FILE" 2>/dev/null || true)"
@@ -165,12 +308,20 @@ until curl -sf "${BASE_URL}/actuator/health" >/dev/null 2>&1; do
 done
 echo " ok"
 
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "restoring Postgres data from ${POSTGRES_RESTORE_FILE}"
+  "$ROOT/tools/postgres-data-backup.sh" restore "$POSTGRES_RESTORE_FILE"
+fi
+
 echo
 echo "stack is up"
 echo "  API     ${BASE_URL}"
 echo "  health  $(curl -sf "${BASE_URL}/actuator/health")"
 echo "  MinIO   http://127.0.0.1:9000  (console :9001)"
 echo "  profile ${PROFILES}"
+if [[ -n "${POSTGRES_RESTORE_FILE}" ]]; then
+  echo "  backup  ${POSTGRES_RESTORE_FILE}"
+fi
 echo
 echo "farmer  +8801711111111  OTP 123456  (Dhaka / DHA)"
 echo "officer officer / password   (Dhaka; also officer-dha)"
