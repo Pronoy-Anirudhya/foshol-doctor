@@ -68,7 +68,7 @@ def test_classify_unknown_crop_returns_400(client, rice_png: bytes) -> None:
     response = client.post(
         "/v1/vision/classify",
         files={"image": ("leaf.png", rice_png, "image/png")},
-        data={"crop_code": "wheat"},
+        data={"crop_code": "banana"},
     )
     assert response.status_code == 400
     assert response.headers["content-type"].startswith("application/problem+json")

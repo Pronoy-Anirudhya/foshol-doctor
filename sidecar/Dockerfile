@@ -3,6 +3,9 @@ FROM python:3.12-slim
 WORKDIR /app
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin foshol \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --upgrade pip
 
 COPY requirements.txt /tmp/requirements.txt
@@ -10,7 +13,10 @@ RUN pip install --no-cache-dir \
         fastapi==0.115.12 \
         uvicorn==0.34.2 \
         pydantic==2.11.4 \
-        python-multipart==0.0.20
+        python-multipart==0.0.20 \
+        pillow==11.2.1 \
+        transformers==4.51.3 \
+    && pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 
 COPY --chown=foshol:foshol app /app/app
 COPY --chown=foshol:foshol fixtures /app/fixtures
@@ -30,6 +36,7 @@ ENV PYTHONUNBUFFERED=1 \
     FOSHOL_AI_ASR_MODEL_REVISION=25c88973563146654493b97882fb2806d2fdeaaa \
     FOSHOL_AI_EMBED_MODEL_ID=sentence-transformers/LaBSE \
     FOSHOL_AI_EMBED_MODEL_REVISION=836121a0533e5664b21c7aacc5d22951f2b8b25b \
+    HF_HOME=/home/foshol/.cache/huggingface \
     HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1 \
     HF_HUB_DISABLE_TELEMETRY=1
@@ -37,7 +44,7 @@ ENV PYTHONUNBUFFERED=1 \
 USER foshol
 EXPOSE 8000
 
-HEALTHCHECK --interval=10s --timeout=5s --retries=12 \
+HEALTHCHECK --interval=10s --timeout=5s --retries=30 --start-period=180s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

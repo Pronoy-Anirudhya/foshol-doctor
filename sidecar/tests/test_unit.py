@@ -58,7 +58,7 @@ def test_route_unknown_crop() -> None:
     with pytest.raises(SidecarError) as raised:
         route_crop(
             settings,
-            "wheat",
+            "banana",
             None,
             primary_usable=True,
             fallback_usable=True,
