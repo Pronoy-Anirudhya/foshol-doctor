@@ -62,6 +62,8 @@ public final class ConfigKeys {
     public static final String KNOWLEDGE_MATCH_MAX_SYMPTOMS = "foshol.knowledge.match.max-symptoms";
     public static final String KNOWLEDGE_MATCH_KNN_LIMIT = "foshol.knowledge.match.knn-limit";
     public static final String KNOWLEDGE_MATCH_INCONCLUSIVE_SCORE_MIN = "foshol.knowledge.match.inconclusive-score-min";
+    /** Startup gate expected live disease count (defaults to KnowledgeTaxonomy.DISEASE_CLASS_COUNT). */
+    public static final String KNOWLEDGE_EXPECTED_DISEASE_COUNT = "foshol.knowledge.expected-disease-count";
     public static final String REVIEW_CLAIM_TTL = "foshol.review.claim.ttl";
     public static final String REVIEW_SLA = "foshol.review.sla";
     public static final String REVIEW_SWEEPER_INTERVAL = "foshol.review.sweeper.interval";

@@ -16,12 +16,17 @@ public final class KnowledgeContentValidator {
     private KnowledgeContentValidator() {}
 
     public static void validateStrict(ContentSnapshot snapshot) {
-        if (snapshot.liveDiseaseCount() != KnowledgeTaxonomy.DISEASE_CLASS_COUNT) {
+        validateStrict(snapshot, KnowledgeTaxonomy.DISEASE_CLASS_COUNT);
+    }
+
+    public static void validateStrict(ContentSnapshot snapshot, int expectedDiseaseCount) {
+        if (snapshot.liveDiseaseCount() != expectedDiseaseCount) {
             fail(
                     ErrorCodes.ERR_KB_CONTENT_INVALID,
                     "KNOWLEDGE-DATA-004",
                     List.of(),
-                    "live disease count is " + snapshot.liveDiseaseCount());
+                    "live disease count is " + snapshot.liveDiseaseCount()
+                            + " expected " + expectedDiseaseCount);
         }
         if (!snapshot.nonHealthyMissingActiveRemedy().isEmpty()) {
             fail(

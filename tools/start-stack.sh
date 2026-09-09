@@ -13,7 +13,7 @@ cd "$ROOT"
 APP_LOG="${APP_LOG:-$ROOT/tools/.run/app.log}"
 APP_PID_FILE="${APP_PID_FILE:-$ROOT/tools/.run/app.pid}"
 BASE_URL="${BASE_URL:-http://localhost:8080}"
-PROFILES="${FOSHOL_SPRING_PROFILES:-local,demo}"
+PROFILES="${FOSHOL_SPRING_PROFILES:-local}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 
 mkdir -p "$ROOT/tools/.run"

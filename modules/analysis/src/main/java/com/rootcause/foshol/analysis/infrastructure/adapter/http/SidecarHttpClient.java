@@ -9,8 +9,10 @@ import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
 import com.rootcause.foshol.common.CorrelationId;
 import com.rootcause.foshol.common.ErrorCodes;
 import java.util.Base64;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -44,6 +46,43 @@ public class SidecarHttpClient {
         } catch (RestClientException | java.io.IOException ex) {
             throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar HTTP failed", ex);
         }
+    }
+
+    public JsonNode postMultipart(
+            String path, MultiValueMap<String, HttpEntity<?>> multipart, String correlationId) {
+        try {
+            String response = restClient.post()
+                    .uri(path)
+                    .header(CorrelationId.HEADER, correlationId)
+                    .body(multipart)
+                    .retrieve()
+                    .body(String.class);
+            return mapper.readTree(response);
+        } catch (RestClientException | java.io.IOException ex) {
+            throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar HTTP failed", ex);
+        }
+    }
+
+    public <T> T postMultipart(
+            String path,
+            MultiValueMap<String, HttpEntity<?>> multipart,
+            String correlationId,
+            Class<T> type) {
+        try {
+            String response = restClient.post()
+                    .uri(path)
+                    .header(CorrelationId.HEADER, correlationId)
+                    .body(multipart)
+                    .retrieve()
+                    .body(String.class);
+            return mapper.readValue(response, type);
+        } catch (RestClientException | java.io.IOException ex) {
+            throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar HTTP failed", ex);
+        }
+    }
+
+    public byte[] readBytes(String objectKey) {
+        return objectStore.read(objectKey);
     }
 
     public String readBase64(String objectKey) {

@@ -15,8 +15,11 @@ import com.rootcause.foshol.analysis.application.port.SpeechToTextPort;
 import com.rootcause.foshol.analysis.application.port.TextEmbeddingPort;
 import com.rootcause.foshol.analysis.application.port.TranscriptRequest;
 import com.rootcause.foshol.analysis.application.port.TranscriptResult;
+import com.rootcause.foshol.analysis.application.port.VisionBatchRequest;
+import com.rootcause.foshol.analysis.application.port.VisionBatchResult;
+import com.rootcause.foshol.analysis.application.port.VisionImageRef;
+import com.rootcause.foshol.analysis.application.port.VisionImageResult;
 import com.rootcause.foshol.analysis.application.port.VisionModelPort;
-import com.rootcause.foshol.analysis.application.port.VisionRequest;
 import com.rootcause.foshol.analysis.application.port.VisionResult;
 import com.rootcause.foshol.analysis.domain.AnalysisRun;
 import com.rootcause.foshol.analysis.domain.AnalysisScale;
@@ -215,14 +218,24 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                         .get(deadline.toMillis(), TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeout) {
                 abandon(visionFuture, speechFuture, command.correlationId());
-            } catch (Exception interrupted) {
+            } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
+                abandon(visionFuture, speechFuture, command.correlationId());
+            } catch (Exception ex) {
+                // ExecutionException from a failed branch — do not mark this thread interrupted
+                // or JPA/Hikari will fail with "Interrupted during connection acquisition".
+                log.warn(
+                        "analysis branch failed before deadline correlationId={}",
+                        command.correlationId(),
+                        ex);
                 abandon(visionFuture, speechFuture, command.correlationId());
             }
             visionBundle = completedOrAbandoned(visionFuture);
             speechBundle = completedOrAbandonedSpeech(speechFuture);
         } finally {
             executor.shutdownNow();
+            // Cancel/time-limiter may leave the interrupt flag set; clear before persistence.
+            Thread.interrupted();
         }
         return assemble(command, summary, visionBundle, speechBundle, start);
     }
@@ -280,6 +293,10 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
 
     private VisionBundle runVision(RunAnalysisCommand command, CaseSummary summary) {
         List<CaseImageRef> images = summary.images() == null ? List.of() : summary.images();
+        if (images.isEmpty()) {
+            return new VisionBundle(
+                    BranchOutcome.COMPLETED, null, null, null, List.of(), List.of(), List.of(), null, null);
+        }
         List<List<MappedCandidate>> perImage = new ArrayList<>();
         List<ImageRaw> raws = new ArrayList<>();
         Set<String> unmapped = new LinkedHashSet<>();
@@ -288,17 +305,25 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         String primaryRawLabel = null;
         CaseImageRef primary = primaryImage(images);
         try {
+            List<VisionImageRef> refs = new ArrayList<>(images.size());
+            Map<UUID, CaseImageRef> caseById = new LinkedHashMap<>();
             for (CaseImageRef image : images) {
-                VisionResult result = vision.classify(new VisionRequest(
-                        command.caseId(),
-                        image.imageId(),
-                        summary.cropCode(),
-                        image.objectKey(),
-                        image.sha256(),
-                        command.correlationId()));
-                modelId = result.modelId();
-                modelVersion = result.modelVersion();
-                List<RawCandidate> scaled = TemperatureScaler.rescale(toDomain(result.candidates()), settings.temperature());
+                refs.add(new VisionImageRef(image.imageId(), image.objectKey(), image.sha256()));
+                caseById.put(image.imageId(), image);
+            }
+
+            VisionBatchResult batch = vision.classifyBatch(new VisionBatchRequest(
+                    command.caseId(), summary.cropCode(), command.correlationId(), List.copyOf(refs)));
+            modelId = batch.modelId();
+            modelVersion = batch.modelVersion();
+
+            for (VisionImageResult imageResult : batch.images()) {
+                CaseImageRef image = caseById.get(imageResult.imageId());
+                if (image == null) {
+                    continue;
+                }
+                List<RawCandidate> scaled =
+                        TemperatureScaler.rescale(toDomain(imageResult.candidates()), settings.temperature());
                 if (primary != null && image.imageId().equals(primary.imageId()) && !scaled.isEmpty()) {
                     primaryRawLabel = scaled.get(0).rawLabel();
                     BigDecimal best = scaled.get(0).confidence();
@@ -309,24 +334,42 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                         }
                     }
                 }
-                String reportedId = result.modelId();
-                String reportedVersion = result.modelVersion();
                 LabelResolver.Resolution resolution = labelResolver.resolve(
                         scaled,
-                        reportedId,
-                        reportedVersion,
+                        batch.modelId(),
+                        batch.modelVersion(),
                         knowledge::resolveModelLabel,
                         id -> knowledge.findDiseaseById(id).map(DiseaseView::code).orElse(id.toString()),
                         command.correlationId());
                 unmapped.addAll(resolution.unmappedLabels());
                 perImage.add(aggregator.maxWithinImage(resolution.mapped()));
-                raws.add(new ImageRaw(image, result, scaled));
+                VisionResult audit = new VisionResult(
+                        batch.modelId(), batch.modelVersion(), imageResult.candidates(), batch.latencyMs());
+                raws.add(new ImageRaw(image, audit, scaled));
             }
             List<MappedCandidate> aggregated = aggregator.aggregateAcrossImages(
                     perImage, settings.aggregation(), settings.candidateLimit());
+            log.info(
+                    "vision branch outcome caseId={} modelId={} mappedCandidates={} unmappedLabels={} topMapped={} correlationId={}",
+                    command.caseId(),
+                    modelId,
+                    aggregated.size(),
+                    unmapped,
+                    aggregated.isEmpty()
+                            ? "none"
+                            : aggregated.getFirst().diseaseCode() + "=" + aggregated.getFirst().confidence(),
+                    command.correlationId());
             String gradcamKey = storeGradcam(command, summary, primary, primaryRawLabel, aggregated);
             return new VisionBundle(
-                    BranchOutcome.COMPLETED, null, modelId, modelVersion, aggregated, List.copyOf(unmapped), raws, primary, gradcamKey);
+                    BranchOutcome.COMPLETED,
+                    null,
+                    modelId,
+                    modelVersion,
+                    aggregated,
+                    List.copyOf(unmapped),
+                    raws,
+                    primary,
+                    gradcamKey);
         } catch (SidecarFailureException ex) {
             return VisionBundle.failed(ex.errorCode());
         } catch (RuntimeException ex) {

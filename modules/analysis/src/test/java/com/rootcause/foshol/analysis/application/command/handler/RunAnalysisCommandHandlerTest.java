@@ -18,8 +18,10 @@ import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
 import com.rootcause.foshol.analysis.application.port.SpeechToTextPort;
 import com.rootcause.foshol.analysis.application.port.TextEmbeddingPort;
 import com.rootcause.foshol.analysis.application.port.TranscriptResult;
+import com.rootcause.foshol.analysis.application.port.RawCandidate;
+import com.rootcause.foshol.analysis.application.port.VisionBatchResult;
+import com.rootcause.foshol.analysis.application.port.VisionImageResult;
 import com.rootcause.foshol.analysis.application.port.VisionModelPort;
-import com.rootcause.foshol.analysis.application.port.VisionResult;
 import com.rootcause.foshol.analysis.domain.AnalysisRun;
 import com.rootcause.foshol.analysis.domain.CaseCandidate;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
@@ -148,7 +150,7 @@ class RunAnalysisCommandHandlerTest {
     void missingFixtureDegradesToUndetermined() {
         when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
         when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
-        when(vision.classify(any()))
+        when(vision.classifyBatch(any()))
                 .thenThrow(new SidecarFailureException(ErrorCodes.ERR_FIXTURE_MISSING, "missing"));
         handler.handle(command(null));
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
@@ -163,12 +165,11 @@ class RunAnalysisCommandHandlerTest {
     void allUnmappedLabelsAreUndetermined() {
         when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
         when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
-        when(vision.classify(any())).thenReturn(new VisionResult(
-                "model",
-                "v1",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
-                        "unknown-label", new BigDecimal("0.9100"))),
-                12));
+        when(vision.classifyBatch(any()))
+                .thenReturn(batchResult(
+                        "model",
+                        "v1",
+                        List.of(new RawCandidate("unknown-label", new BigDecimal("0.9100")))));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.empty());
         handler.handle(command(null));
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
@@ -183,7 +184,7 @@ class RunAnalysisCommandHandlerTest {
     void sidecarUnavailableStillCompletes() {
         when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
         when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
-        when(vision.classify(any()))
+        when(vision.classifyBatch(any()))
                 .thenThrow(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "down"));
         handler.handle(command(null));
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
@@ -231,12 +232,11 @@ class RunAnalysisCommandHandlerTest {
     @Test
     @SuppressWarnings("unchecked")
     void secondaryPathMergesVisionAndKnowledge() {
-        when(vision.classify(any())).thenReturn(new VisionResult(
-                "kssrikar4/Rice-Leaf-Disease-Classification",
-                "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
-                        "Brown Spot", new BigDecimal("0.6000"))),
-                12));
+        when(vision.classifyBatch(any()))
+                .thenReturn(batchResult(
+                        "kssrikar4/Rice-Leaf-Disease-Classification",
+                        "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+                        List.of(new RawCandidate("Brown Spot", new BigDecimal("0.6000")))));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
         when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
@@ -276,18 +276,27 @@ class RunAnalysisCommandHandlerTest {
     }
 
     private void stubHappyVision() {
-        when(vision.classify(any())).thenReturn(new VisionResult(
-                "kssrikar4/Rice-Leaf-Disease-Classification",
-                "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
-                        "Brown Spot", new BigDecimal("0.9100"))),
-                12));
+        when(vision.classifyBatch(any()))
+                .thenReturn(batchResult(
+                        "kssrikar4/Rice-Leaf-Disease-Classification",
+                        "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+                        List.of(new RawCandidate("Brown Spot", new BigDecimal("0.9100")))));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
         when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
                 "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null)));
+    }
+
+    private VisionBatchResult batchResult(String modelId, String modelVersion, List<RawCandidate> candidates) {
+        return new VisionBatchResult(
+                modelId,
+                modelVersion,
+                List.of(
+                        new VisionImageResult(IMAGE_A, HIGH_SHA, candidates),
+                        new VisionImageResult(IMAGE_B, HIGH_B_SHA, candidates)),
+                12);
     }
 
     private RunAnalysisCommand command(CaseAudioRef audio) {
