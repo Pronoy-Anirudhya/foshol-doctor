@@ -15,6 +15,9 @@ public final class ConfigKeys {
     public static final String AUTH_OTP_RATE_LIMIT_WINDOW = "foshol.auth.otp.rate-limit.window";
     public static final String AUTH_OTP_DEV_CODE = "foshol.auth.otp.dev-code";
     public static final String CRYPTO_PHONE_KEY = "foshol.crypto.phone.key";
+    public static final String IDENTITY_BULK_MAX_SIZE = "foshol.identity.bulk.max-size";
+    public static final String IDENTITY_BULK_MAX_BYTES = "foshol.identity.bulk.max-bytes";
+    public static final String IDENTITY_IDEMPOTENCY_TTL = "foshol.identity.idempotency.ttl";
     public static final String STORAGE_ENDPOINT = "foshol.storage.endpoint";
     public static final String STORAGE_ACCESS_KEY = "foshol.storage.access-key";
     public static final String STORAGE_SECRET_KEY = "foshol.storage.secret-key";

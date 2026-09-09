@@ -24,6 +24,11 @@ public final class ErrorCodes {
     public static final String ERR_SUBJECT_NOT_FOUND = "ERR_SUBJECT_NOT_FOUND";
     public static final String ERR_TOKEN_EXPIRED = "ERR_TOKEN_EXPIRED";
     public static final String ERR_TOKEN_INVALID = "ERR_TOKEN_INVALID";
+    public static final String ERR_FARMER_PHONE_EXISTS = "ERR_FARMER_PHONE_EXISTS";
+    public static final String ERR_FARMER_NOT_FOUND = "ERR_FARMER_NOT_FOUND";
+    public static final String ERR_DISTRICT_SCOPE = "ERR_DISTRICT_SCOPE";
+    public static final String ERR_GEO_INVALID = "ERR_GEO_INVALID";
+    public static final String ERR_FARMER_IMPORT_INVALID = "ERR_FARMER_IMPORT_INVALID";
     public static final String ERR_AUDIO_NOT_FOUND = "ERR_AUDIO_NOT_FOUND";
     public static final String ERR_AUDIO_TOO_LARGE = "ERR_AUDIO_TOO_LARGE";
     public static final String ERR_AUDIO_TOO_LONG = "ERR_AUDIO_TOO_LONG";
