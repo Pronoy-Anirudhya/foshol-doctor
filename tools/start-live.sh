@@ -125,5 +125,5 @@ if [[ -n "$existing" || -n "$gradle" ]]; then
   rm -f "$ROOT/tools/.run/app.pid"
 fi
 
-echo "starting Spring Boot (Flyway applies V109 on this boot)"
+echo "starting Spring Boot (Flyway applies pending migrations on this boot)"
 exec "$ROOT/tools/start-stack.sh"
