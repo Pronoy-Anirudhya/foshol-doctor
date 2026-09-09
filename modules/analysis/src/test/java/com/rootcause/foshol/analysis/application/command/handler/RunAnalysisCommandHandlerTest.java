@@ -28,6 +28,7 @@ import com.rootcause.foshol.common.DecisionPath;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
+import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.common.Severity;
@@ -195,6 +196,46 @@ class RunAnalysisCommandHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void photoOnlyMidBandIsSecondaryWithModelCandidates() {
+        stubMidBandVision();
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(explainability.explain(any()))
+                .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
+        handler.handle(command(null));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        ArgumentCaptor<List<CaseCandidate>> candidates = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<AnalysisCompleted> completed = ArgumentCaptor.forClass(AnalysisCompleted.class);
+        verify(persistence).saveNewRun(run.capture(), candidates.capture(), any());
+        verify(events).publishCompleted(completed.capture());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.SECONDARY);
+        assertThat(candidates.getValue()).isNotEmpty();
+        assertThat(candidates.getValue()).extracting(CaseCandidate::source).containsOnly(CandidateSource.MODEL);
+        assertThat(completed.getValue().candidates()).extracting(CandidateView::source).containsOnly(CandidateSource.MODEL);
+        verify(speech, never()).transcribe(any());
+    }
+
+    @Test
+    void speechSidecarUnavailableKeepsHighVisionPrimary() {
+        stubHappyVision();
+        CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(objectStore.read(any())).thenReturn("fixture:asr:demo".getBytes());
+        when(speech.transcribe(any()))
+                .thenThrow(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "down"));
+        when(explainability.explain(any()))
+                .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
+        handler.handle(command(audio));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        verify(events).publishCompleted(any(AnalysisCompleted.class));
+        verify(events, never()).publishFailed(any());
+    }
+
+    @Test
     void speechTimeoutAbandonsSpeechAndKeepsVision() throws Exception {
         handler = new RunAnalysisCommandHandler(
                 intake,
@@ -275,6 +316,29 @@ class RunAnalysisCommandHandlerTest {
         verify(events).publishCompleted(any(AnalysisCompleted.class));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void secondaryWithoutMatchUsesModelSource() {
+        stubMidBandVision();
+        CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(objectStore.read(any())).thenReturn("fixture:asr:demo".getBytes());
+        when(speech.transcribe(any()))
+                .thenThrow(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "down"));
+        when(explainability.explain(any()))
+                .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
+        handler.handle(command(audio));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        ArgumentCaptor<List<CaseCandidate>> candidates = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<AnalysisCompleted> completed = ArgumentCaptor.forClass(AnalysisCompleted.class);
+        verify(persistence).saveNewRun(run.capture(), candidates.capture(), any());
+        verify(events).publishCompleted(completed.capture());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.SECONDARY);
+        assertThat(candidates.getValue()).extracting(CaseCandidate::source).containsOnly(CandidateSource.MODEL);
+        assertThat(completed.getValue().candidates()).extracting(CandidateView::source).containsOnly(CandidateSource.MODEL);
+    }
+
     private void stubHappyVision() {
         when(vision.classify(any())).thenReturn(new VisionResult(
                 "kssrikar4/Rice-Leaf-Disease-Classification",
@@ -288,6 +352,22 @@ class RunAnalysisCommandHandlerTest {
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
                 "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null)));
+    }
+
+    private void stubMidBandVision() {
+        when(vision.classify(any())).thenReturn(new VisionResult(
+                "kssrikar4/Rice-Leaf-Disease-Classification",
+                "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
+                        "Brown Spot", new BigDecimal("0.6000"))),
+                12));
+        when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
+        when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
+                DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
+        when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
+                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
+                "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
+                null, null, null, null)));
     }
 
     private RunAnalysisCommand command(CaseAudioRef audio) {
