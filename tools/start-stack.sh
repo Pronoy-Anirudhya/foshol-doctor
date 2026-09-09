@@ -51,6 +51,102 @@ set +a
 export FOSHOL_JWT_SECRET FOSHOL_PHONE_KEY FOSHOL_DB_PASSWORD
 export FOSHOL_MINIO_ACCESS_KEY FOSHOL_MINIO_SECRET_KEY
 
+wait_for_postgres() {
+  local label="${1:-postgres}"
+  echo -n "waiting for ${label}"
+  for _ in $(seq 1 60); do
+    if docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
+      echo " ok"
+      return 0
+    fi
+    echo -n "."
+    sleep 1
+  done
+  echo " postgres did not become ready" >&2
+  return 1
+}
+
+reset_postgres_data() {
+  echo "local Flyway history does not match current migrations; resetting ./.data/postgres"
+  docker compose stop postgres >/dev/null
+  rm -rf "$ROOT/.data/postgres"
+  docker compose up -d postgres
+  wait_for_postgres "postgres after reset" || exit 1
+}
+
+# Parallel feature branches reused V110 (officer-queue vs farmer provision). Bind-mounted
+# ./.data/postgres keeps the old checksum, and Flyway validate refuses to boot. Same
+# recovery as the MinIO key mismatch below: wipe local data, do not repair history.
+flyway_history_matches() {
+  command -v python3 >/dev/null 2>&1 || {
+    echo "python3 not found; skipping Flyway history check" >&2
+    return 0
+  }
+  local dirs="migration"
+  if [[ "${PROFILES}" == *local* || "${PROFILES}" == *demo* ]]; then
+    dirs="migration,seed"
+  fi
+  local applied_history
+  applied_history="$(docker compose exec -T postgres psql -U foshol -d foshol -At -c \
+    "SELECT version || E'\t' || checksum FROM flyway_schema_history WHERE version IS NOT NULL" \
+    2>/dev/null || true)"
+  [[ -z "${applied_history}" ]] && return 0
+  FOSHOL_FLYWAY_HISTORY="${applied_history}" python3 - "$ROOT" "${dirs}" <<'PY'
+import os, pathlib, re, sys, zlib
+
+root = pathlib.Path(sys.argv[1])
+dirs = [d.strip() for d in sys.argv[2].split(",") if d.strip()]
+applied = {}
+for line in os.environ.get("FOSHOL_FLYWAY_HISTORY", "").splitlines():
+    line = line.strip().replace("\r", "")
+    if not line:
+        continue
+    version, checksum = line.split("\t", 1)
+    applied[version] = int(checksum)
+
+def flyway_checksum(path):
+    crc = 0
+    with open(path, "r", encoding="utf-8-sig", newline="") as handle:
+        for raw in handle:
+            line = raw[:-1] if raw.endswith("\n") else raw
+            if line.endswith("\r"):
+                line = line[:-1]
+            crc = zlib.crc32(line.encode("utf-8"), crc)
+    crc &= 0xFFFFFFFF
+    return crc - 0x100000000 if crc >= 0x80000000 else crc
+
+seen = set()
+failed = False
+for folder in dirs:
+    for path in sorted((root / "app/src/main/resources/db" / folder).glob("V*.sql")):
+        match = re.match(r"V(\d+)__", path.name)
+        if not match:
+            continue
+        version = str(int(match.group(1)))
+        seen.add(version)
+        if version not in applied:
+            continue
+        local = flyway_checksum(path)
+        if local != applied[version]:
+            print(
+                f"  mismatch version {version}: applied {applied[version]}, "
+                f"local {local} ({path.name})",
+                file=sys.stderr,
+            )
+            failed = True
+
+for version, checksum in applied.items():
+    if version not in seen:
+        print(
+            f"  mismatch version {version}: applied {checksum}, local file missing",
+            file=sys.stderr,
+        )
+        failed = True
+
+sys.exit(1 if failed else 0)
+PY
+}
+
 echo "starting postgres and minio"
 if ! docker compose up -d postgres minio; then
   occupant="$(docker ps --filter publish=5434 --format '{{.Names}}' | head -n 1 || true)"
@@ -66,18 +162,11 @@ if ! docker compose up -d postgres minio; then
   exit 1
 fi
 
-echo -n "waiting for postgres"
-for _ in $(seq 1 60); do
-  if docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
-    echo " ok"
-    break
-  fi
-  echo -n "."
-  sleep 1
-done
-if ! docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2>&1; then
-  echo " postgres did not become ready" >&2
-  exit 1
+wait_for_postgres || exit 1
+
+echo "checking Flyway history"
+if ! flyway_history_matches; then
+  reset_postgres_data
 fi
 
 echo -n "waiting for minio"
