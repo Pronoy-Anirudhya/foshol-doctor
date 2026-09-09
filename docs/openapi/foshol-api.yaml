@@ -496,10 +496,10 @@ paths:
     get:
       tags: [review]
       operationId: getReviewQueue
-      summary: Officer queue, ordered least-confident first (role OFFICER, ADMIN)
+      summary: Officer queue, ordered newest submitted_at first (role OFFICER, ADMIN)
       description: >
-        Ordering is fixed by the server (state, top_confidence ASC NULLS FIRST, submitted_at ASC)
-        and is not client-controllable.
+        Ordering is fixed by the server (submitted_at DESC, newest case first)
+        and is not client-controllable. Client `sort` and `order` query parameters are rejected.
       parameters:
         - name: state
           in: query

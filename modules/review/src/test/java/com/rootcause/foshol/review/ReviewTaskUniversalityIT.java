@@ -148,16 +148,21 @@ class ReviewTaskUniversalityIT {
     @Test
     void everyAnalysedCaseGetsExactlyOneReviewTask() {
         seedIdentities();
-        UUID primary = insertCase();
-        UUID secondary = insertCase();
-        UUID undetermined = insertCase();
-        UUID unmapped = insertCase();
-        UUID failed = insertCase();
+        Instant tPrimary = T0;
+        Instant tSecondary = T0.plusSeconds(10);
+        Instant tUndetermined = T0.plusSeconds(20);
+        Instant tUnmapped = T0.plusSeconds(30);
+        Instant tFailed = T0.plusSeconds(40);
+        UUID primary = insertCase(tPrimary);
+        UUID secondary = insertCase(tSecondary);
+        UUID undetermined = insertCase(tUndetermined);
+        UUID unmapped = insertCase(tUnmapped);
+        UUID failed = insertCase(tFailed);
         listener.onCompleted(completed(primary, DecisionPath.PRIMARY, "0.91"));
         listener.onCompleted(completed(secondary, DecisionPath.SECONDARY, "0.62"));
         listener.onCompleted(completed(undetermined, DecisionPath.UNDETERMINED, "0.30"));
         listener.onCompleted(completed(unmapped, DecisionPath.UNDETERMINED, "0.62"));
-        listener.onFailed(new AnalysisFailed(failed, FARMER, "ERR_SIDECAR_UNAVAILABLE", "c", T0));
+        listener.onFailed(new AnalysisFailed(failed, FARMER, "ERR_SIDECAR_UNAVAILABLE", "c", tFailed));
         listener.onCompleted(completed(primary, DecisionPath.PRIMARY, "0.91"));
         assertThat(tasks.count()).isEqualTo(5);
         assertThat(jdbc.queryForObject("select count(*) from geo_division", Long.class)).isEqualTo(8L);
@@ -165,8 +170,11 @@ class ReviewTaskUniversalityIT {
         assertThat(jdbc.queryForObject("select count(*) from review_task", Long.class)).isEqualTo(5L);
         var page = queue.handle(new OfficerQueueQuery("PENDING", false, OFFICER, "DHA", 0, 20, null, null));
         assertThat(page.content())
-                .extracting(OfficerQueueRow::topConfidence)
-                .containsExactly(null, new BigDecimal("0.3000"), new BigDecimal("0.6200"), new BigDecimal("0.6200"), new BigDecimal("0.9100"));
+                .extracting(OfficerQueueRow::submittedAt)
+                .containsExactly(tFailed, tUnmapped, tUndetermined, tSecondary, tPrimary);
+        assertThat(page.content())
+                .extracting(OfficerQueueRow::caseId)
+                .containsExactly(failed, unmapped, undetermined, secondary, primary);
 
         UUID editTask = tasks.findByCaseId(primary).orElseThrow().id();
         claim.handle(new ClaimReviewTaskCommand(editTask, OFFICER));
@@ -248,6 +256,10 @@ class ReviewTaskUniversalityIT {
     }
 
     private UUID insertCase() {
+        return insertCase(T0);
+    }
+
+    private UUID insertCase(Instant submittedAt) {
         UUID id = Uuid7.create();
         jdbc.update(
                 "insert into diagnosis_case (id, farmer_id, crop_id, status, district_code, division_code, correlation_id) values (?,?,?,?,?,?,?)",
@@ -280,7 +292,7 @@ class ReviewTaskUniversalityIT {
                         List.of(),
                         null,
                         "c",
-                        T0,
+                        submittedAt,
                         new BigDecimal("1"),
                         com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
                         null,
