@@ -150,7 +150,11 @@ class AnalysisIntegrationTest {
         registry.add(ConfigKeys.STORAGE_SECRET_KEY, () -> "minioadmin");
         registry.add(ConfigKeys.STORAGE_BUCKET, () -> "foshol-cases");
         registry.add("resilience4j.circuitbreaker.instances.sidecar.sliding-window-size", () -> "10");
+        registry.add("resilience4j.circuitbreaker.instances.sidecar.ignore-exceptions", () ->
+                "com.rootcause.foshol.analysis.application.port.SidecarClientException");
         registry.add("resilience4j.retry.instances.sidecar.max-attempts", () -> "2");
+        registry.add("resilience4j.retry.instances.sidecar.ignore-exceptions", () ->
+                "com.rootcause.foshol.analysis.application.port.SidecarClientException");
         registry.add("resilience4j.timelimiter.instances.sidecar.timeout-duration", () -> "8s");
     }
 

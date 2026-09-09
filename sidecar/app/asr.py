@@ -148,7 +148,8 @@ class FasterWhisperRuntime:
                 audio,
                 language=language,
                 beam_size=1,
-                vad_filter=False,
+                vad_filter=True,
+                condition_on_previous_text=False,
             )
             out: list[dict[str, Any]] = []
             for segment in segments_iter:
@@ -241,7 +242,7 @@ def _decode_ffmpeg(data: bytes) -> list[float]:
             input=data,
             capture_output=True,
             check=False,
-            timeout=60,
+            timeout=8,
         )
     except subprocess.TimeoutExpired as exc:
         raise undecodable("audio bytes could not be decoded") from exc
@@ -293,7 +294,7 @@ def _ffmpeg_loudness(samples: list[float], target_lufs: float) -> list[float] | 
             input=payload,
             capture_output=True,
             check=False,
-            timeout=60,
+            timeout=2,
         )
     except subprocess.TimeoutExpired:
         return None
@@ -312,9 +313,12 @@ def decode_audio_mono_16k(settings: Settings, data: bytes) -> tuple[list[float],
     duration_s = len(samples) / TARGET_HZ if samples else 0.0
     if duration_s > settings.max_audio_seconds:
         raise payload_too_large("audio exceeds FOSHOL_SIDECAR_MAX_AUDIO_SECONDS")
-    normalised = _ffmpeg_loudness(samples, settings.asr_target_lufs)
-    if normalised is None:
+    if media == "audio/wav":
         normalised = _peak_limit(samples)
+    else:
+        normalised = _ffmpeg_loudness(samples, settings.asr_target_lufs)
+        if normalised is None:
+            normalised = _peak_limit(samples)
     duration_ms = int(round(len(normalised) * 1000 / TARGET_HZ)) if normalised else 0
     return normalised, duration_ms
 

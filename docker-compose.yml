@@ -58,6 +58,7 @@ services:
       FOSHOL_SIDECAR_FIXTURE_DIR: /app/fixtures
       HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-1}
       TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-1}
+      FOSHOL_SIDECAR_TORCH_THREADS: ${FOSHOL_SIDECAR_TORCH_THREADS:-4}
     volumes:
       - ${HOME}/.cache/huggingface:/home/foshol/.cache/huggingface
     ports:

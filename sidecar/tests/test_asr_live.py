@@ -116,6 +116,23 @@ def test_transcribe_live_stereo_44100_is_16k(live_env):
     assert body["duration_ms"] > 0
 
 
+def test_decode_wav_skips_ffmpeg_loudness(live_env, monkeypatch):
+    from app.asr import decode_audio_mono_16k
+    from app.config import get_settings
+
+    called = []
+
+    def fake_loudness(samples, target):
+        called.append(target)
+        return samples
+
+    monkeypatch.setattr("app.asr._ffmpeg_loudness", fake_loudness)
+    samples, duration_ms = decode_audio_mono_16k(get_settings(), wav_bytes())
+    assert called == []
+    assert duration_ms > 0
+    assert samples
+
+
 def test_transcribe_live_overlength_is_413(live_env):
     from app.config import get_settings
 

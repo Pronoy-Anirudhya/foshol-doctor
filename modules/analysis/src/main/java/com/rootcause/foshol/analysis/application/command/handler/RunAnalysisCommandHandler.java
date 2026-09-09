@@ -387,6 +387,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                     match,
                     audio.audioId());
         } catch (SidecarFailureException ex) {
+            log.warn(
+                    "speech sidecar failed caseId={} correlationId={} errorCode={}",
+                    command.caseId(),
+                    command.correlationId(),
+                    ex.errorCode());
             if (ErrorCodes.ERR_FIXTURE_MISSING.equals(ex.errorCode())) {
                 return SpeechBundle.abandoned(ex.errorCode());
             }
@@ -394,6 +399,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         } catch (RuntimeException ex) {
             SidecarFailureException sidecar = findSidecar(ex);
             if (sidecar != null) {
+                log.warn(
+                        "speech sidecar failed caseId={} correlationId={} errorCode={}",
+                        command.caseId(),
+                        command.correlationId(),
+                        sidecar.errorCode());
                 if (ErrorCodes.ERR_FIXTURE_MISSING.equals(sidecar.errorCode())) {
                     return SpeechBundle.abandoned(sidecar.errorCode());
                 }
@@ -563,7 +573,12 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
             objectStore.write(key, overlay.overlayPng(), CONTENT_TYPE_PNG);
             return key;
         } catch (RuntimeException ex) {
-            log.warn("gradcam failed correlationId={}", command.correlationId());
+            SidecarFailureException sidecar = findSidecar(ex);
+            log.warn(
+                    "gradcam failed correlationId={} errorCode={}",
+                    command.correlationId(),
+                    sidecar == null ? ex.getClass().getSimpleName() : sidecar.errorCode(),
+                    ex);
             return null;
         }
     }

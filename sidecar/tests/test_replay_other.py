@@ -38,6 +38,15 @@ def test_embed_batch_too_large(client) -> None:
     assert response.json()["code"] == ERR_SIDECAR_PAYLOAD_TOO_LARGE
 
 
+def test_explain_json_body_is_bad_request(client) -> None:
+    response = client.post(
+        "/v1/vision/explain",
+        json={"crop_code": "rice", "image_base64": "QQ==", "raw_label": "x"},
+    )
+    assert response.status_code == 400
+    assert response.json()["code"] == "ERR_SIDECAR_BAD_REQUEST"
+
+
 def test_explain_replay_png(client, rice_png: bytes) -> None:
     response = client.post(
         "/v1/vision/explain",
