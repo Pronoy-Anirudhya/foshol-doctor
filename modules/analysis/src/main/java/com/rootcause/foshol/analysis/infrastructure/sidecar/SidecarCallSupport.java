@@ -11,6 +11,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -61,6 +62,30 @@ public class SidecarCallSupport {
             }
             throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar call failed", ex);
         }
+    }
+
+    static boolean retryable(Throwable ex) {
+        SidecarFailureException sidecar = unwrap(ex);
+        if (sidecar != null) {
+            return sidecar.retryable();
+        }
+        return isTransport(ex);
+    }
+
+    static boolean ignoreForCircuit(Throwable ex) {
+        SidecarFailureException sidecar = unwrap(ex);
+        return sidecar != null && sidecar.clientError();
+    }
+
+    private static boolean isTransport(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            if (current instanceof IOException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private static SidecarFailureException unwrap(Throwable ex) {
