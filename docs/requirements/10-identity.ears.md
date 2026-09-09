@@ -17,7 +17,7 @@
 
 | Owned | Detail |
 |---|---|
-| Tables | `farmer`, `field_officer`, `otp_challenge` (`00-common` §4.2) |
+| Tables | `farmer`, `field_officer`, `otp_challenge`, `farmer_provision_idempotency` (`00-common` §4.2) |
 | Farmer authentication | Phone → one-time code → JWT |
 | Officer and admin authentication | Seeded username + BCrypt password → JWT |
 | Token issuance | HS256 signing, claim set, TTL |
@@ -25,7 +25,7 @@
 | Role model | `FARMER`, `OFFICER`, `ADMIN` (`common.Role`) and the authority mapping |
 | Phone confidentiality | AES-256-GCM encryption at rest, SHA-256 hash index |
 | Published APIs | `FarmerLookupApi`, `OfficerLookupApi` (`00-common` §6.2) |
-| Endpoint | `GET /api/v1/me` |
+| Endpoints | `GET /api/v1/me`; staff farmer provision `POST/GET /api/v1/farmers`, `GET /api/v1/farmers/{farmerId}`, `GET /api/v1/farmers/import/template`, `POST /api/v1/farmers/import` |
 
 `identity` is the **only** module that reads or writes `farmer`, `field_officer` and `otp_challenge`,
 and the **only** module that mints or verifies a JWT.
@@ -44,9 +44,9 @@ and the **only** module that mints or verifies a JWT.
 
 ### 1.3 Events
 
-`identity` **publishes no domain event and consumes no domain event.** It is a synchronous
-query-and-authenticate module only. This is deliberate: an identity change in this scope is a
-migration, not a runtime fact.
+`identity` **publishes no domain event and consumes no domain event.** Staff provision inserts a
+`farmer` row; the existing OTP path authenticates that farmer afterwards. There is no
+`FarmerRegistered` event.
 
 ---
 
@@ -96,6 +96,9 @@ Every property is defined in `00-common` §9 and is read through a constant in `
 | `foshol.auth.otp.dev-code` | Fixed code under `local` / `demo` / `test` only |
 | `foshol.crypto.phone.key` | AES-256-GCM key for `phone_enc` |
 | `foshol.i18n.default-locale` | Fallback locale for `COMMON-API-003` |
+| `foshol.identity.bulk.max-size` | Maximum data rows in a farmer CSV import |
+| `foshol.identity.bulk.max-bytes` | Maximum CSV upload size in bytes |
+| `foshol.identity.idempotency.ttl` | TTL for `farmer_provision_idempotency` rows |
 
 ---
 
@@ -105,7 +108,7 @@ Every property is defined in `00-common` §9 and is read through a constant in `
 
 | Aggregate root | Table | Identity | Lifecycle in this scope |
 |---|---|---|---|
-| `Farmer` | `farmer` | `FarmerId` (UUIDv7) | Created by migration only; read-only at runtime |
+| `Farmer` | `farmer` | `FarmerId` (UUIDv7) | Seeded by migration; also inserted at runtime by staff provision (`IDENTITY-FR-021`) |
 | `FieldOfficer` | `field_officer` | `OfficerId` (UUIDv7) | Created by migration only; read-only at runtime |
 | `OtpChallenge` | `otp_challenge` | `ChallengeId` (UUIDv7) | Created, attempted, consumed or expired at runtime |
 
@@ -140,6 +143,8 @@ Each invariant is enforced in the aggregate, not only by an annotation (`COMMON-
 | INV-6 | `OtpChallenge` | Consumption is irreversible: once `consumed_at` is set it is never cleared |
 | INV-7 | `OtpChallenge` | At most one verifiable challenge exists per `phone_hash` at any instant (`IDENTITY-FR-004`) |
 | INV-8 | `OtpChallenge` | `attempts` only ever increases, and only on a failed verification |
+| INV-9 | `Farmer` | `registration_source` ∈ {`MIGRATION`, `MANUAL`, `CSV`} |
+| INV-10 | `Farmer` | Runtime provision (`MANUAL` or `CSV`) SHALL set `registered_by` to the calling officer; seeded rows MAY leave it null |
 
 ### 3.5 Specifications
 
@@ -334,10 +339,12 @@ misconfigured demo machine is fixed in one pass.
 
 ### 4.6 Account provisioning
 
-`IDENTITY-DATA-001` **THE `farmer` and `field_officer` tables SHALL be populated exclusively by Flyway
-migration, and THE identity module SHALL perform no `INSERT`, `UPDATE` or `DELETE` against either table
-at runtime.** Demo personas are seeded by `V100__seed_demo_identities.sql` under the `demo` profile
-(`COMMON-DATA-005`); integration tests insert their own fixtures directly.
+`IDENTITY-DATA-001` **THE `field_officer` table SHALL be populated exclusively by Flyway migration, and
+THE identity module SHALL perform no `INSERT`, `UPDATE` or `DELETE` against `field_officer` at
+runtime.** THE identity module MAY `INSERT` into `farmer` at runtime only through the staff-provision
+command of `IDENTITY-FR-021` (single or CSV). THE identity module SHALL NOT `UPDATE` or `DELETE` a
+`farmer` row at runtime. Demo personas are seeded by `V100__seed_demo_identities.sql` under the
+`demo` profile (`COMMON-DATA-005`); integration tests insert their own fixtures directly.
 
 `IDENTITY-DATA-002` **THE seeded farmer and officer personas SHALL be fictional**, and are exempt from
 `COMMON-CON-003` because they are not agronomic content.
@@ -348,12 +355,57 @@ machine, so this is not a secret within the meaning of `COMMON-SEC-002`; no `loc
 seeds an officer password.
 
 `IDENTITY-FR-020` `[DEFERRED]` **THE system SHALL NOT expose farmer self-registration, officer
-self-registration, password change, password reset or account deactivation endpoints.** Every account
-in scope is seeded by migration.
-*Seam: the aggregates, the phone-hash uniqueness invariant and the BCrypt encoder are all present, so
-self-registration is one command handler and one endpoint per role. It is out of scope because the
-demo has a fixed cast and account creation carries a verification burden (`IDENTITY-FR-001`'s
-non-enumeration property) that four days does not buy.*
+self-registration, password change, password reset or account deactivation endpoints.**
+Staff-provisioned farmer registration (`IDENTITY-FR-021`) is in scope; farmers still cannot create
+their own accounts.
+
+### 4.6.1 Staff farmer provision (Day-N additive)
+
+`IDENTITY-FR-021` **WHEN an authenticated `OFFICER` or `ADMIN` submits `POST /api/v1/farmers` with
+a valid `Idempotency-Key` and a body whose `divisionCode` and `districtCode` equal the caller's
+principal, THE identity module SHALL insert a `farmer` row** (UUIDv7, hashed and encrypted phone,
+`registration_source = MANUAL`, `registered_by` = the caller) and SHALL return `201` `FarmerRecord`
+with no phone field.
+
+`IDENTITY-FR-022` **THE identity module SHALL list farmers in the caller's district only** via
+`GET /api/v1/farmers`, newest first (`created_at DESC`), paginated. Optional `q` is a case-insensitive
+name contains filter. Optional `phone` is an exact lookup after `IDENTITY-SEC-001` normalisation.
+Supplying both `q` and `phone` SHALL return `400` `ERR_BAD_REQUEST`.
+
+`IDENTITY-FR-023` **THE identity module SHALL return `GET /api/v1/farmers/{farmerId}` only when the
+row's `district_code` equals the caller's district**; otherwise `404` `ERR_FARMER_NOT_FOUND`
+(`COMMON-API-001`).
+
+`IDENTITY-FR-024` **THE identity module SHALL serve `GET /api/v1/farmers/import/template` as UTF-8
+CSV with a leading BOM** and header `name,phone,divisionCode,districtCode,preferredLanguage`.
+
+`IDENTITY-FR-025` **WHEN an authenticated `OFFICER` or `ADMIN` posts a CSV to
+`POST /api/v1/farmers/import`, THE identity module SHALL validate each data row with the same rules as
+`IDENTITY-FR-021`, persist successful rows with `registration_source = CSV`, and return `200`
+`FarmerImportResult` with per-row `OK` or `FAILED`.** A malformed header, empty file, or byte-size
+breach is a whole-request `400` `ERR_FARMER_IMPORT_INVALID`. More than `foshol.identity.bulk.max-size`
+data rows is a whole-request `400` `ERR_BULK_TOO_LARGE` with no inserts. Duplicate phones inside the
+file mark later rows `FAILED` `ERR_BULK_DUPLICATE`. A phone already in `farmer` is `FAILED`
+`ERR_FARMER_PHONE_EXISTS`. Results SHALL NOT contain a phone number.
+
+`IDENTITY-FR-026` **THE identity module SHALL reject a provision whose `divisionCode` or
+`districtCode` differs from the caller's principal with `400` `ERR_DISTRICT_SCOPE`.** An unknown
+district, or a district that does not belong to the supplied division, SHALL return `400`
+`ERR_GEO_INVALID`.
+
+`IDENTITY-SEC-015` **THE farmer provision and directory endpoints SHALL be reachable only by
+`OFFICER` and `ADMIN`.** A `FARMER` token SHALL receive `403` `ERR_FORBIDDEN`. The phone uniqueness
+conflict of provision is `409` `ERR_FARMER_PHONE_EXISTS` for authenticated staff and MUST NOT be used
+on the unauthenticated OTP path (`IDENTITY-FR-001` remains).
+
+`IDENTITY-DATA-008` **THE identity module SHALL persist `farmer.registered_by` (nullable FK to
+`field_officer`) and `farmer.registration_source`**, defaulting existing and seeded rows to
+`MIGRATION`.
+
+`IDENTITY-DATA-009` **THE identity module SHALL store single-create idempotency in
+`farmer_provision_idempotency`**, owned by identity, and SHALL NOT write intake's `idempotency_key`
+table. Replay of the same key and request hash returns `201` with header `Idempotency-Replayed: true`.
+A different body with the same key returns `409` `ERR_IDEMPOTENCY_KEY_CONFLICT`.
 
 ### 4.7 Published API behaviour
 
@@ -437,22 +489,68 @@ populated for `FARMER` and null otherwise. No phone number appears (`IDENTITY-SE
 by the token's `sub` claim, not from the token itself**, so a seeded change to a name or district is
 visible without re-authentication.
 
+### 5.5 `POST /api/v1/farmers`
+
+| | |
+|---|---|
+| Auth | `OFFICER` or `ADMIN` |
+| Header | `Idempotency-Key` UUID, required |
+| Request | `{ "name", "phone", "divisionCode", "districtCode", "preferredLanguage": "bn"\|"en" }` |
+| Success | `201` `FarmerRecord`; `Idempotency-Replayed: true` on replay |
+| `400` | `ERR_PHONE_INVALID` · `ERR_DISTRICT_SCOPE` · `ERR_GEO_INVALID` · `ERR_BAD_REQUEST` · `ERR_IDEMPOTENCY_KEY_MISSING` · `ERR_IDEMPOTENCY_KEY_INVALID` |
+| `403` | `ERR_FORBIDDEN` |
+| `409` | `ERR_FARMER_PHONE_EXISTS` · `ERR_IDEMPOTENCY_KEY_CONFLICT` |
+
+### 5.6 `GET /api/v1/farmers`
+
+| | |
+|---|---|
+| Auth | `OFFICER` or `ADMIN` |
+| Query | `page`, `size`, optional `q`, optional `phone` (not both) |
+| Success | `200` `PageOfFarmerRecord`, caller's district only |
+| `400` | `ERR_BAD_REQUEST` · `ERR_PHONE_INVALID` |
+
+### 5.7 `GET /api/v1/farmers/{farmerId}`
+
+| | |
+|---|---|
+| Auth | `OFFICER` or `ADMIN` |
+| Success | `200` `FarmerRecord` |
+| `404` | `ERR_FARMER_NOT_FOUND` |
+
+### 5.8 `GET /api/v1/farmers/import/template`
+
+| | |
+|---|---|
+| Auth | `OFFICER` or `ADMIN` |
+| Success | `200` `text/csv; charset=utf-8` with BOM |
+
+### 5.9 `POST /api/v1/farmers/import`
+
+| | |
+|---|---|
+| Auth | `OFFICER` or `ADMIN` |
+| Request | `multipart/form-data` field `file` |
+| Success | `200` `FarmerImportResult` |
+| `400` | `ERR_FARMER_IMPORT_INVALID` · `ERR_BULK_TOO_LARGE` |
+| `415` | `ERR_UNSUPPORTED_MEDIA_TYPE` |
+
 ---
 
 ## 6. Persistence
 
 ### 6.1 Tables owned
 
-`farmer`, `field_officer`, `otp_challenge` — defined in `00-common` §4.2 and **never redefined here**.
-Indexes: `ix_otp_phone` (`00-common` §4.9).
+`farmer`, `field_officer`, `otp_challenge`, `farmer_provision_idempotency` — defined in `00-common` §4.2
+and **never redefined here**. Indexes: `ix_otp_phone` (`00-common` §4.9), `ix_farmer_district_created`.
 
 `IDENTITY-DATA-004` **THE identity module SHALL map each table to a JPA entity in
 `infrastructure` distinct from its domain aggregate** (`COMMON-NFR-010`), with a hand-written static
 mapper and no MapStruct.
 
-`IDENTITY-DATA-005` **THE identity module SHALL treat `farmer.phone_enc` and
-`field_officer.phone_enc` as write-never columns at runtime** and SHALL read them only where a
-plaintext phone is genuinely required. No code path in this scope requires one.
+`IDENTITY-DATA-005` **THE identity module SHALL write `farmer.phone_enc` only on staff provision
+(`IDENTITY-FR-021`, `IDENTITY-FR-025`) and SHALL treat `field_officer.phone_enc` as write-never at
+runtime.** `phone_enc` is never decrypted for lookup; `phone_hash` is the sole lookup key.
 
 ### 6.2 Query patterns
 
@@ -464,6 +562,8 @@ plaintext phone is genuinely required. No code path in this scope requires one.
 | Active officers by district | `WHERE district_code = ? AND active` | sequential scan — the table holds single digits of rows |
 | Verifiable challenge | `WHERE phone_hash = ? AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1` | `ix_otp_phone` |
 | Rate-limit count | `WHERE phone_hash = ? AND created_at > ?` | `ix_otp_phone` |
+| Farmer by district | `WHERE district_code = ? ORDER BY created_at DESC` | `ix_farmer_district_created` |
+| Provision idempotency | primary key | PK |
 
 `IDENTITY-DATA-006` **THE identity module SHALL execute every read on the query side through the
 `@ReadOnlyDataSource`-qualified `DataSource` and SHALL NOT load an aggregate in a query handler**
@@ -518,7 +618,10 @@ One scenario per requirement, each mapping onto exactly one test method.
 | `IDENTITY-SEC-013` | a valid unexpired token | it is presented after logout | it still authenticates (documented behaviour, not a defect) |
 | `IDENTITY-SEC-014` | `foshol.auth.otp.dev-code` set with profile `prod` | the context starts | startup fails with `ERR_DEV_OTP_IN_NON_DEV_PROFILE` |
 | `IDENTITY-NFR-003` | a short JWT secret **and** a bad phone key | the context starts | the failure message names both problems |
-| `IDENTITY-DATA-001` | the running application | any identity code path executes | no SQL write is issued against `farmer` or `field_officer` |
+| `IDENTITY-DATA-001` | the running application | any identity code path executes | no SQL write is issued against `field_officer`; `farmer` writes are inserts from staff provision only |
+| `IDENTITY-FR-021` | an officer in `DHA`/`DHK` | `POST /api/v1/farmers` with matching geo | `201`, a `farmer` row exists, response has no phone |
+| `IDENTITY-FR-026` | an officer in `DHA` | `POST /api/v1/farmers` with another district | `400` `ERR_DISTRICT_SCOPE` |
+| `IDENTITY-SEC-015` | a `FARMER` token | `POST /api/v1/farmers` | `403` `ERR_FORBIDDEN` |
 | `IDENTITY-API-001` | a seeded farmer id | `findById` | a `FarmerView` with the row's name, district and language |
 | `IDENTITY-API-002` | a seeded farmer's phone in national form | `findByPhone` | the same `FarmerView` as `findById` |
 | `IDENTITY-API-003` | an inactive officer id | `findById` | an `OfficerView` with `active = false` |
@@ -605,8 +708,8 @@ All ten clauses of `00-common` §11, plus:
 
 1. `IDENTITY-FR-001` … `IDENTITY-FR-019`, every `SEC`, `API`, `DATA`, `NFR` and `UX` requirement above
    is implemented, or listed as `[DEFERRED]` in `docs/progress/a1.md` (`COMMON-NFR-045`).
-2. `IDENTITY-FR-020` and `IDENTITY-SEC-013` remain `[DEFERRED]` — the seams stay visible, the code
-   does not appear.
+2. `IDENTITY-FR-020` and `IDENTITY-SEC-013` remain `[DEFERRED]` — farmer self-registration, password
+   reset and deactivation do not appear. Staff provision (`IDENTITY-FR-021`…`026`) is implemented.
 3. A `grep` of the module's sources and test resources finds no plaintext phone number outside
    `IdentityFixtures` and no OTP code outside the test properties.
 4. Starting the application with a short JWT secret, a bad phone key, or `dev-code` under a
@@ -619,10 +722,10 @@ All ten clauses of `00-common` §11, plus:
 
 | Category | IDs | Count |
 |---|---|---|
-| `FR` | `IDENTITY-FR-001` … `IDENTITY-FR-020` | 20 |
-| `SEC` | `IDENTITY-SEC-001` … `IDENTITY-SEC-014` | 14 |
+| `FR` | `IDENTITY-FR-001` … `IDENTITY-FR-026` | 26 |
+| `SEC` | `IDENTITY-SEC-001` … `IDENTITY-SEC-015` | 15 |
 | `API` | `IDENTITY-API-001` … `IDENTITY-API-006` | 6 |
-| `DATA` | `IDENTITY-DATA-001` … `IDENTITY-DATA-007` | 7 |
+| `DATA` | `IDENTITY-DATA-001` … `IDENTITY-DATA-009` | 9 |
 | `NFR` | `IDENTITY-NFR-001` … `IDENTITY-NFR-003` | 3 |
 | `UX` | `IDENTITY-UX-001` | 1 |
-| **Total** | | **51** |
+| **Total** | | **60** |
