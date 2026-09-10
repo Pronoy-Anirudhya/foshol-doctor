@@ -2,12 +2,12 @@ package com.rootcause.foshol.analysis.infrastructure.adapter.fixture;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rootcause.foshol.analysis.application.port.RawCandidate;
 import com.rootcause.foshol.analysis.application.port.VisionModelPort;
 import com.rootcause.foshol.analysis.application.port.VisionRequest;
 import com.rootcause.foshol.analysis.application.port.VisionResult;
+import com.rootcause.foshol.analysis.domain.RawCandidate;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;

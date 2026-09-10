@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.domain;
+package com.rootcause.foshol.analysis.domain.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

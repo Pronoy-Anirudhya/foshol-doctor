@@ -1,7 +1,9 @@
 package com.rootcause.foshol.analysis.domain;
 
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.analysis.domain.spec.PrimaryPathSpec;
+import com.rootcause.foshol.analysis.domain.spec.SecondaryPathSpec;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.math.BigDecimal;
 
 public final class ConfidenceRouter {

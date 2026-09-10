@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.adapter;
 
 import com.rootcause.foshol.analysis.application.port.AnalysisEventPort;
 import com.rootcause.foshol.common.events.AnalysisCompleted;

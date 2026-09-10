@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,8 +12,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rootcause.foshol.analysis.application.port.TranscriptRequest;
 import com.rootcause.foshol.analysis.application.port.TranscriptResult;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.HttpSpeechToTextAdapter;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.SidecarHttpClient;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;

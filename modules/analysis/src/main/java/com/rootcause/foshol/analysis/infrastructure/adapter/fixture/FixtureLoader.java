@@ -3,7 +3,7 @@ package com.rootcause.foshol.analysis.infrastructure.adapter.fixture;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.io.IOException;
 import java.io.InputStream;
 import org.slf4j.Logger;

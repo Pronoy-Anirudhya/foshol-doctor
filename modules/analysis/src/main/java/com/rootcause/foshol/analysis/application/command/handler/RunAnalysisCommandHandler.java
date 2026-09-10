@@ -1,6 +1,6 @@
 package com.rootcause.foshol.analysis.application.command.handler;
 
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisEventPort;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
@@ -29,26 +29,26 @@ import com.rootcause.foshol.analysis.domain.FieldMetricsExtractor;
 import com.rootcause.foshol.analysis.domain.LabelResolver;
 import com.rootcause.foshol.analysis.domain.MappedCandidate;
 import com.rootcause.foshol.analysis.domain.MergeRanker;
-import com.rootcause.foshol.analysis.domain.PrescribableSpec;
+import com.rootcause.foshol.analysis.domain.spec.PrescribableSpec;
 import com.rootcause.foshol.analysis.domain.RankedCandidate;
 import com.rootcause.foshol.analysis.domain.RawCandidate;
 import com.rootcause.foshol.analysis.domain.RoutingDecision;
 import com.rootcause.foshol.analysis.domain.ScoredDiseaseScore;
 import com.rootcause.foshol.analysis.domain.TemperatureScaler;
-import com.rootcause.foshol.common.BanglaNormalizer;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.common.events.SymptomView;
-import com.rootcause.foshol.common.SymptomSource;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.SymptomSource;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
@@ -306,7 +306,7 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                         command.correlationId()));
                 modelId = result.modelId();
                 modelVersion = result.modelVersion();
-                List<RawCandidate> scaled = TemperatureScaler.rescale(toDomain(result.candidates()), settings.temperature());
+                List<RawCandidate> scaled = TemperatureScaler.rescale(result.candidates(), settings.temperature());
                 if (primary != null && image.imageId().equals(primary.imageId()) && !scaled.isEmpty()) {
                     primaryRawLabel = scaled.get(0).rawLabel();
                     BigDecimal best = scaled.get(0).confidence();
@@ -604,18 +604,6 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                         .thenComparingInt(CaseImageRef::position))
                 .findFirst()
                 .orElse(null);
-    }
-
-    private static List<RawCandidate> toDomain(
-            List<com.rootcause.foshol.analysis.application.port.RawCandidate> candidates) {
-        if (candidates == null) {
-            return List.of();
-        }
-        List<RawCandidate> out = new ArrayList<>(candidates.size());
-        for (com.rootcause.foshol.analysis.application.port.RawCandidate c : candidates) {
-            out.add(new RawCandidate(c.rawLabel(), c.confidence()));
-        }
-        return out;
     }
 
     private List<MappedCandidate> kbMapped(SymptomMatchResult match) {

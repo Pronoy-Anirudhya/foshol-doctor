@@ -1,7 +1,7 @@
 package com.rootcause.foshol.analysis.domain;
 
-import com.rootcause.foshol.common.SymptomSource;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.SymptomSource;
+import com.rootcause.foshol.common.util.Uuid7;
 import java.math.BigDecimal;
 import java.util.UUID;
 

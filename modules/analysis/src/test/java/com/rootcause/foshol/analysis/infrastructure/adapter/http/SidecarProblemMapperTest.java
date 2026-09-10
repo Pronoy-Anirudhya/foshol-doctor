@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rootcause.foshol.analysis.application.port.SidecarClientException;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;

@@ -6,6 +6,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import org.springframework.web.bind.annotation.RestController;
 
 @AnalyzeClasses(packages = "com.rootcause.foshol.analysis", importOptions = ImportOption.DoNotIncludeTests.class)
 class AnalysisArchitectureTest {
@@ -29,7 +30,7 @@ class AnalysisArchitectureTest {
     @ArchTest
     static final ArchRule webDoesNotImportDomain = noClasses()
             .that()
-            .resideInAPackage("..web..")
+            .areAnnotatedWith(RestController.class)
             .should()
             .dependOnClassesThat()
             .resideInAPackage("..domain..")

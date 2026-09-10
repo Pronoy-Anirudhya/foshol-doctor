@@ -3,7 +3,7 @@ package com.rootcause.foshol.analysis.infrastructure.sidecar;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 

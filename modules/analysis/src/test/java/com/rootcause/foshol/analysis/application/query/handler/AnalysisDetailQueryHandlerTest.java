@@ -4,10 +4,10 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
-import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.analysis.application.port.AnalysisReadRepository;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,10 +10,8 @@ import static org.mockito.Mockito.when;
 import com.rootcause.foshol.analysis.application.port.ExplanationRequest;
 import com.rootcause.foshol.analysis.application.port.ExplanationResult;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.HttpExplainabilityAdapter;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.SidecarHttpClient;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;

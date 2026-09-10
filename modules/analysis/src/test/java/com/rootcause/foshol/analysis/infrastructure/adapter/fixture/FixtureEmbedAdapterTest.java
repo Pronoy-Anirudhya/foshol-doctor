@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.adapter.fixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,9 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rootcause.foshol.analysis.application.port.EmbeddingRequest;
 import com.rootcause.foshol.analysis.application.port.EmbeddingResult;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.analysis.infrastructure.adapter.fixture.FixtureTextEmbeddingAdapter;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;

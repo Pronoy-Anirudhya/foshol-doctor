@@ -4,7 +4,7 @@ import com.rootcause.foshol.analysis.application.port.ExplainabilityPort;
 import com.rootcause.foshol.analysis.application.port.ExplanationRequest;
 import com.rootcause.foshol.analysis.application.port.ExplanationResult;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

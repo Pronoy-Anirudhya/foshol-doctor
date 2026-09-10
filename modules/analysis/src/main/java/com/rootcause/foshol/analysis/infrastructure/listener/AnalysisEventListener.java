@@ -1,7 +1,7 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.listener;
 
 import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.events.CaseSubmitted;
 import lombok.extern.slf4j.Slf4j;

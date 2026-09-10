@@ -11,7 +11,7 @@ import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
 import com.rootcause.foshol.analysis.domain.AnalysisNotFoundException;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
 import com.rootcause.foshol.analysis.domain.UnknownSymptomException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
 

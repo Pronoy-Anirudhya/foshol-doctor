@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.application.query;
+package com.rootcause.foshol.analysis.application.port;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import java.util.Optional;

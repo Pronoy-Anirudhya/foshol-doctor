@@ -1,7 +1,7 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.web;
 
 import com.rootcause.foshol.analysis.domain.AnalysisException;
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import java.net.URI;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

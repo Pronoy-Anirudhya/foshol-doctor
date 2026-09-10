@@ -1,6 +1,6 @@
 package com.rootcause.foshol.analysis.application.port;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 
 public class SidecarFailureException extends RuntimeException {
 

@@ -1,7 +1,7 @@
-package com.rootcause.foshol.analysis.application;
+package com.rootcause.foshol.analysis.application.config;
 
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.math.BigDecimal;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;

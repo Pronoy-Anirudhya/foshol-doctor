@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.rootcause.foshol.analysis.application.command.LookupVoiceKbCommand;
 import com.rootcause.foshol.analysis.application.command.VoiceKbDiseaseCandidate;
 import com.rootcause.foshol.analysis.application.command.VoiceKbLookupResult;
-import com.rootcause.foshol.analysis.infrastructure.AnalysisExceptionHandler;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import java.math.BigDecimal;
 import java.util.List;

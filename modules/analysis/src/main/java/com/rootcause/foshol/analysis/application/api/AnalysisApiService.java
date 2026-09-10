@@ -1,9 +1,9 @@
-package com.rootcause.foshol.analysis.application;
+package com.rootcause.foshol.analysis.application.api;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.command.RecordOfficerSymptomsCommand;
-import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
+import com.rootcause.foshol.analysis.application.port.AnalysisReadRepository;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.analysis.infrastructure;
+package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -13,8 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rootcause.foshol.analysis.application.port.EmbeddingRequest;
 import com.rootcause.foshol.analysis.application.port.EmbeddingResult;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.HttpTextEmbeddingAdapter;
-import com.rootcause.foshol.analysis.infrastructure.adapter.http.SidecarHttpClient;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.RetryConfig;

@@ -1,6 +1,6 @@
 package com.rootcause.foshol.analysis.domain;
 
-import com.rootcause.foshol.common.BanglaNormalizer;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
