@@ -21,6 +21,8 @@ import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort.QueueTaskRow;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
+import com.rootcause.foshol.review.application.query.CatalogueTextEnricher;
+import com.rootcause.foshol.review.application.query.CatalogueTextEnricher.Named;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailView;
 import com.rootcause.foshol.review.domain.ReviewException;
@@ -99,30 +101,41 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
                         .map(r -> toSuggestedRef(r, summary))
                         .toList();
         AdvisoryView published = advisories.findPublishedByCaseId(row.caseId())
-                .map(a -> new AdvisoryView(
-                        a.id(),
-                        a.caseId(),
-                        a.diseaseId(),
-                        knowledge.findDiseaseById(a.diseaseId()).map(d -> d.nameBn()).orElse(""),
-                        a.officerId(),
-                        officers.findById(a.officerId()).map(o -> o.name()).orElse(""),
-                        a.action(),
-                        a.officerNoteBn(),
-                        a.version(),
-                        a.supersedesId(),
-                        List.of(),
-                        a.publishedAt()))
+                .map(a -> {
+                    var disease = knowledge.findDiseaseById(a.diseaseId());
+                    return AdvisoryView.of(
+                            a.id(),
+                            a.caseId(),
+                            a.diseaseId(),
+                            disease.map(d -> d.nameBn()).orElse(""),
+                            disease.map(d -> d.nameEn()).orElse(null),
+                            a.officerId(),
+                            officers.findById(a.officerId()).map(o -> o.name()).orElse(""),
+                            a.action(),
+                            a.officerNoteBn(),
+                            a.version(),
+                            a.supersedesId(),
+                            List.of(),
+                            a.publishedAt());
+                })
                 .orElse(null);
+        CatalogueTextEnricher enricher = new CatalogueTextEnricher(knowledge);
+        Named crop = enricher.crop(row.cropCode(), row.cropNameBn());
+        Named disease = enricher.disease(row.topDiseaseId(), row.topDiseaseNameBn());
         return new ReviewTaskDetailView(
                 row.caseId(),
                 row.reviewTaskId(),
                 row.farmerName(),
                 row.cropCode(),
-                row.cropNameBn(),
+                crop.bn(),
+                crop.en(),
+                crop.fallback(),
                 row.districtCode(),
                 row.decisionPath() == null ? null : DecisionPath.valueOf(row.decisionPath()),
                 row.topDiseaseId(),
-                row.topDiseaseNameBn(),
+                disease.bn(),
+                disease.en(),
+                disease.fallback(),
                 row.topConfidence(),
                 row.imageCount(),
                 row.hasAudio(),
@@ -166,18 +179,6 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
                 ? null
                 : new ComputedDoseView(
                         dose.amount(), dose.unit(), dose.basis(), dose.fromArea(), dose.fromAreaUnit());
-        return new RemedyRefView(
-                remedy.id(),
-                remedy.type(),
-                remedy.titleBn(),
-                remedy.stepsBn(),
-                remedy.dosageBn(),
-                remedy.phiDays(),
-                remedy.sourceRef(),
-                remedy.rateAmount(),
-                remedy.rateUnit(),
-                remedy.rateBasis(),
-                remedy.rateNotesBn(),
-                computed);
+        return RemedyRefView.from(remedy, computed);
     }
 }

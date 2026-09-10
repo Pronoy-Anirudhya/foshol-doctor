@@ -17,8 +17,9 @@ public final class AdvisoryViewMapper {
 
     public static AdvisoryView toView(
             Advisory advisory, KnowledgeQueryApi knowledge, OfficerLookupApi officers) {
-        String diseaseName =
-                knowledge.findDiseaseById(advisory.diseaseId()).map(DiseaseView::nameBn).orElse("");
+        DiseaseView disease = knowledge.findDiseaseById(advisory.diseaseId()).orElse(null);
+        String diseaseNameBn = disease == null ? "" : disease.nameBn();
+        String diseaseNameEn = disease == null ? null : disease.nameEn();
         String officerName = officers.findById(advisory.officerId()).map(o -> o.name()).orElse("");
         List<RemedyView> kb = knowledge.listActiveRemedies(advisory.diseaseId());
         List<RemedyRefView> ordered = new ArrayList<>();
@@ -26,17 +27,17 @@ public final class AdvisoryViewMapper {
             RemedyView match =
                     kb.stream().filter(r -> r.id().equals(item.remedyId())).findFirst().orElse(null);
             if (match != null) {
-                ordered.add(toRef(match));
+                ordered.add(RemedyRefView.from(match, null));
             } else {
-                ordered.add(new RemedyRefView(
-                        item.remedyId(), null, "", List.of(), null, null, "", null, null, null, null, null));
+                ordered.add(RemedyRefView.missing(item.remedyId()));
             }
         }
-        return new AdvisoryView(
+        return AdvisoryView.of(
                 advisory.id(),
                 advisory.caseId(),
                 advisory.diseaseId(),
-                diseaseName,
+                diseaseNameBn,
+                diseaseNameEn,
                 advisory.officerId(),
                 officerName,
                 advisory.action(),
@@ -45,21 +46,5 @@ public final class AdvisoryViewMapper {
                 advisory.supersedesId(),
                 ordered,
                 advisory.publishedAt());
-    }
-
-    public static RemedyRefView toRef(RemedyView remedy) {
-        return new RemedyRefView(
-                remedy.id(),
-                remedy.type(),
-                remedy.titleBn(),
-                remedy.stepsBn(),
-                remedy.dosageBn(),
-                remedy.phiDays(),
-                remedy.sourceRef(),
-                remedy.rateAmount(),
-                remedy.rateUnit(),
-                remedy.rateBasis(),
-                remedy.rateNotesBn(),
-                null);
     }
 }

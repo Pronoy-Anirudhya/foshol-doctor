@@ -3,10 +3,12 @@ package com.rootcause.foshol.review.application.query.handler;
 import com.rootcause.foshol.common.contract.ConfigKeys;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
+import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminCaseListCriteria;
 import com.rootcause.foshol.review.application.query.AdminCasePeriod;
 import com.rootcause.foshol.review.application.query.AdminCasesQuery;
+import com.rootcause.foshol.review.application.query.CatalogueTextEnricher;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.domain.ReviewException;
 import java.time.Clock;
@@ -26,16 +28,19 @@ public class AdminCasesQueryHandler implements QueryHandler<AdminCasesQuery, Off
 
     private final ReviewQueryPort reads;
     private final OfficerLookupApi officers;
+    private final KnowledgeQueryApi knowledge;
     private final Clock clock;
     private final ZoneId displayZone;
 
     public AdminCasesQueryHandler(
             ReviewQueryPort reads,
             OfficerLookupApi officers,
+            KnowledgeQueryApi knowledge,
             Clock clock,
             @Value("${" + ConfigKeys.I18N_DISPLAY_ZONE + ":Asia/Dhaka}") String displayZone) {
         this.reads = reads;
         this.officers = officers;
+        this.knowledge = knowledge;
         this.clock = clock;
         this.displayZone = ZoneId.of(displayZone);
     }
@@ -47,7 +52,7 @@ public class AdminCasesQueryHandler implements QueryHandler<AdminCasesQuery, Off
                 .findById(query.callerId())
                 .map(o -> o.districtCode())
                 .orElseThrow(ReviewException::taskNotFound);
-        return reads.findAdminCases(new AdminCaseListCriteria(
+        OfficerQueuePage page = reads.findAdminCases(new AdminCaseListCriteria(
                 district,
                 submittedSince(query.period()),
                 query.state(),
@@ -58,6 +63,13 @@ public class AdminCasesQueryHandler implements QueryHandler<AdminCasesQuery, Off
                 query.resubmission(),
                 query.page(),
                 query.size()));
+        CatalogueTextEnricher enricher = new CatalogueTextEnricher(knowledge);
+        return new OfficerQueuePage(
+                page.content().stream().map(enricher::enrich).toList(),
+                page.page(),
+                page.size(),
+                page.totalElements(),
+                page.totalPages());
     }
 
     private Instant submittedSince(AdminCasePeriod period) {

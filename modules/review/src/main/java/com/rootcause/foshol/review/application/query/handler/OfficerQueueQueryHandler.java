@@ -1,7 +1,9 @@
 package com.rootcause.foshol.review.application.query.handler;
 
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
+import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
+import com.rootcause.foshol.review.application.query.CatalogueTextEnricher;
 import com.rootcause.foshol.review.application.query.OfficerQueuePage;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.domain.ReviewException;
@@ -20,10 +22,12 @@ public class OfficerQueueQueryHandler implements QueryHandler<OfficerQueueQuery,
 
     private final ReviewQueryPort reads;
     private final OfficerLookupApi officers;
+    private final KnowledgeQueryApi knowledge;
 
-    public OfficerQueueQueryHandler(ReviewQueryPort reads, OfficerLookupApi officers) {
+    public OfficerQueueQueryHandler(ReviewQueryPort reads, OfficerLookupApi officers, KnowledgeQueryApi knowledge) {
         this.reads = reads;
         this.officers = officers;
+        this.knowledge = knowledge;
     }
 
     @Transactional(readOnly = true)
@@ -39,7 +43,7 @@ public class OfficerQueueQueryHandler implements QueryHandler<OfficerQueueQuery,
                     .map(o -> o.districtCode())
                     .orElseThrow(ReviewException::taskNotFound);
         }
-        return reads.findQueue(new OfficerQueueQuery(
+        OfficerQueuePage page = reads.findQueue(new OfficerQueueQuery(
                 query.state(),
                 query.mine(),
                 query.officerId(),
@@ -48,5 +52,12 @@ public class OfficerQueueQueryHandler implements QueryHandler<OfficerQueueQuery,
                 query.size(),
                 query.sort(),
                 query.order()));
+        CatalogueTextEnricher enricher = new CatalogueTextEnricher(knowledge);
+        return new OfficerQueuePage(
+                page.content().stream().map(enricher::enrich).toList(),
+                page.page(),
+                page.size(),
+                page.totalElements(),
+                page.totalPages());
     }
 }

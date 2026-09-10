@@ -18,6 +18,8 @@ public record AdminKpiBreachPage(
             String farmerName,
             String cropCode,
             String cropNameBn,
+            String cropNameEn,
+            boolean cropNameEnFallback,
             Instant dueAt,
             Instant breachedAt) {}
 }
