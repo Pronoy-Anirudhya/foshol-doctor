@@ -28,6 +28,7 @@ public final class KnowledgeViewMapper {
 
     public static RemedyView toRemedyView(RemedyReadModel row) {
         List<String> steps = row.stepsBn() == null ? List.of() : List.copyOf(row.stepsBn());
+        List<String> stepsEn = row.stepsEn() == null ? List.of() : List.copyOf(row.stepsEn());
         return new RemedyView(
                 row.id(),
                 row.diseaseId(),
@@ -42,7 +43,11 @@ public final class KnowledgeViewMapper {
                 row.rateAmount(),
                 row.rateUnit(),
                 row.rateBasis(),
-                row.rateNotesBn());
+                row.rateNotesBn(),
+                row.titleEn(),
+                stepsEn,
+                row.dosageEn(),
+                row.rateNotesEn());
     }
 
     public static SymptomRefView toSymptomRefView(SymptomReadModel row) {

@@ -93,15 +93,19 @@ class KnowledgeQueryApiAdapterTest {
                         com.rootcause.foshol.common.enums.RemedyRateUnit.ML,
                         com.rootcause.foshol.common.enums.RemedyRateBasis.PER_DECIMAL,
                         "note",
-                        null,
-                        null,
-                        null,
-                        null)));
+                        "Title",
+                        List.of("Step"),
+                        "Dose",
+                        "Note")));
         RemedyView remedy = api.listActiveRemedies(BLAST).getFirst();
         assertThat(remedy.rateAmount()).isEqualByComparingTo("50");
         assertThat(remedy.rateUnit()).isEqualTo(com.rootcause.foshol.common.enums.RemedyRateUnit.ML);
         assertThat(remedy.rateBasis()).isEqualTo(com.rootcause.foshol.common.enums.RemedyRateBasis.PER_DECIMAL);
         assertThat(remedy.rateNotesBn()).isEqualTo("note");
+        assertThat(remedy.titleEn()).isEqualTo("Title");
+        assertThat(remedy.stepsEn()).containsExactly("Step");
+        assertThat(remedy.dosageEn()).isEqualTo("Dose");
+        assertThat(remedy.rateNotesEn()).isEqualTo("Note");
     }
 
     @Test

@@ -86,6 +86,6 @@ class SpecificationsTest {
     }
 
     private static RemedyView remedy(UUID id, UUID diseaseId, RemedyType type, Integer phi) {
-        return new RemedyView(id, diseaseId, type, "", List.of(), null, phi, "LOW", "LOW", "", null, null, null, null);
+        return new RemedyView(id, diseaseId, type, "", List.of(), null, phi, "LOW", "LOW", "", null, null, null, null, null, null, null, null);
     }
 }
