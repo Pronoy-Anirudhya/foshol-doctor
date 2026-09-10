@@ -32,6 +32,6 @@ class SidecarCallSupportRetryTest {
                 .isFalse();
         assertThat(SidecarCallSupport.ignoreForCircuit(
                         new SidecarFailureException(ErrorCodes.ERR_SIDECAR_MODEL_UNAVAILABLE, "x")))
-                .isFalse();
+                .isTrue();
     }
 }
