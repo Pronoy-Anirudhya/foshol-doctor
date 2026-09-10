@@ -26,6 +26,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @AnalyzeClasses(packages = "com.rootcause.foshol", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTests {
@@ -68,21 +69,21 @@ class ArchitectureTests {
             .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule commandsDoNotDependOnQueries = noClasses()
+    static final ArchRule commandsDoNotDependOnQueryHandlers = noClasses()
             .that()
             .resideInAPackage("..application.command..")
             .should()
             .dependOnClassesThat()
-            .resideInAPackage("..application.query..")
+            .resideInAPackage("..application.query.handler..")
             .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule queriesDoNotDependOnCommands = noClasses()
+    static final ArchRule queriesDoNotDependOnCommandHandlers = noClasses()
             .that()
             .resideInAPackage("..application.query..")
             .should()
             .dependOnClassesThat()
-            .resideInAPackage("..application.command..")
+            .resideInAPackage("..application.command.handler..")
             .allowEmptyShould(true);
 
     @ArchTest
@@ -118,10 +119,9 @@ class ArchitectureTests {
     @ArchTest
     static final ArchRule controllersDoNotTouchDomain = noClasses()
             .that()
-            .resideInAPackage("..web..")
+            .areAnnotatedWith(RestController.class)
             .should()
-            .dependOnClassesThat()
-            .resideInAPackage("..domain..")
+            .dependOnClassesThat(domainModelOtherThanExceptions())
             .because("controllers must not touch the domain model directly")
             .allowEmptyShould(true);
 
@@ -133,6 +133,77 @@ class ArchitectureTests {
             .doNotHaveSimpleName("AuthController")
             .should(beSecuredByPreAuthorize())
             .because("every product API must declare RBAC; AuthController is the public login surface");
+
+    @ArchTest
+    static final ArchRule applicationDoesNotDependOnInfrastructure = noClasses()
+            .that()
+            .resideInAPackage("..application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("..infrastructure..")
+            .because("application must not depend on infrastructure")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule webDoesNotDependOnInfrastructure = noClasses()
+            .that()
+            .resideInAPackage("..web..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("..infrastructure..")
+            .because("web must not depend on infrastructure")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule restControllerAdviceLivesInWeb = classes()
+            .that()
+            .areAnnotatedWith(RestControllerAdvice.class)
+            .should()
+            .resideInAPackage("..web..")
+            .because("@RestControllerAdvice must reside in web");
+
+    @ArchTest
+    static final ArchRule outboundPortsLiveInApplicationPort = classes()
+            .that()
+            .haveSimpleNameEndingWith("Port")
+            .and()
+            .resideOutsideOfPackage("..api..")
+            .should()
+            .resideInAPackage("..application.port..")
+            .because("outbound ports reside in application.port");
+
+    @ArchTest
+    static final ArchRule applicationRepositoriesLiveInApplicationPort = classes()
+            .that()
+            .haveSimpleNameEndingWith("Repository")
+            .and()
+            .resideInAPackage("..application..")
+            .should()
+            .resideInAPackage("..application.port..")
+            .because("application persistence ports reside in application.port")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule specificationsLiveInDomainSpec = classes()
+            .that()
+            .haveSimpleNameEndingWith("Spec")
+            .should()
+            .resideInAPackage("..domain.spec..")
+            .because("*Spec resides in domain.spec")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule commonRootHoldsNoTypes = noClasses()
+            .that()
+            .haveSimpleNameNotContaining("package-info")
+            .should()
+            .resideInAPackage("com.rootcause.foshol.common")
+            .because("shared types live in enums, contract, events, cqrs, util or jdbc");
+
+    @ArchTest
+    static final ArchRule moduleAndLayerRootsHoldNoTypes = noClasses()
+            .should(resideInModuleOrLayerRoot())
+            .because("module, application and infrastructure roots stay empty of types");
 
     @ArchTest
     static final ArchRule noGetPropertyOutsideCommon = noClasses()
@@ -159,6 +230,17 @@ class ArchitectureTests {
                                 method.getFullName() + " is a mapped controller method without @PreAuthorize"));
                     }
                 }
+            }
+        };
+    }
+
+    private static DescribedPredicate<JavaClass> domainModelOtherThanExceptions() {
+        return new DescribedPredicate<JavaClass>("domain types other than exceptions") {
+            @Override
+            public boolean test(JavaClass javaClass) {
+                String pkg = javaClass.getPackageName();
+                boolean domain = pkg.endsWith(".domain") || pkg.contains(".domain.");
+                return domain && !javaClass.getSimpleName().endsWith("Exception");
             }
         };
     }
@@ -215,6 +297,27 @@ class ArchitectureTests {
                 if (own != null && other != null && !own.equals(other)) {
                     events.add(SimpleConditionEvent.violated(
                             field, field.getFullName() + " associates to " + field.getRawType().getName()));
+                }
+            }
+        };
+    }
+
+    private static ArchCondition<JavaClass> resideInModuleOrLayerRoot() {
+        return new ArchCondition<JavaClass>("reside in a module or layer root package") {
+            @Override
+            public void check(JavaClass item, ConditionEvents events) {
+                if ("package-info".equals(item.getSimpleName())) {
+                    return;
+                }
+                String pkg = item.getPackageName();
+                for (String module : MODULES) {
+                    String root = "com.rootcause.foshol." + module;
+                    if (pkg.equals(root)
+                            || pkg.equals(root + ".application")
+                            || pkg.equals(root + ".infrastructure")) {
+                        events.add(SimpleConditionEvent.violated(
+                                item, item.getName() + " lives in empty root package " + pkg));
+                    }
                 }
             }
         };

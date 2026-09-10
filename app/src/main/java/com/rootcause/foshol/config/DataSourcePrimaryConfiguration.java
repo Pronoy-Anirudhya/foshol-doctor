@@ -1,4 +1,4 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.config;
 
 import javax.sql.DataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;

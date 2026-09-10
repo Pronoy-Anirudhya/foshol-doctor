@@ -1,4 +1,4 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

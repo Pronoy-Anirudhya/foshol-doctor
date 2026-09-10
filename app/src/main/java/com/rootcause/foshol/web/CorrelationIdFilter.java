@@ -1,6 +1,6 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.web;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

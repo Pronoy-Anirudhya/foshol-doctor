@@ -1,4 +1,4 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.config;
 
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.CommandHandler;

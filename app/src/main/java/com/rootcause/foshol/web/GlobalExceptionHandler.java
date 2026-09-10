@@ -1,8 +1,8 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.web;
 
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.ProblemResponses;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.ProblemResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

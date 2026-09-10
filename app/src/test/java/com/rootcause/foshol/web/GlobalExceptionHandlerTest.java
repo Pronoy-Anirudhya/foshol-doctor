@@ -1,4 +1,4 @@
-package com.rootcause.foshol;
+package com.rootcause.foshol.web;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -7,9 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.review.domain.ReviewException;
-import com.rootcause.foshol.review.infrastructure.ReviewExceptionHandler;
+import com.rootcause.foshol.review.web.ReviewExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
