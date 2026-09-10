@@ -53,7 +53,7 @@ public class SymptomPhraseVectorRepository implements SymptomPhraseVectorPort {
                         hits.add(new KnnHit(
                                 rs.getObject("phrase_id", UUID.class),
                                 rs.getObject("symptom_id", UUID.class),
-                                rs.getObject("similarity", BigDecimal.class)));
+                                BigDecimal.valueOf(rs.getDouble("similarity"))));
                     }
                     return List.copyOf(hits);
                 }
