@@ -31,6 +31,11 @@ ARCHITECTURE_BY_ROLE = {
 FAMILY_RICE = "rice"
 FAMILY_SOLANACEAE = "solanaceae"
 
+BACKEND_VIT = "vit"
+BACKEND_VISIONARY = "visionary"
+VISION_BACKENDS = (BACKEND_VIT, BACKEND_VISIONARY)
+VISIONARY_MODEL_ID = "VisionaryQuant/5_Crop_Disease_Detection"
+
 _ALIASES: dict[str, tuple[str, ...]] = {
     "FOSHOL_AI_VISION_RICE_MODEL_ID": ("FOSHOL_RICE_MODEL_ID",),
     "FOSHOL_AI_VISION_RICE_MODEL_REVISION": ("FOSHOL_RICE_MODEL_REVISION",),
@@ -121,6 +126,7 @@ class ModelSpec:
 @dataclass(frozen=True)
 class Settings:
     mode: str
+    vision_backend: str
     crop_routes: dict[str, str]
     vision_top_k: int
     max_concurrent: int
@@ -176,6 +182,10 @@ def load_settings() -> Settings:
     )
     crop_routes = parse_crop_routes(routes_raw)
 
+    backend_raw = (_read_env("FOSHOL_SIDECAR_VISION_BACKEND", BACKEND_VIT) or BACKEND_VIT).strip().lower()
+    if backend_raw not in VISION_BACKENDS:
+        raise SystemExit("FOSHOL_SIDECAR_VISION_BACKEND must be 'vit' or 'visionary'")
+
     models: dict[str, ModelSpec] = {}
     for role, (id_key, rev_key) in _REQUIRED_BY_ROLE.items():
         if role == ROLE_VISION_RICE_PRIMARY:
@@ -184,7 +194,10 @@ def load_settings() -> Settings:
             if not model_id or not revision:
                 # Primary rice may be absent; fallback covers rice (SIDECAR-FR-020).
                 continue
-            models[role] = ModelSpec(role, model_id, revision, ARCHITECTURE_BY_ROLE[role])
+            architecture = (
+                "efficientnet_b3" if backend_raw == BACKEND_VISIONARY else ARCHITECTURE_BY_ROLE[role]
+            )
+            models[role] = ModelSpec(role, model_id, revision, architecture)
             continue
         model_id, revision = _require(role, id_key, rev_key)
         models[role] = ModelSpec(role, model_id, revision, ARCHITECTURE_BY_ROLE[role])
@@ -200,6 +213,7 @@ def load_settings() -> Settings:
 
     return Settings(
         mode=mode_raw,
+        vision_backend=backend_raw,
         crop_routes=crop_routes,
         vision_top_k=_read_int("FOSHOL_SIDECAR_VISION_TOP_K", 5),
         max_concurrent=_read_int("FOSHOL_SIDECAR_MAX_CONCURRENT", 2),

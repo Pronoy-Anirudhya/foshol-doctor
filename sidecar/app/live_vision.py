@@ -1,4 +1,4 @@
-"""LIVE vision: load the ViT once, classify from memory, cache predictions by digest."""
+"""LIVE vision: load one backbone (ViT or EfficientNet-B3), classify, cache by digest."""
 
 from __future__ import annotations
 
@@ -8,12 +8,46 @@ from dataclasses import dataclass
 from io import BytesIO
 from typing import Any, Protocol
 
-from app.config import ROLE_VISION_RICE_PRIMARY, ModelSpec, Settings
+from app.config import (
+    BACKEND_VISIONARY,
+    BACKEND_VIT,
+    ROLE_VISION_RICE_PRIMARY,
+    VISIONARY_MODEL_ID,
+    ModelSpec,
+    Settings,
+)
 from app.errors import SidecarError, inference_failed, model_unavailable, undecodable
 from app.replay import sha256_hex
 from app.vision import _clip_predictions, read_image, route_crop
 
 CACHE_MAX = 64
+EFFICIENTNET_WEIGHT_FILE = "best_crop_disease_model.pt"
+EFFICIENTNET_INPUT_PX = 300
+EFFICIENTNET_NUM_CLASSES = 17
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
+
+# Native ImageFolder order for VisionaryQuant/5_Crop_Disease_Detection. Index 3 is
+# Corn___Northern_Leaf_Blight, not Invalid. Sugarcane uses two underscores.
+EFFICIENTNET_LABELS: tuple[str, ...] = (
+    "Corn___Common_Rust",
+    "Corn___Gray_Leaf_Spot",
+    "Corn___Healthy",
+    "Corn___Northern_Leaf_Blight",
+    "Potato___Early_Blight",
+    "Potato___Healthy",
+    "Potato___Late_Blight",
+    "Rice___Brown_Spot",
+    "Rice___Healthy",
+    "Rice___Leaf_Blast",
+    "Rice___Neck_Blast",
+    "Sugarcane__Bacterial_Blight",
+    "Sugarcane__Healthy",
+    "Sugarcane__Red_Rot",
+    "Wheat___Brown_Rust",
+    "Wheat___Healthy",
+    "Wheat___Yellow_Rust",
+)
 
 
 class VisionRuntime(Protocol):
@@ -56,6 +90,38 @@ class TransformersRuntime:
         return ranked
 
 
+@dataclass
+class EfficientNetRuntime:
+    model_id: str
+    model_version: str
+    architecture: str
+    labels: list[str]
+    transform: Any
+    model: Any
+
+    def predict(self, image_bytes: bytes) -> list[tuple[str, float]]:
+        from PIL import Image, UnidentifiedImageError
+        import torch
+        from torch.nn.functional import softmax
+
+        try:
+            image = Image.open(BytesIO(image_bytes)).convert("RGB")
+        except (UnidentifiedImageError, OSError) as exc:
+            raise undecodable("image bytes could not be decoded") from exc
+        tensor = self.transform(image).unsqueeze(0)
+        with torch.no_grad():
+            logits = self.model(tensor)
+            probs = softmax(logits, dim=-1)[0]
+            scores = probs.tolist()
+        del logits, probs, tensor
+        ranked: list[tuple[str, float]] = []
+        for index, confidence in enumerate(scores):
+            label = self.labels[index] if index < len(self.labels) else str(index)
+            ranked.append((label, float(confidence)))
+        ranked.sort(key=lambda item: item[1], reverse=True)
+        return ranked
+
+
 class ClassifyCache:
     def __init__(self, max_size: int = CACHE_MAX) -> None:
         self._max = max_size
@@ -76,7 +142,27 @@ class ClassifyCache:
             self._hits.popitem(last=False)
 
 
-def load_runtime(spec: ModelSpec, torch_threads: int) -> VisionRuntime:
+def assert_backend_matches_model(backend: str, model_id: str) -> None:
+    is_visionary = model_id == VISIONARY_MODEL_ID
+    if backend == BACKEND_VISIONARY and not is_visionary:
+        raise SystemExit(
+            f"FOSHOL_SIDECAR_VISION_BACKEND=visionary requires {VISIONARY_MODEL_ID}, got {model_id}"
+        )
+    if backend == BACKEND_VIT and is_visionary:
+        raise SystemExit(
+            f"FOSHOL_SIDECAR_VISION_BACKEND=vit cannot load {VISIONARY_MODEL_ID}; "
+            "use visionary or a Transformers vision model"
+        )
+
+
+def load_runtime(spec: ModelSpec, torch_threads: int, backend: str = BACKEND_VIT) -> VisionRuntime:
+    assert_backend_matches_model(backend, spec.model_id)
+    if backend == BACKEND_VISIONARY:
+        return _load_efficientnet_runtime(spec, torch_threads)
+    return _load_transformers_runtime(spec, torch_threads)
+
+
+def _load_transformers_runtime(spec: ModelSpec, torch_threads: int) -> TransformersRuntime:
     import torch
     from transformers import AutoImageProcessor, AutoModelForImageClassification
 
@@ -95,15 +181,52 @@ def load_runtime(spec: ModelSpec, torch_threads: int) -> VisionRuntime:
         processor=processor,
         model=model,
     )
-    _warmup(runtime)
+    _warmup(runtime, edge_px=224)
     return runtime
 
 
-def _warmup(runtime: VisionRuntime) -> None:
+def _load_efficientnet_runtime(spec: ModelSpec, torch_threads: int) -> EfficientNetRuntime:
+    import torch
+    import torch.nn as nn
+    from huggingface_hub import hf_hub_download
+    from torchvision import models, transforms
+
+    torch.set_num_threads(max(torch_threads, 1))
+    weight_path = hf_hub_download(
+        repo_id=spec.model_id,
+        filename=EFFICIENTNET_WEIGHT_FILE,
+        revision=spec.model_version,
+    )
+    model = models.efficientnet_b3(weights=None)
+    in_features = model.classifier[1].in_features
+    model.classifier[1] = nn.Linear(in_features, EFFICIENTNET_NUM_CLASSES)
+    state = torch.load(weight_path, map_location="cpu", weights_only=True)
+    model.load_state_dict(state)
+    model.eval()
+    transform = transforms.Compose(
+        [
+            transforms.Resize((EFFICIENTNET_INPUT_PX, EFFICIENTNET_INPUT_PX)),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        ]
+    )
+    runtime = EfficientNetRuntime(
+        model_id=spec.model_id,
+        model_version=spec.model_version,
+        architecture="efficientnet_b3",
+        labels=list(EFFICIENTNET_LABELS),
+        transform=transform,
+        model=model,
+    )
+    _warmup(runtime, edge_px=EFFICIENTNET_INPUT_PX)
+    return runtime
+
+
+def _warmup(runtime: VisionRuntime, edge_px: int = 224) -> None:
     from PIL import Image
 
     buffer = BytesIO()
-    Image.new("RGB", (224, 224), color=(16, 120, 16)).save(buffer, format="PNG")
+    Image.new("RGB", (edge_px, edge_px), color=(16, 120, 16)).save(buffer, format="PNG")
     runtime.predict(buffer.getvalue())
 
 
@@ -111,8 +234,8 @@ def install_live_vision(state: Any) -> None:
     settings: Settings = state.settings
     spec = settings.models.get(ROLE_VISION_RICE_PRIMARY)
     if spec is None:
-        raise SystemExit("LIVE mode requires vision.rice.primary (the ViT) to be configured")
-    runtime = load_runtime(spec, settings.torch_threads)
+        raise SystemExit("LIVE mode requires vision.rice.primary to be configured")
+    runtime = load_runtime(spec, settings.torch_threads, settings.vision_backend)
     state.vision_runtime = runtime
     state.classify_cache = ClassifyCache()
     state.loaded_flags[ROLE_VISION_RICE_PRIMARY] = True
@@ -148,7 +271,7 @@ def classify_live(
         solanaceae_usable=False,
     )
     if route.role != ROLE_VISION_RICE_PRIMARY:
-        raise model_unavailable("LIVE vision loads only the ViT (vision.rice.primary)")
+        raise model_unavailable("LIVE vision loads only vision.rice.primary")
     digest = sha256_hex(image)
     cached = cache.get(digest, crop_code, top_k)
     if cached is None:
@@ -157,7 +280,7 @@ def classify_live(
         except SidecarError:
             raise
         except Exception as exc:
-            raise inference_failed("ViT forward pass failed") from exc
+            raise inference_failed("vision forward pass failed") from exc
         raw = [{"raw_label": label, "confidence": confidence, "rank": 0} for label, confidence in ranked]
         predictions = _clip_predictions(raw, top_k)
         cache.put(digest, crop_code, top_k, predictions)

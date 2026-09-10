@@ -1,4 +1,4 @@
-"""FastAPI inference sidecar. Replay serves fixtures; LIVE loads ViT, ASR, and LaBSE."""
+"""FastAPI inference sidecar. Replay serves fixtures; LIVE loads one vision backbone, ASR, and LaBSE."""
 
 from __future__ import annotations
 

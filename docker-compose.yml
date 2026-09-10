@@ -44,6 +44,7 @@ services:
       context: ./sidecar
     environment:
       FOSHOL_AI_MODE: ${FOSHOL_AI_MODE:-replay}
+      FOSHOL_SIDECAR_VISION_BACKEND: ${FOSHOL_SIDECAR_VISION_BACKEND:-vit}
       FOSHOL_AI_VISION_CROP_ROUTES: ${FOSHOL_AI_VISION_CROP_ROUTES:-rice=rice,tomato=solanaceae,potato=solanaceae}
       FOSHOL_AI_VISION_RICE_MODEL_ID: ${FOSHOL_AI_VISION_RICE_MODEL_ID:-kssrikar4/Rice-Leaf-Disease-Classification}
       FOSHOL_AI_VISION_RICE_MODEL_REVISION: ${FOSHOL_AI_VISION_RICE_MODEL_REVISION:-02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26}

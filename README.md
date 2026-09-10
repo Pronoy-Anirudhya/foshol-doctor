@@ -94,18 +94,22 @@ recreates the `foshol-cases` bucket.
 Live sidecar instead of replay fixtures (API client **and** Angular UI). Demo/replay
 is unchanged: `./tools/start-stack.sh` still uses fixtures and does not need the sidecar.
 
-LIVE loads **only** `wambugu71/crop_leaf_diseases_vit` into memory and classifies rice,
-potato, corn and wheat against it. Tomato is not routed in LIVE.
+LIVE loads **one** vision backbone into memory and classifies rice, potato, corn and
+wheat against it. Tomato has no native labels on either LIVE model. The two backends
+are mutually exclusive — never start both:
 
 ```bash
-./tools/start-live.sh
+./tools/start-live.sh              # ViT (default): wambugu71/crop_leaf_diseases_vit
+./tools/start-live.sh vit          # same as default
+./tools/start-live.sh visionary    # EfficientNet-B3: VisionaryQuant/5_Crop_Disease_Detection
 ```
 
-That script starts Postgres, MinIO and the ViT sidecar together, then boots Spring with
-`local` (LIVE). Equivalent manual env:
+That script starts Postgres, MinIO and the sidecar together, then boots Spring with
+`local` (LIVE). Equivalent manual env for ViT:
 
 ```bash
 FOSHOL_AI_MODE=live \
+FOSHOL_SIDECAR_VISION_BACKEND=vit \
 FOSHOL_AI_VISION_RICE_MODEL_ID=wambugu71/crop_leaf_diseases_vit \
 FOSHOL_AI_VISION_RICE_MODEL_REVISION=7d5b32bcd6f83a2f57e7e0346358fad276296877 \
 FOSHOL_AI_VISION_CROP_ROUTES=rice=rice,potato=rice,corn=rice,wheat=rice \
@@ -116,10 +120,17 @@ docker compose --profile ai up -d sidecar
 FOSHOL_SPRING_PROFILES=local ./tools/start-stack.sh
 ```
 
+For EfficientNet, set `FOSHOL_SIDECAR_VISION_BACKEND=visionary`,
+`FOSHOL_AI_VISION_RICE_MODEL_ID=VisionaryQuant/5_Crop_Disease_Detection` and
+`FOSHOL_AI_VISION_RICE_MODEL_REVISION=63080391f7d2bdb331ab356b0d1d9b4b603b3946`.
+The classify HTTP contract is unchanged (`raw_label`, `confidence`, `rank`).
+Native EfficientNet labels with no taxonomy row (Northern Leaf Blight, Neck Blast,
+sugarcane) stay unmapped and route to `UNDETERMINED`.
+
 The first LIVE start downloads weights into `~/.cache/huggingface` (mounted into the
 sidecar). Later starts reuse that cache. Health is `DEGRADED` while ASR/embed stay
-unloaded; classify still returns 200. `GET /health` is not `UP` until the ViT has
-loaded and warmed up.
+unloaded; classify still returns 200. `GET /health` is not `UP` until the selected
+vision model has loaded and warmed up.
 
 `application-local` sets `foshol.ai.mode=live` and still loads `db/seed` (farmer / officer / admin).
 Do **not** combine with the `demo` profile: `demo` sets `foshol.ai.mode=replay` and would win.

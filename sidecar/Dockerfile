@@ -9,7 +9,7 @@ RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin foshol \
     && pip install --no-cache-dir --upgrade pip
 
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu \
+RUN pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir \
         fastapi==0.115.12 \
         uvicorn==0.34.2 \
@@ -27,6 +27,7 @@ COPY --chown=foshol:foshol fixtures /app/fixtures
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     FOSHOL_AI_MODE=replay \
+    FOSHOL_SIDECAR_VISION_BACKEND=vit \
     FOSHOL_SIDECAR_FIXTURE_DIR=/app/fixtures \
     FOSHOL_AI_VISION_CROP_ROUTES=rice=rice,tomato=solanaceae,potato=solanaceae \
     FOSHOL_AI_VISION_RICE_MODEL_ID=kssrikar4/Rice-Leaf-Disease-Classification \

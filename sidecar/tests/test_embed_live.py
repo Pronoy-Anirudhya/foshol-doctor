@@ -162,7 +162,7 @@ def test_live_installers_load_vit_asr_embed_only(live_env, monkeypatch):
     from app.asr import install_live_asr
     from app.config import REGISTRY_ROLES, get_settings
 
-    monkeypatch.setattr("app.live_vision.load_runtime", lambda spec, threads: FakeVisionRuntime())
+    monkeypatch.setattr("app.live_vision.load_runtime", lambda spec, threads, backend="vit": FakeVisionRuntime())
     monkeypatch.setattr("app.asr.load_asr_runtime", lambda spec, threads: FakeAsrRuntime())
     monkeypatch.setattr("app.embed.load_embed_runtime", lambda spec, threads: FakeEmbedRuntime())
 
