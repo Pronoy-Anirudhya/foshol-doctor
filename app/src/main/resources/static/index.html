@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Foshol Doctor — FAQ</title>
+    <link rel="stylesheet" href="/farmer.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">ফসল ডাক্তার</div>
+      <nav class="menu" aria-label="Farmer">
+        <button type="button" class="nav-btn" data-view="faq" aria-current="page">FAQ</button>
+        <button type="button" class="nav-btn" data-view="case">মামলা</button>
+      </nav>
+      <button type="button" id="logout" class="ghost hidden">বের হোন</button>
+    </header>
+
+    <main>
+      <section id="login" class="card">
+        <h1>কৃষক প্রবেশ</h1>
+        <p class="hint">নিবন্ধিত মোবাইল নম্বর দিন। ডেমো: +8801711111111, কোড 123456।</p>
+        <label>মোবাইল
+          <input id="phone" type="tel" value="+8801711111111" autocomplete="tel" />
+        </label>
+        <button type="button" id="request-otp">OTP চান</button>
+        <label class="hidden" id="otp-row">কোড
+          <input id="otp" inputmode="numeric" maxlength="6" />
+        </label>
+        <button type="button" id="verify-otp" class="hidden">প্রবেশ</button>
+        <p id="login-error" class="error" hidden></p>
+      </section>
+
+      <section id="app" class="hidden">
+        <section id="view-faq">
+          <h1>রোগের নিবন্ধিত প্রতিকার (FAQ)</h1>
+          <p class="disclaimer">
+            এটি জ্ঞানভাণ্ডারের তালিকা, আপনার জমির নির্ণয় নয়। নিশ্চিত না হলে ছবি দিয়ে মামলা করুন।
+            কোনো পরামর্শ মাঠ কর্মকর্তার অনুমোদন ছাড়া আপনার মামলা হিসেবে যায় না।
+          </p>
+          <label>ফসল
+            <select id="crop"></select>
+          </label>
+          <p class="hint">রোগের নাম বলুন (যেমন ব্লাস্ট)। রেকর্ড চেপে ধরে রাখুন।</p>
+          <div class="recorder">
+            <button type="button" id="record">রেকর্ড ধরে রাখুন</button>
+            <span id="rec-status">রেকর্ড হয়নি</span>
+          </div>
+          <button type="button" id="search" disabled>খুঁজুন</button>
+          <p id="faq-error" class="error" hidden></p>
+          <p id="transcript" class="transcript hidden"></p>
+          <div id="candidates" class="chips"></div>
+          <div id="remedies"></div>
+        </section>
+
+        <section id="view-case" class="card hidden">
+          <h1>মামলা (ছবি)</h1>
+          <p>
+            জমির ছবি পাঠিয়ে রোগ নির্ণয় একটি আলাদা পথ। প্রতিটি মামলা মাঠ কর্মকর্তা অনুমোদন করেন।
+            FAQ থেকে কীটনাশকের পরামর্শ মামলা হিসেবে যায় না।
+          </p>
+        </section>
+      </section>
+    </main>
+    <script src="/farmer.js"></script>
+  </body>
+</html>

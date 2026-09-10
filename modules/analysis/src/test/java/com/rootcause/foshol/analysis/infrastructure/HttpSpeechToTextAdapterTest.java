@@ -3,6 +3,7 @@ package com.rootcause.foshol.analysis.infrastructure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,6 +81,27 @@ class HttpSpeechToTextAdapterTest {
         assertThat(result.transcriptBn()).isEqualTo("TODO(content-owner)");
         assertThat(result.asrConfidence()).isEqualByComparingTo(new BigDecimal("0.91"));
         assertThat(result.latencyMs()).isEqualTo(20);
+    }
+
+    @Test
+    void transcribesRawAudioWithoutObjectStore() throws Exception {
+        JsonNode node = new ObjectMapper()
+                .readTree(
+                        """
+                        {"model_id":"bangla-whisper","transcript":"blast","confidence":0.91,\
+                        "inference_ms":20}
+                        """);
+        byte[] audio = {1, 2, 3};
+        when(http.postMultipartAudio(
+                        eq("/v1/asr/transcribe"), eq(audio), eq("audio.bin"), eq("corr"), eq("bn")))
+                .thenReturn(node);
+
+        HttpSpeechToTextAdapter adapter = new HttpSpeechToTextAdapter(http, support());
+        TranscriptResult result = adapter.transcribeAudio(audio, "bn", "corr");
+
+        assertThat(result.transcriptBn()).isEqualTo("blast");
+        assertThat(result.asrConfidence()).isEqualByComparingTo(new BigDecimal("0.91"));
+        verify(http, never()).readBytes(any());
     }
 
     private static TranscriptRequest request() {

@@ -87,6 +87,15 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/",
+                                "/index.html",
+                                "/farmer.html",
+                                "/farmer.js",
+                                "/farmer.css",
+                                "/favicon.ico")
+                        .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
                         .requestMatchers("/api/v1/admin/**")
