@@ -20,6 +20,18 @@ public enum QualityReason {
         };
     }
 
+    public static QualityReason fromHttpReason(String http) {
+        if (http == null || http.isBlank()) {
+            return UNREADABLE;
+        }
+        for (QualityReason reason : values()) {
+            if (reason.httpReason().equals(http) || reason.name().equals(http)) {
+                return reason;
+            }
+        }
+        return UNREADABLE;
+    }
+
     public String messageKey() {
         return switch (this) {
             case BLURRY -> "intake.quality.blurry";

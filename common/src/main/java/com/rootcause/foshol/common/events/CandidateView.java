@@ -1,6 +1,6 @@
 package com.rootcause.foshol.common.events;
 
-import com.rootcause.foshol.common.CandidateSource;
+import com.rootcause.foshol.common.enums.CandidateSource;
 import java.math.BigDecimal;
 import java.util.UUID;
 

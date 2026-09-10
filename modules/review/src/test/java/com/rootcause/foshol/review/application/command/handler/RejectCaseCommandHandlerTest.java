@@ -5,8 +5,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.review.application.command.RejectCaseCommand;
@@ -53,7 +53,7 @@ class RejectCaseCommandHandlerTest {
     private ApplicationEventPublisher events;
 
     @Mock
-    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+    private com.rootcause.foshol.review.application.command.ReviewDistrictGuard districtGuard;
 
     @Test
     void writesRejectionAndNoAdvisory() {

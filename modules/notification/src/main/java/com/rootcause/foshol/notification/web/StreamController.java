@@ -1,9 +1,9 @@
 package com.rootcause.foshol.notification.web;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
-import com.rootcause.foshol.notification.infrastructure.sse.SseSubscriptionRegistry;
+import com.rootcause.foshol.notification.application.port.SseSubscribePort;
 import java.time.Duration;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,17 +23,17 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/v1")
 public class StreamController {
 
-    private final SseSubscriptionRegistry registry;
+    private final SseSubscribePort stream;
     private final OfficerLookupApi officers;
     private final boolean enabled;
     private final Duration timeout;
 
     public StreamController(
-            SseSubscriptionRegistry registry,
+            SseSubscribePort stream,
             OfficerLookupApi officers,
             @Value("${" + ConfigKeys.CHANNELS_SSE_ENABLED + ":true}") boolean enabled,
             @Value("${" + ConfigKeys.CHANNELS_SSE_TIMEOUT + ":PT30M}") Duration timeout) {
-        this.registry = registry;
+        this.stream = stream;
         this.officers = officers;
         this.enabled = enabled;
         this.timeout = timeout;
@@ -50,15 +50,14 @@ public class StreamController {
         UUID subject = UUID.fromString(authentication.getName());
         Role role = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
-                .map(a -> a.substring("ROLE_".length()))
-                .map(Role::valueOf)
+                .filter(a -> a.startsWith(Role.AUTHORITY_PREFIX))
+                .map(Role::fromAuthority)
                 .findFirst()
                 .orElseThrow();
         String district = "";
         if (role == Role.OFFICER || role == Role.ADMIN) {
             district = officers.findById(subject).map(o -> o.districtCode()).orElse("");
         }
-        return registry.subscribe(subject, role, district, lastEventId, timeout);
+        return stream.subscribe(subject, role, district, lastEventId, timeout);
     }
 }

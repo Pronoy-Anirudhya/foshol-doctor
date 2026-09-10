@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.domain;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 
 public class ReviewException extends RuntimeException {
 

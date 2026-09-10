@@ -7,7 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
 import com.rootcause.foshol.analysis.application.port.AnalysisEventPort;
 import com.rootcause.foshol.analysis.application.port.AnalysisPersistencePort;
@@ -24,16 +24,16 @@ import com.rootcause.foshol.analysis.application.port.VisionResult;
 import com.rootcause.foshol.analysis.domain.AnalysisRun;
 import com.rootcause.foshol.analysis.domain.CaseCandidate;
 import com.rootcause.foshol.analysis.domain.CaseSymptom;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
-import com.rootcause.foshol.common.Severity;
-import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.common.enums.Severity;
+import com.rootcause.foshol.common.enums.SymptomSource;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
@@ -168,7 +168,7 @@ class RunAnalysisCommandHandlerTest {
         when(vision.classify(any())).thenReturn(new VisionResult(
                 "model",
                 "v1",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
+                List.of(new com.rootcause.foshol.analysis.domain.RawCandidate(
                         "unknown-label", new BigDecimal("0.9100"))),
                 12));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.empty());
@@ -318,14 +318,14 @@ class RunAnalysisCommandHandlerTest {
         when(vision.classify(any())).thenReturn(new VisionResult(
                 "kssrikar4/Rice-Leaf-Disease-Classification",
                 "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
+                List.of(new com.rootcause.foshol.analysis.domain.RawCandidate(
                         "Brown Spot", new BigDecimal("0.6000"))),
                 12));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
         when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
-                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
+                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
                 "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
                 null, null, null, null)));
         CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
@@ -386,14 +386,14 @@ class RunAnalysisCommandHandlerTest {
         when(vision.classify(any())).thenReturn(new VisionResult(
                 "kssrikar4/Rice-Leaf-Disease-Classification",
                 "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
+                List.of(new com.rootcause.foshol.analysis.domain.RawCandidate(
                         "Brown Spot", new BigDecimal("0.9100"))),
                 12));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
         when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
-                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
+                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
                 "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null)));
     }
 
@@ -401,14 +401,14 @@ class RunAnalysisCommandHandlerTest {
         when(vision.classify(any())).thenReturn(new VisionResult(
                 "kssrikar4/Rice-Leaf-Disease-Classification",
                 "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
-                List.of(new com.rootcause.foshol.analysis.application.port.RawCandidate(
+                List.of(new com.rootcause.foshol.analysis.domain.RawCandidate(
                         "Brown Spot", new BigDecimal("0.6000"))),
                 12));
         when(knowledge.resolveModelLabel(any(), any(), any())).thenReturn(Optional.of(DISEASE));
         when(knowledge.findDiseaseById(DISEASE)).thenReturn(Optional.of(new DiseaseView(
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
-                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.RemedyType.CULTURAL,
+                UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
                 "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
                 null, null, null, null)));
     }
@@ -425,7 +425,7 @@ class RunAnalysisCommandHandlerTest {
                 "rice",
                 "DHA",
                 "DHK",
-                com.rootcause.foshol.common.CaseStatus.SUBMITTED,
+                com.rootcause.foshol.common.enums.CaseStatus.SUBMITTED,
                 null,
                 null,
                 null,
@@ -434,10 +434,10 @@ class RunAnalysisCommandHandlerTest {
                 "corr-1",
                 Instant.now(),
                 new BigDecimal("1"),
-                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL,
                 null,
                 null,
-                com.rootcause.foshol.common.MetricsSource.FORM);
+                com.rootcause.foshol.common.enums.MetricsSource.FORM);
     }
 
     private static List<CaseImageRef> images() {

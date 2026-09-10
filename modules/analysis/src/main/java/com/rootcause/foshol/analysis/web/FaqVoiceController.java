@@ -3,7 +3,7 @@ package com.rootcause.foshol.analysis.web;
 import com.rootcause.foshol.analysis.application.command.LookupVoiceKbCommand;
 import com.rootcause.foshol.analysis.application.command.VoiceKbDiseaseCandidate;
 import com.rootcause.foshol.analysis.application.command.VoiceKbLookupResult;
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import java.io.IOException;
 import java.util.ArrayList;

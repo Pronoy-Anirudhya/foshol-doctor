@@ -1,7 +1,7 @@
 package com.rootcause.foshol.review.application.command.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.review.application.ReviewKpiCalendar;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.review.application.command.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.ReviewTask;

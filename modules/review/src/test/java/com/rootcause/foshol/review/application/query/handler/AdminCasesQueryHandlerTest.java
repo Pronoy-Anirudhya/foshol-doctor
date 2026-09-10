@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;

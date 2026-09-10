@@ -6,8 +6,8 @@ dependencies {
     implementation libs.pgvector
     implementation 'org.postgresql:postgresql'
     implementation 'org.springframework.security:spring-security-core'
-    testImplementation 'org.flywaydb:flyway-core'
-    testImplementation 'org.flywaydb:flyway-database-postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway'
+    testRuntimeOnly 'org.flywaydb:flyway-database-postgresql'
 }
 
 tasks.withType(Test).configureEach {

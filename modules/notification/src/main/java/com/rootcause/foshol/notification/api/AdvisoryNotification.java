@@ -1,6 +1,6 @@
 package com.rootcause.foshol.notification.api;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import java.util.Map;
 import java.util.UUID;
 

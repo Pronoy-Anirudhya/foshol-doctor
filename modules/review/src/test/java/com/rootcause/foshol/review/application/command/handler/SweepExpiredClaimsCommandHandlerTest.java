@@ -6,8 +6,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.review.ReviewFixtures;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
@@ -44,7 +44,7 @@ class SweepExpiredClaimsCommandHandlerTest {
         SweepExpiredClaimsCommandHandler handler = new SweepExpiredClaimsCommandHandler(
                 tasks,
                 queue,
-                com.rootcause.foshol.review.application.ReviewKpiCalendar.alwaysOpenUtc(),
+                com.rootcause.foshol.review.application.command.ReviewKpiCalendar.alwaysOpenUtc(),
                 Clock.fixed(ReviewFixtures.T0.plus(Duration.ofMinutes(16)), ZoneOffset.UTC),
                 Duration.ofMinutes(15));
         int swept = handler.handle();

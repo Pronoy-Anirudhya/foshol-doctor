@@ -8,14 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
-import com.rootcause.foshol.identity.infrastructure.FarmerEntity;
-import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.FieldOfficerEntity;
-import com.rootcause.foshol.identity.infrastructure.FieldOfficerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.PhoneCipher;
+import com.rootcause.foshol.identity.infrastructure.persistence.FarmerEntity;
+import com.rootcause.foshol.identity.infrastructure.persistence.FarmerJpaRepository;
+import com.rootcause.foshol.identity.infrastructure.persistence.FieldOfficerEntity;
+import com.rootcause.foshol.identity.infrastructure.persistence.FieldOfficerJpaRepository;
+import com.rootcause.foshol.identity.infrastructure.persistence.PhoneCipher;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;

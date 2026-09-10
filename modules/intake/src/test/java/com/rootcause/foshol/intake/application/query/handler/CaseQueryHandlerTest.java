@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.intake.domain.IntakeException;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.port.ImageStorePort;
 import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
@@ -44,7 +44,7 @@ class CaseQueryHandlerTest {
     private ImageStorePort store;
 
     @Mock
-    private com.rootcause.foshol.intake.application.StaffRegionAccess staffRegion;
+    private com.rootcause.foshol.intake.application.query.StaffRegionAccess staffRegion;
 
     @Test
     void farmerCannotSeeAnotherCase() {
@@ -61,8 +61,8 @@ class CaseQueryHandlerTest {
         when(queries.findFarmerId(CASE)).thenReturn(Optional.of(OWNER));
         when(queries.findDetail(CASE)).thenReturn(Optional.of(new CaseDetailView(
                 CASE, UUID.randomUUID(), "ধান", null, null, null, null, java.util.List.of(), null, Instant.now(),
-                java.math.BigDecimal.ONE, com.rootcause.foshol.common.FieldAreaUnit.DECIMAL, null, null,
-                com.rootcause.foshol.common.MetricsSource.FORM)));
+                java.math.BigDecimal.ONE, com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL, null, null,
+                com.rootcause.foshol.common.enums.MetricsSource.FORM)));
         when(staffRegion.allows(Role.OFFICER, OTHER, CASE)).thenReturn(true);
         CaseDetailQueryHandler handler = new CaseDetailQueryHandler(queries, staffRegion);
         assertThat(handler.handle(new CaseDetailQuery(CASE, OTHER, Role.OFFICER)).caseId()).isEqualTo(CASE);

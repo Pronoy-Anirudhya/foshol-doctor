@@ -1,6 +1,6 @@
 package com.rootcause.foshol.identity.application.command;
 
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.Role;
 import java.time.Instant;
 import java.util.UUID;
 

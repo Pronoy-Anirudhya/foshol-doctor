@@ -2,7 +2,7 @@ package com.rootcause.foshol.intake.domain.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.intake.domain.IdempotencyRecord;
 import com.rootcause.foshol.intake.domain.vo.RequestFingerprint;
 import com.rootcause.foshol.intake.domain.vo.Sha256;

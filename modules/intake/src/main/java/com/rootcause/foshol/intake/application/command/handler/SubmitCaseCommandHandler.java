@@ -1,11 +1,11 @@
 package com.rootcause.foshol.intake.application.command.handler;
 
-import com.rootcause.foshol.common.BanglaNormalizer;
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import com.rootcause.foshol.common.events.CaseSubmitted;
@@ -17,7 +17,7 @@ import com.rootcause.foshol.intake.api.IntakeRequest;
 import com.rootcause.foshol.intake.application.command.CaseSubmissionWriter;
 import com.rootcause.foshol.intake.application.command.SubmitCaseCommand;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
-import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.intake.domain.IntakeException;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.application.port.DuplicateIdempotencyKeyException;
 import com.rootcause.foshol.intake.application.port.ImageQualityPort;
@@ -433,18 +433,10 @@ public class SubmitCaseCommandHandler implements CommandHandler<SubmitCaseComman
     private static Map<String, Object> error(int position, QualityReason reason) {
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("position", position);
-        row.put("reason", httpReason(reason));
+        row.put("reason", reason.httpReason());
         row.put("field", "images[" + position + "]");
         row.put("message", reason.name());
         return row;
-    }
-
-    private static String httpReason(QualityReason reason) {
-        return switch (reason) {
-            case TOO_DARK -> "UNDEREXPOSED";
-            case TOO_BRIGHT -> "OVEREXPOSED";
-            default -> reason.name();
-        };
     }
 
     private static CaseSubmitted toSubmitted(DiagnosisCase diagnosisCase, String cropCode) {

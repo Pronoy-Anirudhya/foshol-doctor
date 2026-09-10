@@ -7,16 +7,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.identity.application.command.RequestOtpCommand;
 import com.rootcause.foshol.identity.application.command.RequestOtpResult;
+import com.rootcause.foshol.identity.application.port.FarmerSnapshot;
+import com.rootcause.foshol.identity.application.port.FarmerStore;
+import com.rootcause.foshol.identity.application.port.OtpChallengeStore;
 import com.rootcause.foshol.identity.domain.IdentityException;
+import com.rootcause.foshol.identity.domain.OtpChallenge;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
-import com.rootcause.foshol.identity.infrastructure.FarmerEntity;
-import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,10 +39,10 @@ class RequestOtpCommandHandlerTest {
     private static final Duration WINDOW = Duration.ofMinutes(10);
 
     @Mock
-    private FarmerJpaRepository farmers;
+    private FarmerStore farmers;
 
     @Mock
-    private OtpChallengeJpaRepository challenges;
+    private OtpChallengeStore challenges;
 
     private RequestOtpCommandHandler handler;
 
@@ -62,7 +62,7 @@ class RequestOtpCommandHandlerTest {
     @Test
     void unknownPhoneIs404AndDoesNotCreateChallenge() {
         String hash = PhoneHash.of(PhoneNumber.parse(PHONE)).hex();
-        when(challenges.countByPhoneHashAndCreatedAtAfter(hash, NOW.minus(WINDOW))).thenReturn(0L);
+        when(challenges.countCreatedAfter(hash, NOW.minus(WINDOW))).thenReturn(0L);
         when(farmers.findByPhoneHash(hash)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> handler.handle(new RequestOtpCommand(PHONE)))
@@ -74,15 +74,15 @@ class RequestOtpCommandHandlerTest {
                     assertThat(identity.getMessage()).isEqualTo("Farmer was not found.");
                 });
         verify(challenges, never()).save(any());
-        verify(challenges, never()).consumeOpenChallenges(any(), any());
+        verify(challenges, never()).consumeOpen(any(), any());
     }
 
     @Test
     void knownFarmerCreatesChallengeWithDevFixedMode() {
         String hash = PhoneHash.of(PhoneNumber.parse(PHONE)).hex();
-        when(challenges.countByPhoneHashAndCreatedAtAfter(hash, NOW.minus(WINDOW))).thenReturn(0L);
+        when(challenges.countCreatedAfter(hash, NOW.minus(WINDOW))).thenReturn(0L);
         when(farmers.findByPhoneHash(hash))
-                .thenReturn(Optional.of(new FarmerEntity(
+                .thenReturn(Optional.of(new FarmerSnapshot(
                         UUID.fromString("01800000-0000-7000-8000-000000000201"),
                         "Rahim",
                         hash,
@@ -90,21 +90,20 @@ class RequestOtpCommandHandlerTest {
                         "DHA",
                         "DHK",
                         "bn",
-                        NOW,
+                        null,
+                        "MIGRATION",
                         NOW)));
-        when(challenges.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
         RequestOtpResult result = handler.handle(new RequestOtpCommand(PHONE));
 
         assertThat(result.expiresInSeconds()).isEqualTo(300);
         assertThat(result.otpDeliveryMode()).isEqualTo("DEV_FIXED");
-        ArgumentCaptor<OtpChallengeEntity> saved = ArgumentCaptor.forClass(OtpChallengeEntity.class);
-        verify(challenges).consumeOpenChallenges(hash, NOW);
+        ArgumentCaptor<OtpChallenge> saved = ArgumentCaptor.forClass(OtpChallenge.class);
+        verify(challenges).consumeOpen(hash, NOW);
         verify(challenges).save(saved.capture());
-        assertThat(saved.getValue().getPhoneHash()).isEqualTo(hash);
-        assertThat(saved.getValue().getAttempts()).isEqualTo((short) 0);
-        assertThat(saved.getValue().getExpiresAt()).isEqualTo(NOW.plus(TTL));
-        assertThat(saved.getValue().getConsumedAt()).isNull();
+        assertThat(saved.getValue().phoneHash()).isEqualTo(hash);
+        assertThat(saved.getValue().attempts()).isEqualTo(0);
+        assertThat(saved.getValue().expiresAt()).isEqualTo(NOW.plus(TTL));
+        assertThat(saved.getValue().consumedAt()).isNull();
     }
 
     @Test
@@ -131,7 +130,7 @@ class RequestOtpCommandHandlerTest {
     @Test
     void rateLimitedIs429() {
         String hash = PhoneHash.of(PhoneNumber.parse(PHONE)).hex();
-        when(challenges.countByPhoneHashAndCreatedAtAfter(hash, NOW.minus(WINDOW))).thenReturn(3L);
+        when(challenges.countCreatedAfter(hash, NOW.minus(WINDOW))).thenReturn(3L);
         assertThatThrownBy(() -> handler.handle(new RequestOtpCommand(PHONE)))
                 .isInstanceOf(IdentityException.class)
                 .satisfies(ex -> {

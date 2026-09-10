@@ -2,7 +2,7 @@ package com.rootcause.foshol.identity.application.query.handler;
 
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.identity.application.query.DivisionResponse;
-import com.rootcause.foshol.identity.application.query.GeoCataloguePort;
+import com.rootcause.foshol.identity.application.port.GeoCataloguePort;
 import com.rootcause.foshol.identity.application.query.ListDivisionsQuery;
 import java.util.List;
 import org.springframework.stereotype.Service;

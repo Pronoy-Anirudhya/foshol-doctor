@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.web;
 
-import com.rootcause.foshol.common.RejectionReason;
+import com.rootcause.foshol.common.enums.RejectionReason;
 import java.util.List;
 import java.util.UUID;
 

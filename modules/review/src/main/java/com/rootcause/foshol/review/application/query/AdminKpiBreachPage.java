@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query;
 
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.KpiKind;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

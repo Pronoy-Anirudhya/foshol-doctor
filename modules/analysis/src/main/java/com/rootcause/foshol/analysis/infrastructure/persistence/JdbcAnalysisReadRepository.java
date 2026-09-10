@@ -1,12 +1,12 @@
 package com.rootcause.foshol.analysis.infrastructure.persistence;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
-import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
-import com.rootcause.foshol.analysis.application.query.ReadOnlyDataSource;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.analysis.application.port.AnalysisReadRepository;
+import com.rootcause.foshol.common.jdbc.ReadOnlyDataSource;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.SymptomSource;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.SymptomView;
 import com.rootcause.foshol.knowledge.api.DiseaseView;

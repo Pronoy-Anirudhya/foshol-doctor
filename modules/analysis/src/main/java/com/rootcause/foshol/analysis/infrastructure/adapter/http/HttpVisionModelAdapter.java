@@ -1,10 +1,10 @@
 package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.rootcause.foshol.analysis.application.port.RawCandidate;
 import com.rootcause.foshol.analysis.application.port.VisionModelPort;
 import com.rootcause.foshol.analysis.application.port.VisionRequest;
 import com.rootcause.foshol.analysis.application.port.VisionResult;
+import com.rootcause.foshol.analysis.domain.RawCandidate;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
 import java.math.BigDecimal;
 import java.util.ArrayList;

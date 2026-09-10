@@ -1,9 +1,10 @@
 package com.rootcause.foshol.notification.infrastructure.sse;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.notification.api.AdvisoryNotification;
-import com.rootcause.foshol.notification.application.OfficerQueueNudgePort;
+import com.rootcause.foshol.notification.application.port.OfficerQueueNudgePort;
+import com.rootcause.foshol.notification.application.port.SseSubscribePort;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Component
-public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
+public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscribePort {
 
     public static final String EVENT_ADVISORY = "advisory";
     public static final String EVENT_CASE_STATUS = "case-status";
@@ -42,6 +43,7 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort {
         this.clock = clock;
     }
 
+    @Override
     public SseEmitter subscribe(UUID subjectId, Role role, String districtCode, String lastEventId, Duration timeout) {
         SseEmitter emitter = new SseEmitter(timeout.toMillis());
         attach(subjectId, role, districtCode, lastEventId, emitter);

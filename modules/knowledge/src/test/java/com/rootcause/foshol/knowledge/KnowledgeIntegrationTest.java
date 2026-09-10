@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.common.cqrs.CqrsBuses;
@@ -67,6 +67,7 @@ class KnowledgeIntegrationTest {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.jpa.open-in-view", () -> "false");
+        registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.flyway.locations", () -> "filesystem:" + flywayDir());
         registry.add(ConfigKeys.KNOWLEDGE_MATCH_VECTOR_THRESHOLD, () -> "0.72");
         registry.add(ConfigKeys.KNOWLEDGE_MATCH_FUZZY_THRESHOLD, () -> "0.60");
@@ -104,7 +105,28 @@ class KnowledgeIntegrationTest {
         assertThat(diseases).isEqualTo(KnowledgeTaxonomy.DISEASE_CLASS_COUNT);
         Integer remedies = jdbc.queryForObject(
                 "select count(*) from remedy where deleted_at is null and active = true", Integer.class);
-        assertThat(remedies).isGreaterThanOrEqualTo(11);
+        assertThat(remedies).isGreaterThanOrEqualTo(45);
+        Integer todoRemedies = jdbc.queryForObject(
+                "select count(*) from remedy where deleted_at is null and title_bn like '%TODO(content-owner%'",
+                Integer.class);
+        assertThat(todoRemedies).isZero();
+        Integer todoPhrases = jdbc.queryForObject(
+                "select count(*) from symptom_phrase where deleted_at is null and phrase_bn like '%TODO(content-owner%'",
+                Integer.class);
+        assertThat(todoPhrases).isZero();
+        Integer diseasesWithoutRemedy = jdbc.queryForObject(
+                """
+                select count(*) from disease d
+                where d.deleted_at is null
+                  and d.is_healthy = false
+                  and not exists (
+                      select 1 from remedy r
+                      where r.disease_id = d.id
+                        and r.deleted_at is null
+                        and r.active = true)
+                """,
+                Integer.class);
+        assertThat(diseasesWithoutRemedy).isZero();
 
         List<NormalisedPhrase> phrases = jdbc.query(
                 "select phrase_bn, normalised_bn from symptom_phrase where deleted_at is null",

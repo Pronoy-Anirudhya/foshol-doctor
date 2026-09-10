@@ -11,14 +11,14 @@ import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.command.RunAnalysisCommand;
 import com.rootcause.foshol.analysis.application.command.handler.RunAnalysisCommandHandler;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.Severity;
-import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.enums.Severity;
+import com.rootcause.foshol.common.enums.SymptomSource;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.common.cqrs.CqrsBuses;
@@ -324,10 +324,10 @@ class AnalysisIntegrationTest {
                 "corr-it",
                 Instant.parse("2026-09-07T00:00:00Z"),
                 new BigDecimal("1"),
-                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL,
                 null,
                 null,
-                com.rootcause.foshol.common.MetricsSource.FORM);
+                com.rootcause.foshol.common.enums.MetricsSource.FORM);
     }
 
     private static List<CaseImageRef> images() {

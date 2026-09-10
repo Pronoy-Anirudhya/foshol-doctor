@@ -1,7 +1,7 @@
 package com.rootcause.foshol.analysis.api;
 
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.DecisionPath;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.SymptomView;
 import java.math.BigDecimal;

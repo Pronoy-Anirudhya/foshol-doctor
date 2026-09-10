@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;

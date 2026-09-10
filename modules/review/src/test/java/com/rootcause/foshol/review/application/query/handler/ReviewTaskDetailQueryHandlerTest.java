@@ -6,18 +6,18 @@ import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
-import com.rootcause.foshol.common.RemedyRateBasis;
-import com.rootcause.foshol.common.RemedyRateUnit;
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
-import com.rootcause.foshol.common.CandidateSource;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
+import com.rootcause.foshol.common.enums.RemedyRateBasis;
+import com.rootcause.foshol.common.enums.RemedyRateUnit;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
+import com.rootcause.foshol.common.enums.CandidateSource;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
@@ -83,7 +83,7 @@ class ReviewTaskDetailQueryHandlerTest {
     private OfficerLookupApi officers;
 
     @Mock
-    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+    private com.rootcause.foshol.review.application.command.ReviewDistrictGuard districtGuard;
 
     @Test
     void missingTask() {

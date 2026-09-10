@@ -6,7 +6,7 @@ import com.rootcause.foshol.analysis.application.port.EmbeddingRequest;
 import com.rootcause.foshol.analysis.application.port.EmbeddingResult;
 import com.rootcause.foshol.analysis.application.port.TextEmbeddingPort;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

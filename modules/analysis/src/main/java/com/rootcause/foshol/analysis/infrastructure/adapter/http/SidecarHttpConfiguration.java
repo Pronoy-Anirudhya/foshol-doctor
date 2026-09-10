@@ -1,7 +1,7 @@
 package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

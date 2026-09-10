@@ -2,7 +2,7 @@ package com.rootcause.foshol.analysis.infrastructure.adapter.storage;
 
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.PresignedUrl;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;

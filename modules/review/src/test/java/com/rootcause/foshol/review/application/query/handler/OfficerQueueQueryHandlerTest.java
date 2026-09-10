@@ -2,8 +2,8 @@ package com.rootcause.foshol.review.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.domain.ReviewException;

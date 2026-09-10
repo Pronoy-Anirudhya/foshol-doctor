@@ -1,15 +1,13 @@
 package com.rootcause.foshol.analysis.web;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
 import com.rootcause.foshol.analysis.application.query.GradcamLink;
 import com.rootcause.foshol.analysis.application.query.GradcamLinkQuery;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import java.net.URI;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -36,7 +34,7 @@ public class AnalysisController {
     }
 
     @GetMapping("/{caseId}/analysis")
-    public ResponseEntity<Map<String, Object>> getAnalysis(@PathVariable UUID caseId, Authentication authentication) {
+    public ResponseEntity<AnalysisDetailResponse> getAnalysis(@PathVariable UUID caseId, Authentication authentication) {
         Caller caller = Caller.from(authentication);
         if (caller == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -56,26 +54,8 @@ public class AnalysisController {
         return link.map(this::redirect).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    private Map<String, Object> toBody(AnalysisView view) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("caseId", view.caseId());
-        body.put("decisionPath", view.decisionPath().name());
-        body.put("mode", view.mode().name());
-        body.put("top1Confidence", view.top1Confidence());
-        body.put("top2Confidence", view.top2Confidence());
-        body.put("margin", view.margin());
-        body.put("candidates", view.candidates());
-        body.put("symptoms", view.symptoms());
-        body.put("transcriptBn", view.transcriptBn());
-        body.put("asrConfidence", view.asrConfidence());
-        body.put("hasGradcam", view.gradcamObjectKey() != null);
-        body.put("unmappedLabels", view.unmappedLabels());
-        body.put("visionModelId", view.visionModelId());
-        body.put("visionModelVersion", view.visionModelVersion());
-        body.put("latencyMs", view.latencyMs());
-        body.put("errorCode", view.errorCode());
-        body.put("thresholds", Map.of("high", settings.confidenceHigh(), "low", settings.confidenceLow()));
-        return body;
+    private AnalysisDetailResponse toBody(AnalysisView view) {
+        return AnalysisDetailResponse.from(view, settings.confidenceHigh(), settings.confidenceLow());
     }
 
     private ResponseEntity<Void> redirect(GradcamLink link) {
@@ -90,8 +70,8 @@ public class AnalysisController {
             UUID id = UUID.fromString(authentication.getName());
             Role role = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
-                    .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
-                    .map(Role::valueOf)
+                    .filter(authority -> authority.startsWith(Role.AUTHORITY_PREFIX))
+                    .map(Role::fromAuthority)
                     .findFirst()
                     .orElse(Role.FARMER);
             return new Caller(id, role);

@@ -1,0 +1,49 @@
+package com.rootcause.foshol.identity.web;
+
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.identity.domain.IdentityException;
+import java.net.URI;
+import java.util.Map;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class IdentityExceptionHandler {
+
+    @ExceptionHandler(IdentityException.class)
+    public ResponseEntity<Map<String, Object>> handle(IdentityException ex) {
+        Map<String, Object> body = Map.of(
+                "type", URI.create("https://foshol.local/problems/" + ex.errorCode().toLowerCase().replace('_', '-')),
+                "title", titleFor(ex.status()),
+                "status", ex.status(),
+                "detail", ex.getMessage(),
+                "code", ex.errorCode(),
+                "correlationId", CorrelationId.current());
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(ex.status())
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON);
+        if (ex.status() == 429) {
+            builder.header(HttpHeaders.RETRY_AFTER, "600");
+        }
+        return builder.body(body);
+    }
+
+    private static String titleFor(int status) {
+        return switch (status) {
+            case 400 -> "Bad Request";
+            case 401 -> "Unauthorized";
+            case 403 -> "Forbidden";
+            case 404 -> "Not Found";
+            case 409 -> "Conflict";
+            case 415 -> "Unsupported Media Type";
+            case 429 -> "Too Many Requests";
+            case 503 -> "Service Unavailable";
+            default -> "Error";
+        };
+    }
+}

@@ -1,10 +1,10 @@
 package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.SymptomRefView;
-import com.rootcause.foshol.review.application.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.command.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.command.RecordOfficerSymptomsCommand;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
 import com.rootcause.foshol.review.domain.ReviewException;

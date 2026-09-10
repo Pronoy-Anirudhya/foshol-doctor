@@ -7,7 +7,9 @@ dependencies {
     api libs.uuid.creator
     api libs.slf4j.api
     api platform(libs.spring.modulith.bom)
+    api platform(libs.spring.boot.dependencies)
     api 'org.springframework.modulith:spring-modulith-api'
+    api 'org.springframework:spring-beans'
     testImplementation platform(libs.spring.boot.dependencies)
     testRuntimeOnly platform(libs.spring.boot.dependencies)
     testImplementation 'org.junit.jupiter:junit-jupiter'

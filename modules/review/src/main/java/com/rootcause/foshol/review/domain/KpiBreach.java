@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.domain;
 
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.KpiKind;
 import java.time.Instant;
 import java.util.UUID;
 

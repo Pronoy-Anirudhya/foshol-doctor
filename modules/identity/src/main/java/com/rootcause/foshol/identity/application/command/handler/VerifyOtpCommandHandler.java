@@ -1,25 +1,25 @@
 package com.rootcause.foshol.identity.application.command.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.identity.application.command.AuthTokenResult;
 import com.rootcause.foshol.identity.application.command.VerifyOtpCommand;
+import com.rootcause.foshol.identity.application.port.FarmerSnapshot;
+import com.rootcause.foshol.identity.application.port.FarmerStore;
+import com.rootcause.foshol.identity.application.port.GeoLabelPort;
+import com.rootcause.foshol.identity.application.port.GeoLabels;
+import com.rootcause.foshol.identity.application.port.IssuedToken;
+import com.rootcause.foshol.identity.application.port.OtpChallengeStore;
+import com.rootcause.foshol.identity.application.port.TokenIssuer;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.domain.OtpChallenge;
 import com.rootcause.foshol.identity.domain.OtpCodeHash;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
-import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.GeoLabelLookup;
-import com.rootcause.foshol.identity.infrastructure.JwtService;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
-import com.rootcause.foshol.common.cqrs.CommandHandler;
-
 import java.time.Clock;
 import java.time.Instant;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,25 +32,25 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
         return VerifyOtpCommand.class;
     }
 
-    private final FarmerJpaRepository farmers;
-    private final OtpChallengeJpaRepository challenges;
-    private final JwtService jwtService;
-    private final GeoLabelLookup geoLabels;
+    private final FarmerStore farmers;
+    private final OtpChallengeStore challenges;
+    private final TokenIssuer tokens;
+    private final GeoLabelPort geoLabels;
     private final Clock clock;
     private final boolean otpEnabled;
     private final int maxAttempts;
 
     public VerifyOtpCommandHandler(
-            FarmerJpaRepository farmers,
-            OtpChallengeJpaRepository challenges,
-            JwtService jwtService,
-            GeoLabelLookup geoLabels,
+            FarmerStore farmers,
+            OtpChallengeStore challenges,
+            TokenIssuer tokens,
+            GeoLabelPort geoLabels,
             Clock clock,
             @Value("${" + ConfigKeys.AUTH_OTP_ENABLED + "}") boolean otpEnabled,
             @Value("${" + ConfigKeys.AUTH_OTP_MAX_ATTEMPTS + "}") int maxAttempts) {
         this.farmers = farmers;
         this.challenges = challenges;
-        this.jwtService = jwtService;
+        this.tokens = tokens;
         this.geoLabels = geoLabels;
         this.clock = clock;
         this.otpEnabled = otpEnabled;
@@ -66,17 +66,9 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
         PhoneNumber phone = PhoneNumber.parse(command.phone());
         String phoneHash = PhoneHash.of(phone).hex();
         Instant now = clock.instant();
-        OtpChallengeEntity row = challenges
-                .findFirstByPhoneHashAndConsumedAtIsNullOrderByCreatedAtDesc(phoneHash)
+        OtpChallenge challenge = challenges
+                .findLatestOpen(phoneHash)
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_OTP_INVALID, 401, "The code is not valid."));
-        OtpChallenge challenge = new OtpChallenge(
-                row.getId(),
-                row.getPhoneHash(),
-                row.getCodeHash(),
-                row.getAttempts(),
-                row.getExpiresAt(),
-                row.getConsumedAt(),
-                row.getCreatedAt());
         if (challenge.isExpired(now)) {
             throw new IdentityException(ErrorCodes.ERR_OTP_EXPIRED, 401, "The code has expired.");
         }
@@ -86,32 +78,34 @@ public class VerifyOtpCommandHandler implements CommandHandler<VerifyOtpCommand,
         String expected = OtpCodeHash.compute(challenge.id(), phoneHash, command.code());
         if (!OtpCodeHash.equalsConstantTime(expected, challenge.codeHash())) {
             int attempts = challenge.incrementAttempts();
-            row.setAttempts((short) attempts);
             if (attempts >= maxAttempts) {
-                row.setConsumedAt(now);
+                challenge.consume(now);
+                challenges.save(challenge);
                 throw new IdentityException(
                         ErrorCodes.ERR_OTP_ATTEMPTS_EXCEEDED, 401, "Too many incorrect attempts.");
             }
+            challenges.save(challenge);
             throw new IdentityException(ErrorCodes.ERR_OTP_INVALID, 401, "The code is not valid.");
         }
-        var farmer = farmers.findByPhoneHash(phoneHash)
+        FarmerSnapshot farmer = farmers.findByPhoneHash(phoneHash)
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_OTP_INVALID, 401, "The code is not valid."));
-        row.setConsumedAt(now);
-        JwtService.IssuedToken token = jwtService.issue(farmer.getId(), Role.FARMER, now);
-        GeoLabelLookup.Labels geo = geoLabels.forDistrict(farmer.getDistrictCode(), farmer.getDivisionCode());
+        challenge.consume(now);
+        challenges.save(challenge);
+        IssuedToken token = tokens.issue(farmer.id(), Role.FARMER, now);
+        GeoLabels geo = geoLabels.forDistrict(farmer.districtCode(), farmer.divisionCode());
         return new AuthTokenResult(
                 token.compact(),
                 token.expiresAt(),
                 Role.FARMER,
-                farmer.getId(),
-                farmer.getName(),
-                farmer.getDistrictCode(),
-                farmer.getDivisionCode(),
+                farmer.id(),
+                farmer.name(),
+                farmer.districtCode(),
+                farmer.divisionCode(),
                 geo.districtNameBn(),
                 geo.districtNameEn(),
                 geo.divisionNameBn(),
                 geo.divisionNameEn(),
-                farmer.getPreferredLanguage(),
+                farmer.preferredLanguage(),
                 null);
     }
 }

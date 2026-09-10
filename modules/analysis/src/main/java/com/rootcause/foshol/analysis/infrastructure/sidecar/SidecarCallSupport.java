@@ -1,8 +1,8 @@
 package com.rootcause.foshol.analysis.infrastructure.sidecar;
 
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;

@@ -5,12 +5,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.rootcause.foshol.common.AdvisoryAction;
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.AdvisoryRevised;
 import com.rootcause.foshol.common.events.CaseRejected;
@@ -18,10 +18,10 @@ import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.notification.api.NotificationChannel;
-import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryApproved;
-import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryRevised;
-import com.rootcause.foshol.notification.application.command.handler.HandleCaseRejected;
-import com.rootcause.foshol.notification.application.command.handler.HandleCaseStatusChanged;
+import com.rootcause.foshol.notification.application.command.handler.AdvisoryApprovedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.AdvisoryRevisedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.CaseRejectedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.CaseStatusChangedEventHandler;
 import com.rootcause.foshol.notification.domain.DeliveryState;
 import com.rootcause.foshol.notification.infrastructure.channel.SmsChannel;
 import com.rootcause.foshol.notification.infrastructure.channel.WebPushChannel;
@@ -92,16 +92,16 @@ class NotificationFanOutIT {
     }
 
     @Autowired
-    private HandleCaseStatusChanged status;
+    private CaseStatusChangedEventHandler status;
 
     @Autowired
-    private HandleAdvisoryApproved approved;
+    private AdvisoryApprovedEventHandler approved;
 
     @Autowired
-    private HandleAdvisoryRevised revised;
+    private AdvisoryRevisedEventHandler revised;
 
     @Autowired
-    private HandleCaseRejected rejected;
+    private CaseRejectedEventHandler rejected;
 
     @Autowired
     private SseSubscriptionRegistry registry;

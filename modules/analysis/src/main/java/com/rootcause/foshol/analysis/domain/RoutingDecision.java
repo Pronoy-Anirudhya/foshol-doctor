@@ -1,6 +1,6 @@
 package com.rootcause.foshol.analysis.domain;
 
-import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.enums.DecisionPath;
 import java.math.BigDecimal;
 
 public record RoutingDecision(

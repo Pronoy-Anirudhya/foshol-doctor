@@ -1,6 +1,6 @@
 package com.rootcause.foshol.intake.domain.spec;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import java.util.UUID;
 

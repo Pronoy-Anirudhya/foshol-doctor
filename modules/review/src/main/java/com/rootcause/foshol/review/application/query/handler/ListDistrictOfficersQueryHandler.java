@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query.handler;
 
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.review.application.query.ColleagueOfficerView;

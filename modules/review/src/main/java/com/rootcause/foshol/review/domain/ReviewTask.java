@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.domain;
 
-import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.enums.ReviewState;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;

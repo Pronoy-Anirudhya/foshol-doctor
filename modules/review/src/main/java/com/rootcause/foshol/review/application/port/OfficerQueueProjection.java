@@ -1,8 +1,8 @@
 package com.rootcause.foshol.review.application.port;
 
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.ReviewState;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.rootcause.foshol.notification.application.query.handler;
 
-import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationRow;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsPage;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsQuery;

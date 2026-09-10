@@ -4,14 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
 import com.rootcause.foshol.analysis.api.AnalysisView;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
@@ -42,10 +42,10 @@ import com.rootcause.foshol.review.application.query.OfficerQueueQuery;
 import com.rootcause.foshol.review.application.query.handler.OfficerQueueQueryHandler;
 import com.rootcause.foshol.review.application.query.OfficerQueueRow;
 import com.rootcause.foshol.review.domain.ReviewException;
-import com.rootcause.foshol.review.infrastructure.CreateReviewTaskOnAnalysisListener;
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.review.infrastructure.listener.CreateReviewTaskOnAnalysisListener;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.enums.Severity;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -285,7 +285,7 @@ class ReviewTaskUniversalityIT {
                         "rice",
                         "DHA",
                         "DHK",
-                        com.rootcause.foshol.common.CaseStatus.ANALYSED,
+                        com.rootcause.foshol.common.enums.CaseStatus.ANALYSED,
                         DecisionPath.PRIMARY,
                         null,
                         null,
@@ -294,10 +294,10 @@ class ReviewTaskUniversalityIT {
                         "c",
                         submittedAt,
                         new BigDecimal("1"),
-                        com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                        com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL,
                         null,
                         null,
-                        com.rootcause.foshol.common.MetricsSource.FORM));
+                        com.rootcause.foshol.common.enums.MetricsSource.FORM));
         return id;
     }
 

@@ -6,15 +6,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.analysis.application.AnalysisSettings;
+import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.PresignedUrl;
-import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
+import com.rootcause.foshol.analysis.application.port.AnalysisReadRepository;
 import com.rootcause.foshol.analysis.application.query.GradcamLink;
 import com.rootcause.foshol.analysis.application.query.GradcamLinkQuery;
 import com.rootcause.foshol.analysis.domain.AnalysisException;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 
 import java.math.BigDecimal;

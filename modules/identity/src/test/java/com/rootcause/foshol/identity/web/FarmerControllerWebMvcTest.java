@@ -7,14 +7,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.identity.application.command.FarmerImportResult;
 import com.rootcause.foshol.identity.application.command.RegisterFarmerResult;
-import com.rootcause.foshol.identity.application.FarmerRecord;
+import com.rootcause.foshol.identity.application.query.FarmerRecord;
 import com.rootcause.foshol.identity.domain.IdentityException;
-import com.rootcause.foshol.identity.infrastructure.IdentityExceptionHandler;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

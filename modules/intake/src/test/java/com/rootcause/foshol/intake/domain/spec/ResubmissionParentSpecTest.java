@@ -2,9 +2,9 @@ package com.rootcause.foshol.intake.domain.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import com.rootcause.foshol.intake.domain.CaseImage;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
 import com.rootcause.foshol.intake.domain.vo.CaseId;

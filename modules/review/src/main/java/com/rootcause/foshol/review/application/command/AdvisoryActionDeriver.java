@@ -1,7 +1,7 @@
 package com.rootcause.foshol.review.application.command;
 
-import com.rootcause.foshol.common.AdvisoryAction;
-import com.rootcause.foshol.common.CandidateSource;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.enums.CandidateSource;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.knowledge.api.RemedyView;
 import java.util.HashSet;

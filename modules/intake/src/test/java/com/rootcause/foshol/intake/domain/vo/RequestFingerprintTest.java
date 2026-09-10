@@ -2,7 +2,7 @@ package com.rootcause.foshol.intake.domain.vo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;

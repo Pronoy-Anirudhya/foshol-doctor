@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query;
 
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.common.cqrs.Query;
 import java.util.UUID;
 

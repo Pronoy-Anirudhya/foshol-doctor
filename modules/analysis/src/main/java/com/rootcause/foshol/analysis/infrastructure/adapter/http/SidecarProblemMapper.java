@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rootcause.foshol.analysis.application.port.SidecarClientException;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.util.Set;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClientResponseException;

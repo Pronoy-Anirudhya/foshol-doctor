@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.enums.Severity;
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
 import com.rootcause.foshol.knowledge.application.port.ModelLabelIndex;
 import com.rootcause.foshol.knowledge.application.query.CropReadModel;

@@ -3,7 +3,7 @@ package com.rootcause.foshol.common.cqrs;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

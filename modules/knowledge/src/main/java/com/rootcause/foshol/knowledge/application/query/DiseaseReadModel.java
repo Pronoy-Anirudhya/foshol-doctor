@@ -1,6 +1,6 @@
 package com.rootcause.foshol.knowledge.application.query;
 
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.enums.Severity;
 import java.util.UUID;
 
 public record DiseaseReadModel(

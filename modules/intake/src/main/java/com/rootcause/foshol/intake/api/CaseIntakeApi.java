@@ -1,8 +1,8 @@
 package com.rootcause.foshol.intake.api;
 
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;

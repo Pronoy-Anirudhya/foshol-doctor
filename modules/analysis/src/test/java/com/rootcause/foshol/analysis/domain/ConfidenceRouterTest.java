@@ -2,8 +2,8 @@ package com.rootcause.foshol.analysis.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 

@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.intake.domain.IntakeException;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;
@@ -29,7 +29,7 @@ class CaseDetailQueryHandlerTest {
     private CaseQueryPort queries;
 
     @Mock
-    private com.rootcause.foshol.intake.application.StaffRegionAccess staffRegion;
+    private com.rootcause.foshol.intake.application.query.StaffRegionAccess staffRegion;
 
     @Test
     void hidesAnotherFarmersCase() {
@@ -58,10 +58,10 @@ class CaseDetailQueryHandlerTest {
                 null,
                 Instant.parse("2026-01-01T00:00:00Z"),
                 new java.math.BigDecimal("1"),
-                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL,
                 null,
                 null,
-                com.rootcause.foshol.common.MetricsSource.FORM);
+                com.rootcause.foshol.common.enums.MetricsSource.FORM);
         when(queries.findFarmerId(caseId)).thenReturn(Optional.of(UUID.randomUUID()));
         when(queries.findDetail(caseId)).thenReturn(Optional.of(view));
         when(staffRegion.allows(org.mockito.ArgumentMatchers.eq(Role.OFFICER), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(caseId)))

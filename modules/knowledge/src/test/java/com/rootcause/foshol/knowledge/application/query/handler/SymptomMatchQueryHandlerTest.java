@@ -8,10 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.knowledge.api.SymptomMatchRequest;
 import com.rootcause.foshol.knowledge.api.SymptomMatchResult;
-import com.rootcause.foshol.knowledge.application.MatchSettings;
+import com.rootcause.foshol.knowledge.application.config.MatchSettings;
 import com.rootcause.foshol.knowledge.application.port.CropIdIndex;
 import com.rootcause.foshol.knowledge.application.port.DiseaseScoringPort;
 import com.rootcause.foshol.knowledge.application.port.PhraseIndex;

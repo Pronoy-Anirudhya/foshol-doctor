@@ -1,7 +1,7 @@
 package com.rootcause.foshol.intake.web;
 
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.intake.api.IntakeAudio;
 import com.rootcause.foshol.intake.api.IntakeImage;
 import com.rootcause.foshol.intake.api.IntakeRequest;

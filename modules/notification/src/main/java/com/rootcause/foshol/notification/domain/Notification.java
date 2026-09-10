@@ -1,7 +1,7 @@
 package com.rootcause.foshol.notification.domain;
 
-import com.rootcause.foshol.common.BanglaNormalizer;
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
+import com.rootcause.foshol.common.enums.NotificationType;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;

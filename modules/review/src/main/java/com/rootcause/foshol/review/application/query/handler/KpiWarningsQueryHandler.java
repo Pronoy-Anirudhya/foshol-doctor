@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query.handler;
 
-import com.rootcause.foshol.review.application.ReviewKpiCalendar;
+import com.rootcause.foshol.review.application.command.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.KpiWarningView;
 import com.rootcause.foshol.review.application.query.KpiWarningsQuery;

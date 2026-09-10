@@ -3,10 +3,10 @@ package com.rootcause.foshol.analysis.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.SymptomSource;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.SymptomSource;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

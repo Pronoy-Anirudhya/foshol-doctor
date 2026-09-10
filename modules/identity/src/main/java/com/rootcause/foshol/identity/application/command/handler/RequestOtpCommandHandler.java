@@ -1,24 +1,22 @@
 package com.rootcause.foshol.identity.application.command.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.Uuid7;
+import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.identity.application.command.RequestOtpCommand;
 import com.rootcause.foshol.identity.application.command.RequestOtpResult;
+import com.rootcause.foshol.identity.application.port.FarmerStore;
+import com.rootcause.foshol.identity.application.port.OtpChallengeStore;
 import com.rootcause.foshol.identity.domain.IdentityException;
+import com.rootcause.foshol.identity.domain.OtpChallenge;
 import com.rootcause.foshol.identity.domain.OtpCodeHash;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
-import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeEntity;
-import com.rootcause.foshol.identity.infrastructure.OtpChallengeJpaRepository;
-import com.rootcause.foshol.common.cqrs.CommandHandler;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +29,8 @@ public class RequestOtpCommandHandler implements CommandHandler<RequestOtpComman
         return RequestOtpCommand.class;
     }
 
-    private final FarmerJpaRepository farmers;
-    private final OtpChallengeJpaRepository challenges;
+    private final FarmerStore farmers;
+    private final OtpChallengeStore challenges;
     private final Clock clock;
     private final boolean otpEnabled;
     private final Duration otpTtl;
@@ -41,8 +39,8 @@ public class RequestOtpCommandHandler implements CommandHandler<RequestOtpComman
     private final Duration rateWindow;
 
     public RequestOtpCommandHandler(
-            FarmerJpaRepository farmers,
-            OtpChallengeJpaRepository challenges,
+            FarmerStore farmers,
+            OtpChallengeStore challenges,
             Clock clock,
             @Value("${" + ConfigKeys.AUTH_OTP_ENABLED + "}") boolean otpEnabled,
             @Value("${" + ConfigKeys.AUTH_OTP_TTL + "}") Duration otpTtl,
@@ -68,7 +66,7 @@ public class RequestOtpCommandHandler implements CommandHandler<RequestOtpComman
         PhoneNumber phone = PhoneNumber.parse(command.phone());
         String phoneHash = PhoneHash.of(phone).hex();
         Instant now = clock.instant();
-        long recent = challenges.countByPhoneHashAndCreatedAtAfter(phoneHash, now.minus(rateWindow));
+        long recent = challenges.countCreatedAfter(phoneHash, now.minus(rateWindow));
         if (recent >= rateMax) {
             throw new IdentityException(
                     ErrorCodes.ERR_OTP_RATE_LIMITED, 429, "Too many one-time code requests. Try again later.");
@@ -77,11 +75,11 @@ public class RequestOtpCommandHandler implements CommandHandler<RequestOtpComman
         if (farmers.findByPhoneHash(phoneHash).isEmpty()) {
             throw new IdentityException(ErrorCodes.ERR_FARMER_NOT_FOUND, 404, "Farmer was not found.");
         }
-        challenges.consumeOpenChallenges(phoneHash, now);
+        challenges.consumeOpen(phoneHash, now);
         UUID id = Uuid7.create();
         String code = (devCode == null || devCode.isBlank()) ? "000000" : devCode;
         String codeHash = OtpCodeHash.compute(id, phoneHash, code);
-        challenges.save(new OtpChallengeEntity(id, phoneHash, codeHash, (short) 0, now.plus(otpTtl), null, now));
+        challenges.save(new OtpChallenge(id, phoneHash, codeHash, 0, now.plus(otpTtl), null, now));
         return new RequestOtpResult((int) otpTtl.toSeconds(), mode);
     }
 }

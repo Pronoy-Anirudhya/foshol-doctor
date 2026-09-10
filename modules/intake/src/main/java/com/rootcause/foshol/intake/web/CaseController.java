@@ -1,25 +1,24 @@
 package com.rootcause.foshol.intake.web;
 
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.common.cqrs.CommandBus;
+import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.intake.application.command.SubmitCaseCommand;
 import com.rootcause.foshol.intake.application.command.SubmitCaseResult;
 import com.rootcause.foshol.intake.application.query.CaseAudioUrlQuery;
 import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;
 import com.rootcause.foshol.intake.application.query.CaseImageUrlQuery;
 import com.rootcause.foshol.intake.application.query.FarmerCaseListQuery;
-import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;
 import com.rootcause.foshol.intake.application.query.PresignedUrlView;
-import com.rootcause.foshol.intake.infrastructure.WebIntakeAdapter;
+import com.rootcause.foshol.intake.domain.IntakeException;
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,17 +40,17 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/cases")
 public class CaseController {
 
-    private final WebIntakeAdapter intake;
+    private final CommandBus commands;
     private final QueryBus queries;
 
-    public CaseController(WebIntakeAdapter intake, QueryBus queries) {
-        this.intake = intake;
+    public CaseController(CommandBus commands, QueryBus queries) {
+        this.commands = commands;
         this.queries = queries;
     }
 
     @PostMapping
     @PreAuthorize("hasRole('FARMER')")
-    public ResponseEntity<Map<String, Object>> create(
+    public ResponseEntity<CaseAcceptedResponse> create(
             Authentication authentication,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @RequestParam UUID cropId,
@@ -65,7 +64,7 @@ public class CaseController {
             @RequestPart(value = "audio", required = false) MultipartFile audio,
             @RequestParam(value = "audioDurationMs", required = false) Integer audioDurationMs)
             throws Exception {
-        SubmitCaseResult result = intake.submitForHttp(MultipartCaseAssembler.assemble(
+        SubmitCaseResult result = commands.handle(SubmitCaseCommand.from(MultipartCaseAssembler.assemble(
                 UUID.fromString(authentication.getName()),
                 cropId,
                 noteBn,
@@ -77,7 +76,7 @@ public class CaseController {
                 audioDurationMs,
                 images,
                 audio,
-                parseIdempotencyKey(idempotencyKey)));
+                parseIdempotencyKey(idempotencyKey))));
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.LOCATION, "/api/v1/cases/" + result.caseId());
         if (result.replayed()) {
@@ -145,9 +144,8 @@ public class CaseController {
     static Role roleOf(Authentication authentication) {
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
-                .map(a -> a.substring("ROLE_".length()))
-                .map(Role::valueOf)
+                .filter(a -> a.startsWith(Role.AUTHORITY_PREFIX))
+                .map(Role::fromAuthority)
                 .findFirst()
                 .orElseThrow(() -> new IntakeException(ErrorCodes.ERR_FORBIDDEN, 403, "Role is required."));
     }
@@ -164,19 +162,17 @@ public class CaseController {
         }
     }
 
-    private static Map<String, Object> acceptedBody(SubmitCaseResult result) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("caseId", result.caseId());
-        body.put("status", "SUBMITTED");
+    private static CaseAcceptedResponse acceptedBody(SubmitCaseResult result) {
+        String submittedAt = null;
         String marker = "\"submittedAt\":\"";
         int start = result.body().indexOf(marker);
         if (start >= 0) {
             start += marker.length();
             int end = result.body().indexOf('"', start);
             if (end > start) {
-                body.put("submittedAt", result.body().substring(start, end));
+                submittedAt = result.body().substring(start, end);
             }
         }
-        return body;
+        return CaseAcceptedResponse.submitted(result.caseId(), submittedAt);
     }
 }

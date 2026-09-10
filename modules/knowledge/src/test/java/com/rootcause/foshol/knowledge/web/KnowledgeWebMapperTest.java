@@ -2,7 +2,7 @@ package com.rootcause.foshol.knowledge.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.enums.Severity;
 import com.rootcause.foshol.knowledge.application.query.CropReadModel;
 import com.rootcause.foshol.knowledge.application.query.DiseaseReadModel;
 import java.util.UUID;

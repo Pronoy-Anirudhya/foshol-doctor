@@ -2,8 +2,8 @@ package com.rootcause.foshol.analysis.application.query.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
 import com.rootcause.foshol.analysis.application.query.AnalysisDetailQuery;
-import com.rootcause.foshol.analysis.application.query.AnalysisReadRepository;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.analysis.application.port.AnalysisReadRepository;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 

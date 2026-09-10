@@ -6,7 +6,7 @@ import com.rootcause.foshol.analysis.application.port.SpeechToTextPort;
 import com.rootcause.foshol.analysis.application.port.TranscriptRequest;
 import com.rootcause.foshol.analysis.application.port.TranscriptResult;
 import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarCallSupport;
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

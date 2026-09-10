@@ -1,6 +1,6 @@
 package com.rootcause.foshol.common.events;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import java.time.Instant;
 import java.util.UUID;
 
