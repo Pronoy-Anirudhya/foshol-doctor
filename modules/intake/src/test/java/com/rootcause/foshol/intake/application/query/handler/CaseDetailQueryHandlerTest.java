@@ -50,6 +50,8 @@ class CaseDetailQueryHandlerTest {
                 caseId,
                 UUID.randomUUID(),
                 "ধান",
+                "Rice",
+                false,
                 CaseStatus.SUBMITTED,
                 null,
                 null,

@@ -14,6 +14,8 @@ public record CaseDetailView(
         UUID caseId,
         UUID cropId,
         String cropNameBn,
+        String cropNameEn,
+        boolean cropNameEnFallback,
         CaseStatus status,
         DecisionPath decisionPath,
         String noteBn,

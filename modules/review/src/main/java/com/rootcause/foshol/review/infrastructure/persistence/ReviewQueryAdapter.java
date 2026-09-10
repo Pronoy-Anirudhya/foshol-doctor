@@ -4,6 +4,7 @@ import com.rootcause.foshol.common.enums.AiMode;
 import com.rootcause.foshol.common.enums.DecisionPath;
 import com.rootcause.foshol.common.jdbc.ReadOnlyDataSource;
 import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.CatalogueLocale;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminStatsView;
 import com.rootcause.foshol.review.application.query.KpiWarningView;
@@ -272,10 +273,14 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
                 raw.farmerName(),
                 raw.cropCode(),
                 raw.cropNameBn(),
+                CatalogueLocale.enOrBn(null, raw.cropNameBn()),
+                CatalogueLocale.enFallback((String) null),
                 raw.districtCode(),
                 raw.decisionPath() == null ? null : DecisionPath.valueOf(raw.decisionPath()),
                 raw.topDiseaseId(),
                 raw.topDiseaseNameBn(),
+                CatalogueLocale.enOrBn(null, raw.topDiseaseNameBn()),
+                CatalogueLocale.enFallback(null, raw.topDiseaseNameBn()),
                 raw.topConfidence(),
                 raw.imageCount(),
                 raw.hasAudio(),

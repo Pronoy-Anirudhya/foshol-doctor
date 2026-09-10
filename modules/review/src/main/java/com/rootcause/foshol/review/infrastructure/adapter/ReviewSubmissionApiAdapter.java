@@ -1,6 +1,7 @@
 package com.rootcause.foshol.review.infrastructure.adapter;
 
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
+import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.review.api.AdvisoryView;
@@ -87,30 +88,19 @@ public class ReviewSubmissionApiAdapter implements ReviewSubmissionApi {
         for (AdvisoryRemedyEntity row : rows) {
             remedies.add(new AdvisoryRemedy(row.getRemedyId(), row.getDisplayOrder()));
             RemedyView kb = byId.get(row.getRemedyId());
-            refs.add(new RemedyRefView(
-                    row.getRemedyId(),
-                    kb == null ? null : kb.type(),
-                    kb == null ? "" : kb.titleBn(),
-                    kb == null ? List.of() : kb.stepsBn(),
-                    kb == null ? null : kb.dosageBn(),
-                    kb == null ? null : kb.phiDays(),
-                    kb == null ? "" : kb.sourceRef(),
-                    kb == null ? null : kb.rateAmount(),
-                    kb == null ? null : kb.rateUnit(),
-                    kb == null ? null : kb.rateBasis(),
-                    kb == null ? null : kb.rateNotesBn(),
-                    null));
+            refs.add(kb == null ? RemedyRefView.missing(row.getRemedyId()) : RemedyRefView.from(kb, null));
         }
         Advisory advisory = AdvisoryMapper.toDomain(entity, remedies);
         String officerName = officers.findById(advisory.officerId()).map(o -> o.name()).orElse("");
-        String diseaseNameBn = entity.getDiseaseId() == null
-                ? null
-                : knowledge.findDiseaseById(entity.getDiseaseId()).map(d -> d.nameBn()).orElse(null);
-        return new AdvisoryView(
+        Optional<DiseaseView> disease = entity.getDiseaseId() == null
+                ? Optional.empty()
+                : knowledge.findDiseaseById(entity.getDiseaseId());
+        return AdvisoryView.of(
                 advisory.id(),
                 advisory.caseId(),
                 advisory.diseaseId(),
-                diseaseNameBn,
+                disease.map(DiseaseView::nameBn).orElse(null),
+                disease.map(DiseaseView::nameEn).orElse(null),
                 advisory.officerId(),
                 officerName,
                 advisory.action(),

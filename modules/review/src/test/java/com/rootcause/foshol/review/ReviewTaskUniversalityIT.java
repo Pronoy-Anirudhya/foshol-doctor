@@ -313,7 +313,7 @@ class ReviewTaskUniversalityIT {
                 new BigDecimal("0.10"),
                 top1 == null
                         ? List.of()
-                        : List.of(new CandidateView(DISEASE_D, "brown_spot", "d", top1, 1, CandidateSource.MODEL)),
+                        : List.of(new CandidateView(DISEASE_D, "brown_spot", "d", "d", false, top1, 1, CandidateSource.MODEL)),
                 List.of(),
                 false,
                 1,
@@ -380,7 +380,7 @@ class ReviewTaskUniversalityIT {
                             new BigDecimal("0.40"),
                             new BigDecimal("0.51"),
                             List.of(new CandidateView(
-                                    DISEASE_D, "brown_spot", "d", new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
+                                    DISEASE_D, "brown_spot", "d", "d", false, new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
                             List.of(),
                             null,
                             null,
@@ -402,7 +402,7 @@ class ReviewTaskUniversalityIT {
             return new KnowledgeQueryApi() {
                 @Override
                 public List<CropView> listCrops() {
-                    return List.of();
+                    return List.of(new CropView(CROP, "rice", "rice", "Rice", "crop-rice"));
                 }
 
                 @Override
@@ -412,7 +412,7 @@ class ReviewTaskUniversalityIT {
 
                 @Override
                 public Optional<CropView> findCropByCode(String code) {
-                    return Optional.empty();
+                    return Optional.of(new CropView(CROP, "rice", "rice", "Rice", "crop-rice"));
                 }
 
                 @Override
@@ -437,10 +437,10 @@ class ReviewTaskUniversalityIT {
                     return List.of(
                             new RemedyView(
                                     REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "",
-                                    null, null, null, null),
+                                    null, null, null, null, null, null, null, null),
                             new RemedyView(
                                     REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "",
-                                    null, null, null, null));
+                                    null, null, null, null, null, null, null, null));
                 }
 
                 @Override

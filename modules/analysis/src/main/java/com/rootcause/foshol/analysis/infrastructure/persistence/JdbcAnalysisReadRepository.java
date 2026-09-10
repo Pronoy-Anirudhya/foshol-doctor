@@ -130,10 +130,13 @@ public class JdbcAnalysisReadRepository implements AnalysisReadRepository {
                 (rs, i) -> {
                     UUID diseaseId = rs.getObject("disease_id", UUID.class);
                     Optional<DiseaseView> disease = knowledge.findDiseaseById(diseaseId);
-                    return new CandidateView(
+                    String nameBn = disease.map(DiseaseView::nameBn).orElse("");
+                    String nameEn = disease.map(DiseaseView::nameEn).orElse(null);
+                    return CandidateView.of(
                             diseaseId,
                             disease.map(DiseaseView::code).orElse(""),
-                            disease.map(DiseaseView::nameBn).orElse(""),
+                            nameBn,
+                            nameEn,
                             rs.getBigDecimal("confidence"),
                             rs.getInt("rank"),
                             CandidateSource.valueOf(rs.getString("source")));
@@ -155,10 +158,11 @@ public class JdbcAnalysisReadRepository implements AnalysisReadRepository {
                     Optional<SymptomRefView> ref = knowledge.listSymptoms().stream()
                             .filter(s -> s.id().equals(symptomId))
                             .findFirst();
-                    return new SymptomView(
+                    return SymptomView.of(
                             symptomId,
                             ref.map(SymptomRefView::code).orElse(""),
                             ref.map(SymptomRefView::nameBn).orElse(""),
+                            ref.map(SymptomRefView::nameEn).orElse(null),
                             rs.getBigDecimal("score"),
                             SymptomSource.valueOf(rs.getString("source")),
                             rs.getString("matcher"));

@@ -260,6 +260,10 @@ class AnalysisIntegrationTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
                 null)));
         when(knowledge.listActiveRemedies(BLAST)).thenReturn(List.of());
         when(knowledge.listActiveRemedies(HEALTHY)).thenReturn(List.of());

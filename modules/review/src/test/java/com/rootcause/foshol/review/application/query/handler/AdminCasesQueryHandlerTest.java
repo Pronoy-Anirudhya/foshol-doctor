@@ -8,6 +8,7 @@ import com.rootcause.foshol.common.enums.DecisionPath;
 import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.identity.api.OfficerView;
+import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminCaseListCriteria;
 import com.rootcause.foshol.review.application.query.AdminCasePeriod;
@@ -34,6 +35,9 @@ class AdminCasesQueryHandlerTest {
     @Mock
     private OfficerLookupApi officers;
 
+    @Mock
+    private KnowledgeQueryApi knowledge;
+
     @Test
     void scopesToCallerDistrictAndMapsCuratedFilters() {
         Instant t0 = Instant.parse("2026-03-10T00:00:00Z");
@@ -44,7 +48,7 @@ class AdminCasesQueryHandlerTest {
         when(reads.findAdminCases(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new OfficerQueuePage(List.of(), 0, 20, 0, 0));
         AdminCasesQueryHandler handler =
-                new AdminCasesQueryHandler(reads, officers, Clock.fixed(t0, ZoneOffset.UTC), "Asia/Dhaka");
+                new AdminCasesQueryHandler(reads, officers, knowledge, Clock.fixed(t0, ZoneOffset.UTC), "Asia/Dhaka");
         handler.handle(new AdminCasesQuery(
                 adminId,
                 AdminCasePeriod.MONTH,
@@ -80,7 +84,7 @@ class AdminCasesQueryHandlerTest {
         when(reads.findAdminCases(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new OfficerQueuePage(List.of(), 0, 20, 0, 0));
         AdminCasesQueryHandler handler =
-                new AdminCasesQueryHandler(reads, officers, Clock.fixed(t0, ZoneOffset.UTC), "Asia/Dhaka");
+                new AdminCasesQueryHandler(reads, officers, knowledge, Clock.fixed(t0, ZoneOffset.UTC), "Asia/Dhaka");
         handler.handle(new AdminCasesQuery(
                 adminId, AdminCasePeriod.LIFETIME, "ALL", null, null, null, null, null, 0, 20));
         ArgumentCaptor<AdminCaseListCriteria> captor = ArgumentCaptor.forClass(AdminCaseListCriteria.class);

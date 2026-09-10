@@ -16,12 +16,15 @@ import com.rootcause.foshol.common.enums.RemedyRateBasis;
 import com.rootcause.foshol.common.enums.RemedyRateUnit;
 import com.rootcause.foshol.common.enums.RemedyType;
 import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.enums.Severity;
 import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.enums.CandidateSource;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
+import com.rootcause.foshol.knowledge.api.CropView;
+import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
 import com.rootcause.foshol.review.api.RemedyRefView;
@@ -148,7 +151,7 @@ class ReviewTaskDetailQueryHandlerTest {
                 new BigDecimal("0.91"),
                 new BigDecimal("0.40"),
                 new BigDecimal("0.51"),
-                List.of(new CandidateView(DISEASE, "blast", "ব্লাস্ট", new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
+                List.of(new CandidateView(DISEASE, "blast", "ব্লাস্ট", "Blast", false, new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
                 List.of(),
                 null,
                 null,
@@ -172,13 +175,33 @@ class ReviewTaskDetailQueryHandlerTest {
                 new BigDecimal("50"),
                 RemedyRateUnit.ML,
                 RemedyRateBasis.PER_DECIMAL,
-                null)));
+                null,
+                "Title",
+                List.of("Step"),
+                "Dose",
+                "Note")));
+        when(knowledge.listCrops()).thenReturn(List.of(new CropView(CROP, "rice", "ধান", "Rice", null)));
+        when(knowledge.findDiseaseById(DISEASE))
+                .thenReturn(Optional.of(new DiseaseView(
+                        DISEASE, CROP, "blast", "ব্লাস্ট", "Blast", null, Severity.HIGH, false)));
         when(advisories.findPublishedByCaseId(CASE)).thenReturn(Optional.empty());
 
         ReviewTaskDetailView detail = handler().handle(new ReviewTaskDetailQuery(TASK, OFFICER_A));
 
+        assertThat(detail.cropNameEn()).isEqualTo("Rice");
+        assertThat(detail.cropNameEnFallback()).isFalse();
+        assertThat(detail.topDiseaseNameEn()).isEqualTo("Blast");
+        assertThat(detail.topDiseaseNameEnFallback()).isFalse();
         assertThat(detail.suggestedRemedies()).hasSize(1);
         RemedyRefView rem = detail.suggestedRemedies().getFirst();
+        assertThat(rem.titleEn()).isEqualTo("Title");
+        assertThat(rem.titleEnFallback()).isFalse();
+        assertThat(rem.stepsEn()).containsExactly("Step");
+        assertThat(rem.stepsEnFallback()).isFalse();
+        assertThat(rem.dosageEn()).isEqualTo("Dose");
+        assertThat(rem.dosageEnFallback()).isFalse();
+        assertThat(rem.rateNotesEn()).isEqualTo("Note");
+        assertThat(rem.rateNotesEnFallback()).isFalse();
         assertThat(rem.rateAmount()).isEqualByComparingTo("50");
         assertThat(rem.rateUnit()).isEqualTo(RemedyRateUnit.ML);
         assertThat(rem.rateBasis()).isEqualTo(RemedyRateBasis.PER_DECIMAL);

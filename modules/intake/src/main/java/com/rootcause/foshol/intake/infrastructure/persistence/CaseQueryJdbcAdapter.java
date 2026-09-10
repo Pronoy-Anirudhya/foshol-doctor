@@ -12,7 +12,9 @@ import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;
 import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;
+import com.rootcause.foshol.intake.application.query.CatalogueNames;
 import com.rootcause.foshol.knowledge.api.CropView;
+import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -54,7 +56,8 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
             return Optional.empty();
         }
         CaseRow c = row.get();
-        String cropName = knowledge.findCropById(c.cropId()).map(crop -> crop.nameBn()).orElse("");
+        CropView crop = knowledge.findCropById(c.cropId()).orElse(null);
+        CatalogueNames cropNames = CatalogueNames.crop(crop, crop == null ? "" : crop.nameBn());
         List<CaseDetailView.ImageRefView> images = jdbc.sql(
                         """
                         select id, position, is_primary, quality_score, width, height
@@ -81,7 +84,9 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
         return Optional.of(new CaseDetailView(
                 c.id(),
                 c.cropId(),
-                cropName,
+                cropNames.bn(),
+                cropNames.en(),
+                cropNames.fallback(),
                 c.status(),
                 c.decisionPath(),
                 c.noteBn(),
@@ -105,10 +110,18 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
         if (historyCount > 0) {
             List<FarmerCaseRow> content = jdbc.sql(
                             """
-                            select h.case_id, h.crop_name_bn, cast(null as uuid) as crop_id, h.status, h.decision_path,
-                                   h.disease_name_bn, h.officer_name, h.advisory_version, h.rejection_message_bn,
-                                   i.id as thumbnail_image_id, h.submitted_at, h.published_at
+                            select h.case_id, h.crop_name_bn, dc.crop_id, h.status, h.decision_path,
+                                   h.disease_name_bn, pub.disease_id, h.officer_name, h.advisory_version,
+                                   h.rejection_message_bn, i.id as thumbnail_image_id, h.submitted_at, h.published_at
                               from p_farmer_case_history h
+                              left join diagnosis_case dc on dc.id = h.case_id
+                              left join lateral (
+                                select a.disease_id
+                                  from advisory a
+                                 where a.case_id = h.case_id
+                                 order by a.version desc
+                                 limit 1
+                              ) pub on true
                               left join case_image i on i.case_id = h.case_id and i.is_primary = true
                              where h.farmer_id = :farmerId
                              order by h.submitted_at desc
@@ -129,6 +142,7 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
                         """
                         select c.id as case_id, cast(null as varchar) as crop_name_bn, c.crop_id, c.status, c.decision_path,
                                cast(null as varchar) as disease_name_bn,
+                               cast(null as uuid) as disease_id,
                                cast(null as varchar) as officer_name,
                                cast(null as smallint) as advisory_version,
                                cast(null as text) as rejection_message_bn,
@@ -208,19 +222,22 @@ public class CaseQueryJdbcAdapter implements CaseQueryPort {
     }
 
     private FarmerCaseRow historyRow(ResultSet rs, int rowNum) throws SQLException {
-        String cropName = rs.getString("crop_name_bn");
-        if (cropName == null) {
-            UUID cropId = rs.getObject("crop_id", UUID.class);
-            cropName = cropId == null
-                    ? ""
-                    : knowledge.findCropById(cropId).map(CropView::nameBn).orElse("");
-        }
+        UUID cropId = rs.getObject("crop_id", UUID.class);
+        CropView crop = cropId == null ? null : knowledge.findCropById(cropId).orElse(null);
+        CatalogueNames cropNames = CatalogueNames.crop(crop, rs.getString("crop_name_bn"));
+        UUID diseaseId = rs.getObject("disease_id", UUID.class);
+        DiseaseView disease = diseaseId == null ? null : knowledge.findDiseaseById(diseaseId).orElse(null);
+        CatalogueNames diseaseNames = CatalogueNames.disease(disease, rs.getString("disease_name_bn"));
         return new FarmerCaseRow(
                 rs.getObject("case_id", UUID.class),
-                cropName,
+                cropNames.bn(),
+                cropNames.en(),
+                cropNames.fallback(),
                 CaseStatus.valueOf(rs.getString("status")),
                 rs.getString("decision_path") == null ? null : DecisionPath.valueOf(rs.getString("decision_path")),
-                rs.getString("disease_name_bn"),
+                diseaseNames.bn(),
+                diseaseNames.en(),
+                diseaseNames.fallback(),
                 rs.getString("officer_name"),
                 (Integer) (rs.getObject("advisory_version") instanceof Number n ? n.intValue() : null),
                 rs.getString("rejection_message_bn"),

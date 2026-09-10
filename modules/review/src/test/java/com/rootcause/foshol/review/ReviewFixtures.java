@@ -46,7 +46,7 @@ public final class ReviewFixtures {
                 AiMode.REPLAY,
                 top1,
                 new BigDecimal("0.10"),
-                List.of(new CandidateView(DISEASE_D, "brown_spot", "d", top1, 1, CandidateSource.MODEL)),
+                List.of(new CandidateView(DISEASE_D, "brown_spot", "d", "d", false, top1, 1, CandidateSource.MODEL)),
                 List.of(),
                 false,
                 1,
@@ -83,19 +83,19 @@ public final class ReviewFixtures {
     }
 
     public static RemedyView r1() {
-        return new RemedyView(REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
+        return new RemedyView(REMEDY_R1, DISEASE_D, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null, null, null, null, null);
     }
 
     public static RemedyView r2() {
-        return new RemedyView(REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "", null, null, null, null);
+        return new RemedyView(REMEDY_R2, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, 14, "LOW", "LOW", "", null, null, null, null, null, null, null, null);
     }
 
     public static RemedyView r3() {
-        return new RemedyView(REMEDY_R3, DISEASE_E, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
+        return new RemedyView(REMEDY_R3, DISEASE_E, RemedyType.CULTURAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null, null, null, null, null);
     }
 
     public static RemedyView chemicalWithoutPhi() {
-        return new RemedyView(REMEDY_NO_PHI, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null);
+        return new RemedyView(REMEDY_NO_PHI, DISEASE_D, RemedyType.CHEMICAL, "", List.of(), null, null, "LOW", "LOW", "", null, null, null, null, null, null, null, null);
     }
 
     public static AnalysisView analysisView(UUID caseId) {
@@ -106,7 +106,7 @@ public final class ReviewFixtures {
                 new BigDecimal("0.91"),
                 new BigDecimal("0.40"),
                 new BigDecimal("0.51"),
-                List.of(new CandidateView(DISEASE_D, "brown_spot", "d", new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
+                List.of(new CandidateView(DISEASE_D, "brown_spot", "d", "d", false, new BigDecimal("0.91"), 1, CandidateSource.MODEL)),
                 List.of(),
                 null,
                 null,

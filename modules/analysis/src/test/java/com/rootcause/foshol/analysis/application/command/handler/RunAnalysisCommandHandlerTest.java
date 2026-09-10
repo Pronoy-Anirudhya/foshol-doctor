@@ -214,7 +214,8 @@ class RunAnalysisCommandHandlerTest {
         assertThat(candidates.getValue()).isNotEmpty();
         assertThat(candidates.getValue()).extracting(CaseCandidate::source).containsOnly(CandidateSource.MODEL);
         assertThat(completed.getValue().candidates()).extracting(CandidateView::source).containsOnly(CandidateSource.MODEL);
-        verify(speech, never()).transcribe(any());
+        assertThat(completed.getValue().candidates().getFirst().diseaseNameEn()).isEqualTo("Brown spot");
+        assertThat(completed.getValue().candidates().getFirst().diseaseNameEnFallback()).isFalse();
     }
 
     @Test
@@ -398,7 +399,7 @@ class RunAnalysisCommandHandlerTest {
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
                 "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
-                null, null, null, null)));
+                null, null, null, null, null, null, null, null)));
         CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
         when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
         when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
@@ -466,7 +467,7 @@ class RunAnalysisCommandHandlerTest {
                 DISEASE, CROP, "brown_spot", "Brown spot", "Brown spot", null, Severity.LOW, false)));
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
-                "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null)));
+                "t", List.of("s"), null, null, "LOW", "HIGH", "ref", null, null, null, null, null, null, null, null)));
     }
 
     private void stubMidBandVision() {
@@ -482,7 +483,7 @@ class RunAnalysisCommandHandlerTest {
         when(knowledge.listActiveRemedies(DISEASE)).thenReturn(List.of(new RemedyView(
                 UUID.randomUUID(), DISEASE, com.rootcause.foshol.common.enums.RemedyType.CULTURAL,
                 "TODO(content-owner)", List.of("TODO(content-owner)"), null, null, "LOW", "HIGH", "TODO(content-owner)",
-                null, null, null, null)));
+                null, null, null, null, null, null, null, null)));
     }
 
     private RunAnalysisCommand command(CaseAudioRef audio) {
