@@ -146,6 +146,16 @@ class KnowledgeIntegrationTest {
                         "7d5b32bcd6f83a2f57e7e0346358fad276296877",
                         "Invalid"))
                 .isEmpty();
+        assertThat(knowledgeQueryApi.resolveModelLabel(
+                        "VisionaryQuant/5_Crop_Disease_Detection",
+                        "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
+                        "Rice___Leaf_Blast"))
+                .contains(UUID.fromString("01800000-0000-7000-8000-000000000103"));
+        assertThat(knowledgeQueryApi.resolveModelLabel(
+                        "VisionaryQuant/5_Crop_Disease_Detection",
+                        "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
+                        "Rice___Neck_Blast"))
+                .isEmpty();
         assertThatThrownBy(() -> symptomMatchApi.match(
                         new SymptomMatchRequest(UUID.fromString("01800000-0000-7000-8000-000000000099"), null, null, List.of())))
                 .isInstanceOf(KnowledgeException.class)
