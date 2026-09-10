@@ -60,7 +60,7 @@ class CaseQueryHandlerTest {
     void officerMayReadAnyCase() {
         when(queries.findFarmerId(CASE)).thenReturn(Optional.of(OWNER));
         when(queries.findDetail(CASE)).thenReturn(Optional.of(new CaseDetailView(
-                CASE, UUID.randomUUID(), "ধান", null, null, null, null, java.util.List.of(), null, Instant.now(),
+                CASE, UUID.randomUUID(), "ধান", "Rice", false, null, null, null, null, java.util.List.of(), null, Instant.now(),
                 java.math.BigDecimal.ONE, com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL, null, null,
                 com.rootcause.foshol.common.enums.MetricsSource.FORM)));
         when(staffRegion.allows(Role.OFFICER, OTHER, CASE)).thenReturn(true);
