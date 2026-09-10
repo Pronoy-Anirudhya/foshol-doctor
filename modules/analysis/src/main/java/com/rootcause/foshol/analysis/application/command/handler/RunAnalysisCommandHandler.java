@@ -67,7 +67,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
@@ -195,6 +197,7 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                     command.correlationId(),
                     Instant.now()));
         } finally {
+            Thread.interrupted();
             CorrelationId.clear();
         }
         return null;
@@ -202,10 +205,8 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
 
     Assembled orchestrate(RunAnalysisCommand command, CaseSummary summary, Instant start) {
         Duration deadline = settings.deadline();
-        VisionBundle visionBundle;
-        SpeechBundle speechBundle;
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        try {
+        Assembled assembled;
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             CompletableFuture<VisionBundle> visionFuture =
                     CompletableFuture.supplyAsync(() -> runVision(command, summary), executor);
             CompletableFuture<SpeechBundle> speechFuture =
@@ -215,16 +216,23 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                         .get(deadline.toMillis(), TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeout) {
                 abandon(visionFuture, speechFuture, command.correlationId());
-            } catch (Exception interrupted) {
-                Thread.currentThread().interrupt();
+            } catch (InterruptedException interrupted) {
+                abandon(visionFuture, speechFuture, command.correlationId());
+            } catch (ExecutionException | CancellationException ignored) {
                 abandon(visionFuture, speechFuture, command.correlationId());
             }
-            visionBundle = completedOrAbandoned(visionFuture);
-            speechBundle = completedOrAbandonedSpeech(speechFuture);
-        } finally {
-            executor.shutdownNow();
+            // JDBC in assemble/persist must not see this thread's interrupt flag: the PostgreSQL
+            // driver closes the socket (SQLState 08006) when the caller is interrupted.
+            Thread.interrupted();
+            assembled = assemble(
+                    command,
+                    summary,
+                    completedOrAbandoned(visionFuture),
+                    completedOrAbandonedSpeech(speechFuture),
+                    start);
         }
-        return assemble(command, summary, visionBundle, speechBundle, start);
+        Thread.interrupted();
+        return assembled;
     }
 
     private void abandon(
@@ -328,6 +336,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
             return new VisionBundle(
                     BranchOutcome.COMPLETED, null, modelId, modelVersion, aggregated, List.copyOf(unmapped), raws, primary, gradcamKey);
         } catch (SidecarFailureException ex) {
+            log.warn(
+                    "vision sidecar failed caseId={} correlationId={} errorCode={}",
+                    command.caseId(),
+                    command.correlationId(),
+                    ex.errorCode());
             return VisionBundle.failed(ex.errorCode());
         } catch (RuntimeException ex) {
             SidecarFailureException sidecar = findSidecar(ex);
@@ -710,6 +723,7 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         }
         if (speechBundle.errorCode() != null
                 && speechBundle.outcome() != BranchOutcome.COMPLETED
+                && visionBundle.outcome() != BranchOutcome.COMPLETED
                 && !ErrorCodes.ERR_FIXTURE_MISSING.equals(speechBundle.errorCode())) {
             return speechBundle.errorCode();
         }
