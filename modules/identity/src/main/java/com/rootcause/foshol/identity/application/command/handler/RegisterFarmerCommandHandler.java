@@ -1,25 +1,25 @@
 package com.rootcause.foshol.identity.application.command.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.identity.application.command.RegisterFarmerCommand;
 import com.rootcause.foshol.identity.application.command.RegisterFarmerResult;
-import com.rootcause.foshol.identity.application.FarmerRecordAssembler;
+import com.rootcause.foshol.identity.application.port.DistrictPort;
+import com.rootcause.foshol.identity.application.port.DistrictRef;
+import com.rootcause.foshol.identity.application.port.FarmerSnapshot;
+import com.rootcause.foshol.identity.application.port.FarmerStore;
+import com.rootcause.foshol.identity.application.port.IdempotencySnapshot;
+import com.rootcause.foshol.identity.application.port.OfficerSnapshot;
+import com.rootcause.foshol.identity.application.port.OfficerStore;
+import com.rootcause.foshol.identity.application.port.PhoneCipherPort;
+import com.rootcause.foshol.identity.application.port.ProvisionIdempotencyStore;
+import com.rootcause.foshol.identity.application.query.FarmerRecordAssembler;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import com.rootcause.foshol.identity.domain.PhoneHash;
 import com.rootcause.foshol.identity.domain.PhoneNumber;
 import com.rootcause.foshol.identity.domain.RegistrationSource;
-import com.rootcause.foshol.identity.infrastructure.FarmerEntity;
-import com.rootcause.foshol.identity.infrastructure.FarmerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.FarmerProvisionIdempotencyEntity;
-import com.rootcause.foshol.identity.infrastructure.FarmerProvisionIdempotencyJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.FieldOfficerEntity;
-import com.rootcause.foshol.identity.infrastructure.FieldOfficerJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.GeoDistrictEntity;
-import com.rootcause.foshol.identity.infrastructure.GeoDistrictJpaRepository;
-import com.rootcause.foshol.identity.infrastructure.PhoneCipher;
 import java.text.Normalizer;
 import java.time.Clock;
 import java.time.Duration;
@@ -34,21 +34,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarmerCommand, RegisterFarmerResult> {
 
-    private final FarmerJpaRepository farmers;
-    private final FieldOfficerJpaRepository officers;
-    private final GeoDistrictJpaRepository districts;
-    private final FarmerProvisionIdempotencyJpaRepository idempotency;
-    private final PhoneCipher phoneCipher;
+    private final FarmerStore farmers;
+    private final OfficerStore officers;
+    private final DistrictPort districts;
+    private final ProvisionIdempotencyStore idempotency;
+    private final PhoneCipherPort phoneCipher;
     private final FarmerRecordAssembler assembler;
     private final Clock clock;
     private final Duration idempotencyTtl;
 
     public RegisterFarmerCommandHandler(
-            FarmerJpaRepository farmers,
-            FieldOfficerJpaRepository officers,
-            GeoDistrictJpaRepository districts,
-            FarmerProvisionIdempotencyJpaRepository idempotency,
-            PhoneCipher phoneCipher,
+            FarmerStore farmers,
+            OfficerStore officers,
+            DistrictPort districts,
+            ProvisionIdempotencyStore idempotency,
+            PhoneCipherPort phoneCipher,
             FarmerRecordAssembler assembler,
             Clock clock,
             @Value("${" + ConfigKeys.IDENTITY_IDEMPOTENCY_TTL + "}") Duration idempotencyTtl) {
@@ -70,7 +70,7 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public RegisterFarmerResult handle(RegisterFarmerCommand command) {
-        FieldOfficerEntity officer = officers.findById(command.officerId())
+        OfficerSnapshot officer = officers.findById(command.officerId())
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_SUBJECT_NOT_FOUND, 404, "Subject not found."));
         String name = requireName(command.name());
         String language = requireLanguage(command.preferredLanguage());
@@ -82,14 +82,14 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
         String requestHash = fingerprint(command.officerId(), name, phoneHash, command.divisionCode(), command.districtCode(), language, source);
 
         if (idempotencyKey != null) {
-            var existing = idempotency.findById(idempotencyKey);
+            var existing = idempotency.findByKey(idempotencyKey);
             if (existing.isPresent()) {
-                FarmerProvisionIdempotencyEntity row = existing.get();
-                if (!row.getOfficerId().equals(command.officerId()) || !row.getRequestHash().equals(requestHash)) {
+                IdempotencySnapshot row = existing.get();
+                if (!row.officerId().equals(command.officerId()) || !row.requestHash().equals(requestHash)) {
                     throw new IdentityException(
                             ErrorCodes.ERR_IDEMPOTENCY_KEY_CONFLICT, 409, "Idempotency key was reused with a different request.");
                 }
-                FarmerEntity replayed = farmers.findById(row.getFarmerId())
+                FarmerSnapshot replayed = farmers.findById(row.farmerId())
                         .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_FARMER_NOT_FOUND, 404, "Farmer not found."));
                 return new RegisterFarmerResult(assembler.assemble(replayed), true);
             }
@@ -101,7 +101,7 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
 
         Instant now = clock.instant();
         UUID farmerId = Uuid7.create();
-        FarmerEntity farmer = new FarmerEntity(
+        FarmerSnapshot farmer = new FarmerSnapshot(
                 farmerId,
                 name,
                 phoneHash,
@@ -109,16 +109,15 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
                 command.districtCode().trim(),
                 command.divisionCode().trim(),
                 language,
-                officer.getId(),
+                officer.id(),
                 source,
-                now,
                 now);
         try {
             farmers.saveAndFlush(farmer);
             if (idempotencyKey != null) {
-                idempotency.saveAndFlush(new FarmerProvisionIdempotencyEntity(
+                idempotency.saveAndFlush(new IdempotencySnapshot(
                         idempotencyKey,
-                        officer.getId(),
+                        officer.id(),
                         requestHash,
                         farmerId,
                         now,
@@ -126,11 +125,11 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
             }
         } catch (DataIntegrityViolationException ex) {
             if (idempotencyKey != null) {
-                var raced = idempotency.findById(idempotencyKey);
+                var raced = idempotency.findByKey(idempotencyKey);
                 if (raced.isPresent()
-                        && raced.get().getOfficerId().equals(command.officerId())
-                        && raced.get().getRequestHash().equals(requestHash)) {
-                    FarmerEntity replayed = farmers.findById(raced.get().getFarmerId())
+                        && raced.get().officerId().equals(command.officerId())
+                        && raced.get().requestHash().equals(requestHash)) {
+                    FarmerSnapshot replayed = farmers.findById(raced.get().farmerId())
                             .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_FARMER_NOT_FOUND, 404, "Farmer not found."));
                     return new RegisterFarmerResult(assembler.assemble(replayed), true);
                 }
@@ -140,18 +139,18 @@ public class RegisterFarmerCommandHandler implements CommandHandler<RegisterFarm
         return new RegisterFarmerResult(assembler.assemble(farmer), false);
     }
 
-    private void validateGeo(FieldOfficerEntity officer, String divisionCode, String districtCode) {
+    private void validateGeo(OfficerSnapshot officer, String divisionCode, String districtCode) {
         if (divisionCode == null || divisionCode.isBlank() || districtCode == null || districtCode.isBlank()) {
             throw new IdentityException(ErrorCodes.ERR_GEO_INVALID, 400, "Division and district are required.");
         }
         String division = divisionCode.trim();
         String district = districtCode.trim();
-        GeoDistrictEntity geo = districts.findById(district)
+        DistrictRef geo = districts.findByCode(district)
                 .orElseThrow(() -> new IdentityException(ErrorCodes.ERR_GEO_INVALID, 400, "Unknown division or district."));
-        if (!geo.getDivision().getCode().equals(division)) {
+        if (!geo.divisionCode().equals(division)) {
             throw new IdentityException(ErrorCodes.ERR_GEO_INVALID, 400, "Unknown division or district.");
         }
-        if (!officer.getDistrictCode().equals(district) || !officer.getDivisionCode().equals(division)) {
+        if (!officer.districtCode().equals(district) || !officer.divisionCode().equals(division)) {
             throw new IdentityException(
                     ErrorCodes.ERR_DISTRICT_SCOPE, 400, "Farmers can only be registered in your district.");
         }

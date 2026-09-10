@@ -1,7 +1,7 @@
 package com.rootcause.foshol.identity.application.command.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.identity.application.command.FarmerImportResult;
 import com.rootcause.foshol.identity.application.command.FarmerImportResult.FarmerImportRowResult;

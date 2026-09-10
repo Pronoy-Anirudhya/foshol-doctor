@@ -1,6 +1,7 @@
 package com.rootcause.foshol.identity.web;
 
 import com.rootcause.foshol.common.cqrs.QueryBus;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.identity.application.query.MeQuery;
 import com.rootcause.foshol.identity.application.query.MeView;
 import java.util.UUID;
@@ -26,8 +27,8 @@ public class MeController {
     public MeView me(Authentication authentication) {
         String role = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
-                .map(a -> a.substring("ROLE_".length()))
+                .filter(a -> a.startsWith(Role.AUTHORITY_PREFIX))
+                .map(a -> Role.fromAuthority(a).name())
                 .findFirst()
                 .orElseThrow();
         return queries.handle(new MeQuery(UUID.fromString(authentication.getName()), role));

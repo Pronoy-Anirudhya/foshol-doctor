@@ -1,6 +1,6 @@
 package com.rootcause.foshol.identity.domain;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import java.util.regex.Pattern;
 
 public final class PhoneNumber {

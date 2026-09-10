@@ -2,7 +2,7 @@ package com.rootcause.foshol.identity.web;
 
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.QueryBus;
-import com.rootcause.foshol.identity.application.FarmerRecord;
+import com.rootcause.foshol.identity.application.query.FarmerRecord;
 import com.rootcause.foshol.identity.application.command.FarmerImportResult;
 import com.rootcause.foshol.identity.application.command.ImportFarmersCommand;
 import com.rootcause.foshol.identity.application.command.RegisterFarmerCommand;

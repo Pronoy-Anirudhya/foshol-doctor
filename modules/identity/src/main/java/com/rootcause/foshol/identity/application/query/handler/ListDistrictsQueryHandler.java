@@ -1,9 +1,9 @@
 package com.rootcause.foshol.identity.application.query.handler;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.identity.application.query.DistrictResponse;
-import com.rootcause.foshol.identity.application.query.GeoCataloguePort;
+import com.rootcause.foshol.identity.application.port.GeoCataloguePort;
 import com.rootcause.foshol.identity.application.query.ListDistrictsQuery;
 import com.rootcause.foshol.identity.domain.IdentityException;
 import java.util.List;

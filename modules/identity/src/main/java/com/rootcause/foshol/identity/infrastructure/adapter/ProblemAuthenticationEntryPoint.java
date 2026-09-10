@@ -1,0 +1,26 @@
+package com.rootcause.foshol.identity.infrastructure.adapter;
+
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ProblemAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private final SecurityProblemWriter writer;
+
+    public ProblemAuthenticationEntryPoint(SecurityProblemWriter writer) {
+        this.writer = writer;
+    }
+
+    @Override
+    public void commence(
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
+            throws IOException {
+        writer.write(response, 401, ErrorCodes.ERR_TOKEN_INVALID, "Authentication is required.", request);
+    }
+}
