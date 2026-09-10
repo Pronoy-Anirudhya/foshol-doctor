@@ -17,7 +17,7 @@ to something you should be calling through a published interface.
 | `70-frontend.ears.md` | web | **A6** | Angular: farmer, officer console, admin stats |
 | `CONTENT-OWNERS.md` | — | human | Everything an agent may **not** author |
 | `../adr/` | — | — | Why each contested decision went the way it did |
-| `../openapi/foshol-api.yaml` | — | **A1** | The frozen API contract the Angular client generates from |
+| `../openapi/foshol-api.yaml` | — | **A1** | The API contract the Angular client generates from. Additive bilingual catalogue fields may be added. |
 
 ---
 

@@ -31,7 +31,7 @@ The human-in-the-loop approval workflow is the product. The AI is a triage accel
 | `docs/requirements/INDEX.md` | Dependency graph, build order, the 4-day schedule, the demo script. |
 | `docs/requirements/CONTENT-OWNERS.md` | Everything you are **not** allowed to author. |
 | `docs/adr/` | Why each contested decision went the way it did. |
-| `docs/openapi/foshol-api.yaml` | **FROZEN.** The API contract the frontend generates from. |
+| `docs/openapi/foshol-api.yaml` | The API contract the frontend generates from. Additive bilingual catalogue fields may be added; do not break existing required fields. |
 
 `docs/requirements/fasol-doctor-plan-v2-revised-scope.md` is the historical input plan. It is **superseded** on
 naming (Fasol → Foshol), frontend (React → Angular), build (Kotlin DSL → Groovy DSL) and, most
