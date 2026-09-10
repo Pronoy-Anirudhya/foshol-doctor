@@ -615,8 +615,10 @@ Base path `/api/v1`. Errors are RFC 9457 (`COMMON-API-002`), localised per `COMM
 | Success | `200` · paginated envelope of `FarmerCaseRow` |
 
 ```json
-{ "caseId": "018f…", "cropNameBn": "…", "status": "IN_REVIEW", "decisionPath": "SECONDARY",
-  "diseaseNameBn": null, "officerName": null, "advisoryVersion": null,
+{ "caseId": "018f…", "cropNameBn": "…", "cropNameEn": "…", "cropNameEnFallback": false,
+  "status": "IN_REVIEW", "decisionPath": "SECONDARY",
+  "diseaseNameBn": null, "diseaseNameEn": null, "diseaseNameEnFallback": true,
+  "officerName": null, "advisoryVersion": null,
   "rejectionMessageBn": null, "submittedAt": "…Z", "publishedAt": null }
 ```
 
@@ -625,7 +627,7 @@ Base path `/api/v1`. Errors are RFC 9457 (`COMMON-API-002`), localised per `COMM
 | | |
 |---|---|
 | Auth | `FARMER` owner, or `OFFICER` / `ADMIN` |
-| Success | `200` · case, ordered image references (`imageId`, `position`, `primary`, `qualityScore`, `width`, `height`), audio reference (`audioId`, `durationMs`), `status`, `decisionPath`, `noteBn`, `parentCaseId`, `submittedAt` |
+| Success | `200` · case, `cropNameBn`, `cropNameEn`, `cropNameEnFallback` (`COMMON-NFR-038`), ordered image references (`imageId`, `position`, `primary`, `qualityScore`, `width`, `height`), audio reference (`audioId`, `durationMs`), `status`, `decisionPath`, `noteBn`, `parentCaseId`, `submittedAt` |
 | `404` | `ERR_CASE_NOT_FOUND` — unknown, or another farmer's (`INTAKE-SEC-007`) |
 
 No object key appears in the response (`INTAKE-FR-072`).

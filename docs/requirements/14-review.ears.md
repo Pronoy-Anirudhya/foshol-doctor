@@ -738,15 +738,22 @@ Ordering is not expressible on the queue request (`REVIEW-FR-030`, `REVIEW-FR-03
 
 ### 5.1 Response shapes
 
-`OfficerQueueRow` — `caseId, reviewTaskId, farmerName, cropCode, cropNameBn, districtCode,
-decisionPath, topDiseaseId, topDiseaseNameBn, topConfidence, imageCount, hasAudio, analysisMode,
-state, officerId, isResubmission, requeueCount, submittedAt, slaDueAt`.
+`OfficerQueueRow` — `caseId, reviewTaskId, farmerName, cropCode, cropNameBn, cropNameEn,
+cropNameEnFallback, districtCode, decisionPath, topDiseaseId, topDiseaseNameBn, topDiseaseNameEn,
+topDiseaseNameEnFallback, topConfidence, imageCount, hasAudio, analysisMode, state, officerId,
+isResubmission, requeueCount, submittedAt, slaDueAt`. Blank `*En` copies the Bangla value and sets
+the matching `*Fallback` flag (`COMMON-NFR-038`). English is resolved at read time from
+`KnowledgeQueryApi`; queue projection columns stay Bangla-only.
 
 `ReviewTaskDetailView` — every `OfficerQueueRow` field, plus `analysisMode` (`REVIEW-UX-004`),
 `top1Confidence`, `top2Confidence`, `margin`, `candidates[]`, `symptoms[]`, `transcriptBn`,
 `asrConfidence`, `gradcamObjectKey`, `images[]` with presigned URLs (`COMMON-SEC-016`), `audio`,
 `parentCaseId`, `suggestedRemedies[]` (`REVIEW-FR-057`), `claimedBy`, `claimExpiresAt`
 (`claimedAt + foshol.review.claim.ttl`), and `publishedAdvisory` when one exists.
+`AdvisoryView` includes `diseaseNameEn` / `diseaseNameEnFallback`. `RemedyRefView` includes
+`titleEn`, `titleEnFallback`, `stepsEn`, `stepsEnFallback`, `dosageEn`, `dosageEnFallback`,
+`rateNotesEn`, `rateNotesEnFallback`. Task `candidates[]` / `symptoms[]` carry the same
+`*En` / `*Fallback` fields as analysis HTTP.
 
 ### 5.2 `GET /api/v1/admin/stats`
 
