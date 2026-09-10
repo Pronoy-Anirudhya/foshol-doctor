@@ -257,7 +257,9 @@ agent-authored agronomic content — `COMMON-CON-003`.)*
 ### 4.3 Authentication and session
 
 `WEB-FR-010` **THE farmer login SHALL collect a phone number, request an OTP, then collect a
-`foshol.auth.otp.length`-digit code.**
+`foshol.auth.otp.length`-digit code.** **WHEN `POST /api/v1/auth/otp/request` returns `202`, THE
+frontend SHALL proceed to the code step. WHEN it returns `404` `ERR_FARMER_NOT_FOUND`, THE frontend
+SHALL remain on the phone step and SHALL display the problem `detail`.**
 
 `WEB-FR-011` **WHILE OTP requests are rate-limited (`429`, `COMMON-SEC-015`), THE frontend SHALL
 disable the request control and SHALL display the wait derived from `Retry-After`.**

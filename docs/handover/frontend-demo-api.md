@@ -133,11 +133,13 @@ Content-Type: application/json
 {"phone":"+8801711111111"}
 ```
 
-**202** (challenge created if the phone is known; do not leak whether the number exists):
+**202** only when the phone is a registered farmer (a challenge was created):
 
 ```json
 { "expiresInSeconds": 300, "otpDeliveryMode": "DEV_FIXED" }
 ```
+
+**404** `ERR_FARMER_NOT_FOUND` — stay on the phone screen, show `detail`, do not open the OTP step.
 
 (`otpDeliveryMode` is a live extra vs a minimal OpenAPI description of 202.) **400**, **429**.
 

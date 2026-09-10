@@ -187,10 +187,11 @@ body, header, problem document, log line or metric tag.** (Reinforces `COMMON-SE
 ### 4.2 Farmer authentication — one-time code
 
 `IDENTITY-FR-001` **WHEN a client posts `POST /api/v1/auth/otp/request` with a normalisable phone
-number, THE identity module SHALL respond `202 Accepted` regardless of whether that phone number
-resolves to a `farmer` row.**
-*(`[DERIVED]` — farmer accounts are seeded and finite, so a distinguishable "unknown phone" response
-would let anyone enumerate the demo's farmers. The plan is silent; not leaking is the safe default.)*
+number that does not resolve to a `farmer` row, THE identity module SHALL respond `404` with code
+`ERR_FARMER_NOT_FOUND` and SHALL NOT insert an `otp_challenge` row.**
+*(The frontend must stay on the phone step. A distinguishable unknown-phone response lets callers
+enumerate seeded farmer numbers; that cost is accepted so an unregistered number never reaches OTP
+verify.)*
 
 `IDENTITY-FR-002` **WHEN the requested phone hash resolves to a `farmer` row, THE identity module
 SHALL insert one `otp_challenge` row with `expires_at = now() + foshol.auth.otp.ttl`, `attempts = 0`
@@ -395,8 +396,9 @@ district, or a district that does not belong to the supplied division, SHALL ret
 
 `IDENTITY-SEC-015` **THE farmer provision and directory endpoints SHALL be reachable only by
 `OFFICER` and `ADMIN`.** A `FARMER` token SHALL receive `403` `ERR_FORBIDDEN`. The phone uniqueness
-conflict of provision is `409` `ERR_FARMER_PHONE_EXISTS` for authenticated staff and MUST NOT be used
-on the unauthenticated OTP path (`IDENTITY-FR-001` remains).
+conflict of provision is `409` `ERR_FARMER_PHONE_EXISTS` for authenticated staff. An unknown phone on
+the unauthenticated OTP path SHALL be `404` `ERR_FARMER_NOT_FOUND` (`IDENTITY-FR-001`), not
+`ERR_FARMER_PHONE_EXISTS`.
 
 `IDENTITY-DATA-008` **THE identity module SHALL persist `farmer.registered_by` (nullable FK to
 `field_officer`) and `farmer.registration_source`**, defaulting existing and seeded rows to
@@ -441,12 +443,11 @@ Base path `/api/v1`. Every error body is RFC 9457 (`COMMON-API-002`), localised 
 |---|---|
 | Auth | None (`COMMON-SEC-010`) |
 | Request | `{ "phone": "+8801XXXXXXXXX" }` — `@NotBlank` |
-| Success | `202` · `{ "expiresInSeconds": 300, "otpDeliveryMode": "DEV_FIXED" }` |
+| Success | `202` · `{ "expiresInSeconds": 300, "otpDeliveryMode": "DEV_FIXED" }` — registered farmer only |
 | `400` | `ERR_PHONE_INVALID` — not normalisable to E.164 (`IDENTITY-SEC-001`) |
+| `404` | `ERR_FARMER_NOT_FOUND` — no `farmer` row for the phone (`IDENTITY-FR-001`) |
 | `429` | `ERR_OTP_RATE_LIMITED` + `Retry-After` (`IDENTITY-SEC-007`) |
 | `503` | `ERR_OTP_DISABLED` (`IDENTITY-FR-011`) |
-
-The response is identical for a known and an unknown phone number (`IDENTITY-FR-001`).
 
 ### 5.2 `POST /api/v1/auth/otp/verify`
 
@@ -586,7 +587,7 @@ One scenario per requirement, each mapping onto exactly one test method.
 | `IDENTITY-SEC-003` | a phone number and a 32-byte key | it is encrypted twice | the two `phone_enc` values differ, and both decrypt to the original |
 | `IDENTITY-SEC-004` | `foshol.crypto.phone.key` decoding to 16 bytes | the context starts | startup fails with `ERR_PHONE_KEY_INVALID` |
 | `IDENTITY-SEC-005` | any endpoint in §5 | it responds | no field, header or log line contains a phone number |
-| `IDENTITY-FR-001` | a phone with no `farmer` row | `POST /auth/otp/request` | `202`, and no `otp_challenge` row exists |
+| `IDENTITY-FR-001` | a phone with no `farmer` row | `POST /auth/otp/request` | `404` `ERR_FARMER_NOT_FOUND`, and no `otp_challenge` row exists |
 | `IDENTITY-FR-002` | a seeded farmer | `POST /auth/otp/request` | one challenge exists with `expires_at ≈ now + foshol.auth.otp.ttl` |
 | `IDENTITY-FR-003` | `foshol.auth.otp.dev-code=000000` under `test` | a challenge is created | verifying with `000000` succeeds |
 | `IDENTITY-SEC-006` | a challenge with a known code | the row is read | `code_hash` is neither the code nor the SHA-256 of the code alone |
