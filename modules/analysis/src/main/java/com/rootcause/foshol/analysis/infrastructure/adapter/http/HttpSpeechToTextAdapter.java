@@ -27,12 +27,25 @@ public class HttpSpeechToTextAdapter implements SpeechToTextPort {
             byte[] audio = http.readBytes(request.objectKey());
             JsonNode node = http.postMultipartAudio(
                     "/v1/asr/transcribe", audio, "audio.bin", request.correlationId());
-            return new TranscriptResult(
-                    text(node, "model_id", "modelId"),
-                    text(node, "transcript", "transcript_bn", "transcriptBn"),
-                    decimal(node, "confidence", "asr_confidence", "asrConfidence"),
-                    latencyMs(node));
+            return parse(node);
         });
+    }
+
+    @Override
+    public TranscriptResult transcribeAudio(byte[] audio, String language, String correlationId) {
+        return sidecar.execute("asr", () -> {
+            JsonNode node = http.postMultipartAudio(
+                    "/v1/asr/transcribe", audio, "audio.bin", correlationId, language);
+            return parse(node);
+        });
+    }
+
+    private static TranscriptResult parse(JsonNode node) {
+        return new TranscriptResult(
+                text(node, "model_id", "modelId"),
+                text(node, "transcript", "transcript_bn", "transcriptBn"),
+                decimal(node, "confidence", "asr_confidence", "asrConfidence"),
+                latencyMs(node));
     }
 
     private static String text(JsonNode node, String... names) {

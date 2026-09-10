@@ -76,8 +76,16 @@ public class SidecarHttpClient {
     }
 
     public JsonNode postMultipartAudio(String path, byte[] audio, String filename, String correlationId) {
+        return postMultipartAudio(path, audio, filename, correlationId, null);
+    }
+
+    public JsonNode postMultipartAudio(
+            String path, byte[] audio, String filename, String correlationId, String language) {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("audio", namedResource(audio, filename));
+        if (language != null && !language.isBlank()) {
+            body.add("language", language);
+        }
         return exchangeMultipartJson(path, body, correlationId);
     }
 
