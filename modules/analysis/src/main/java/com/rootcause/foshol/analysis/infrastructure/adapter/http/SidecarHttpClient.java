@@ -7,6 +7,8 @@ import com.rootcause.foshol.analysis.application.config.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.ExplanationResult;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
+import com.rootcause.foshol.analysis.infrastructure.sidecar.SidecarTimeouts;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.common.util.CorrelationId;
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -28,28 +30,35 @@ public class SidecarHttpClient {
     private static final Logger log = LoggerFactory.getLogger(SidecarHttpClient.class);
 
     private final RestClient restClient;
+    private final RestClient asrRestClient;
     private final ObjectMapper mapper;
     private final ObjectStorePort objectStore;
 
     public SidecarHttpClient(AnalysisSettings settings, ObjectMapper mapper, ObjectStorePort objectStore) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
-        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
-        factory.setReadTimeout(settings.aiTimeout());
-        this.restClient = RestClient.builder()
-                .baseUrl(settings.aiBaseUrl())
-                .requestFactory(factory)
-                .build();
+        this.restClient = restClient(settings, settings.aiTimeout());
+        this.asrRestClient = restClient(settings, settings.deadline());
         this.mapper = mapper;
         this.objectStore = objectStore;
     }
 
     SidecarHttpClient(RestClient restClient, ObjectMapper mapper, ObjectStorePort objectStore) {
         this.restClient = restClient;
+        this.asrRestClient = restClient;
         this.mapper = mapper;
         this.objectStore = objectStore;
+    }
+
+    private static RestClient restClient(AnalysisSettings settings, Duration readTimeout) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(readTimeout);
+        return RestClient.builder()
+                .baseUrl(settings.aiBaseUrl())
+                .requestFactory(factory)
+                .build();
     }
 
     public JsonNode postJson(String path, ObjectNode body, String correlationId) {
@@ -86,7 +95,7 @@ public class SidecarHttpClient {
         if (language != null && !language.isBlank()) {
             body.add("language", language);
         }
-        return exchangeMultipartJson(path, body, correlationId);
+        return exchangeAsrMultipartJson(path, body, correlationId);
     }
 
     public ExplanationResult postMultipartPng(
@@ -143,10 +152,34 @@ public class SidecarHttpClient {
         }
     }
 
+    private JsonNode exchangeAsrMultipartJson(
+            String path, MultiValueMap<String, Object> body, String correlationId) {
+        try {
+            String response = asrRestClient.post()
+                    .uri(path)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .header(CorrelationId.HEADER, correlationId)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+            return mapper.readTree(response);
+        } catch (RestClientException | IOException ex) {
+            throw mappedAudio(ex);
+        }
+    }
+
     private SidecarFailureException mapped(Exception ex) {
         SidecarFailureException failure = SidecarProblemMapper.map(ex, mapper);
         log.warn("sidecar HTTP failed errorCode={}", failure.errorCode());
         return failure;
+    }
+
+    private SidecarFailureException mappedAudio(Exception ex) {
+        if (SidecarTimeouts.isTimeout(ex)) {
+            log.warn("sidecar ASR timed out errorCode={}", ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT);
+            return new SidecarFailureException(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT, "Sidecar ASR timed out", ex);
+        }
+        return mapped(ex);
     }
 
     private static String header(ResponseEntity<byte[]> entity, String name) {

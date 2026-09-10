@@ -19,6 +19,9 @@ class SidecarCallSupportRetryTest {
                 .isFalse();
         assertThat(SidecarCallSupport.retryable(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_BAD_REQUEST, "x")))
                 .isFalse();
+        assertThat(SidecarCallSupport.retryable(
+                        new SidecarFailureException(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT, "x")))
+                .isFalse();
         assertThat(SidecarCallSupport.retryable(new IOException("reset"))).isTrue();
     }
 
@@ -32,6 +35,11 @@ class SidecarCallSupportRetryTest {
                 .isFalse();
         assertThat(SidecarCallSupport.ignoreForCircuit(
                         new SidecarFailureException(ErrorCodes.ERR_SIDECAR_MODEL_UNAVAILABLE, "x")))
+                .isTrue();
+        assertThat(SidecarCallSupport.ignoreForCircuit(
+                        new SidecarFailureException(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT, "asr")))
+                .isTrue();
+        assertThat(SidecarCallSupport.ignoreForCircuit(new java.util.concurrent.TimeoutException("deadline")))
                 .isTrue();
     }
 }

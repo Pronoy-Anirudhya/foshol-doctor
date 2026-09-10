@@ -287,9 +287,79 @@ class RunAnalysisCommandHandlerTest {
         assertThat(Thread.currentThread().isInterrupted()).isFalse();
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
         verify(persistence).saveNewRun(run.capture(), any(), any());
-        assertThat(run.getValue().errorCode()).isEqualTo(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT);
+        assertThat(run.getValue().errorCode()).isNull();
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().rawOutput()).contains("\"speech\":\"ABANDONED\"");
         verify(events).publishCompleted(any());
+    }
+
+    @Test
+    void visionTimeoutRecordsVisionBranchTimeout() {
+        handler = new RunAnalysisCommandHandler(
+                intake,
+                knowledge,
+                symptomMatch,
+                vision,
+                speech,
+                embedding,
+                explainability,
+                objectStore,
+                persistence,
+                events,
+                settings(Duration.ofMillis(250), true),
+                new SimpleMeterRegistry());
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(vision.classify(any())).thenAnswer(inv -> {
+            Thread.sleep(1_500);
+            return null;
+        });
+        handler.handle(command(null));
+        assertThat(Thread.currentThread().isInterrupted()).isFalse();
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().errorCode()).isEqualTo(ErrorCodes.ERR_VISION_BRANCH_TIMEOUT);
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.UNDETERMINED);
+        verify(events).publishCompleted(any());
+        verify(events, never()).publishFailed(any());
+    }
+
+    @Test
+    void bothBranchesAbandonedAreUndeterminedWithTimeoutCode() {
+        handler = new RunAnalysisCommandHandler(
+                intake,
+                knowledge,
+                symptomMatch,
+                vision,
+                speech,
+                embedding,
+                explainability,
+                objectStore,
+                persistence,
+                events,
+                settings(Duration.ofMillis(250), true),
+                new SimpleMeterRegistry());
+        CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(objectStore.read(any())).thenReturn("fixture:asr:demo".getBytes());
+        when(vision.classify(any())).thenAnswer(inv -> {
+            Thread.sleep(1_500);
+            return null;
+        });
+        when(speech.transcribe(any())).thenAnswer(inv -> {
+            Thread.sleep(1_500);
+            return null;
+        });
+        handler.handle(command(audio));
+        assertThat(Thread.currentThread().isInterrupted()).isFalse();
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.UNDETERMINED);
+        assertThat(run.getValue().errorCode()).isIn(
+                ErrorCodes.ERR_VISION_BRANCH_TIMEOUT, ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT);
+        verify(events).publishCompleted(any());
+        verify(events, never()).publishFailed(any());
     }
 
     @Test
@@ -307,6 +377,7 @@ class RunAnalysisCommandHandlerTest {
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
         verify(persistence).saveNewRun(run.capture(), any(), any());
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().errorCode()).isNull();
         verify(events).publishCompleted(any(AnalysisCompleted.class));
         verify(events, never()).publishFailed(any());
         verify(knowledge, atLeastOnce()).findDiseaseById(DISEASE);
@@ -378,6 +449,7 @@ class RunAnalysisCommandHandlerTest {
         verify(persistence).saveNewRun(run.capture(), candidates.capture(), any());
         verify(events).publishCompleted(completed.capture());
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.SECONDARY);
+        assertThat(run.getValue().errorCode()).isNull();
         assertThat(candidates.getValue()).extracting(CaseCandidate::source).containsOnly(CandidateSource.MODEL);
         assertThat(completed.getValue().candidates()).extracting(CandidateView::source).containsOnly(CandidateSource.MODEL);
     }

@@ -473,10 +473,9 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         }
         if (speechBundle.outcome() == BranchOutcome.ABANDONED
                 && summary.audio() != null
-                && (error == null || path == DecisionPath.UNDETERMINED && visionBundle.outcome() == BranchOutcome.COMPLETED)) {
-            if (error == null) {
-                error = ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT;
-            }
+                && visionBundle.outcome() != BranchOutcome.COMPLETED
+                && error == null) {
+            error = ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT;
         }
         List<CaseCandidate> persisted = new ArrayList<>();
         List<MappedCandidate> eventCandidates = visionCandidates;

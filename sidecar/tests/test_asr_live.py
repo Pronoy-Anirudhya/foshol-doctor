@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import subprocess
 import wave
 from dataclasses import dataclass, field
 
@@ -131,6 +132,38 @@ def test_decode_wav_skips_ffmpeg_loudness(live_env, monkeypatch):
     assert called == []
     assert duration_ms > 0
     assert samples
+
+
+def test_decode_non_wav_loudnorm_failure_falls_back_to_peak_limit(live_env, monkeypatch):
+    from app.asr import decode_audio_mono_16k, _peak_limit
+    from app.config import get_settings
+
+    samples_in = [0.5, -0.5] * 160
+    peaked = []
+
+    def spy_peak(samples):
+        peaked.append(True)
+        return _peak_limit(samples)
+
+    monkeypatch.setattr("app.asr.read_audio", lambda settings, data: "audio/ogg")
+    monkeypatch.setattr("app.asr._decode_ffmpeg", lambda data: list(samples_in))
+    monkeypatch.setattr("app.asr._ffmpeg_loudness", lambda samples, target: None)
+    monkeypatch.setattr("app.asr._peak_limit", spy_peak)
+    samples, duration_ms = decode_audio_mono_16k(get_settings(), b"ogg-bytes")
+    assert peaked == [True]
+    assert duration_ms > 0
+    assert samples
+
+
+def test_ffmpeg_loudness_timeout_returns_none(monkeypatch):
+    from app.asr import _ffmpeg_loudness
+
+    def boom(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd="ffmpeg", timeout=2)
+
+    monkeypatch.setattr("app.asr.shutil.which", lambda name: "/usr/bin/ffmpeg")
+    monkeypatch.setattr("app.asr.subprocess.run", boom)
+    assert _ffmpeg_loudness([0.1, -0.1], -23.0) is None
 
 
 def test_transcribe_live_overlength_is_413(live_env):

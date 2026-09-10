@@ -115,7 +115,7 @@ One `AnalysisRun` per executed pipeline, identified by a UUIDv7, referencing `ca
 | `INV-A4` | `margin` is never an input to `decisionPath`. |
 | `INV-A5` | `unmappedLabels` is a JSON array of distinct raw label strings, never null; the empty array is the default. |
 | `INV-A6` | `gradcamObjectKey` is non-null only when the overlay bytes were successfully stored. |
-| `INV-A7` | `errorCode` is non-null if and only if at least one branch degraded, timed out or failed. |
+| `INV-A7` | `errorCode` is non-null if and only if vision degraded, timed out or failed, both branches failed, or `ANALYSIS-FR-101` applies. Speech-only degradation while vision `COMPLETED` is recorded on `raw_output.branches.speech`, not on `analysis_run.error_code`. |
 | `INV-A8` | `latencyMs` is the wall-clock span from pipeline start to result assembly and is always recorded, including on the degraded path. |
 | `INV-A9` | A completed run for a case is terminal: it is never mutated after `AnalysisCompleted` is published. |
 
@@ -211,9 +211,14 @@ any other Java preview API.**
 SHALL cancel that branch with interruption, SHALL mark its outcome `ABANDONED`, and SHALL assemble a
 result from whichever branches completed** (`COMMON-NFR-030`).
 
-`ANALYSIS-FR-024` **WHEN a branch is abandoned, THE analysis module SHALL record
-`analysis_run.error_code` as `ERR_VISION_BRANCH_TIMEOUT` or `ERR_SPEECH_BRANCH_TIMEOUT` and SHALL log
-a `WARN` carrying the correlation id.**
+`ANALYSIS-FR-024` **WHEN a branch is abandoned, THE analysis module SHALL log a `WARN` carrying the
+correlation id.** **WHEN vision is abandoned, THE analysis module SHALL record
+`analysis_run.error_code` as `ERR_VISION_BRANCH_TIMEOUT`.** **WHEN speech is abandoned AND vision did
+not complete, THE analysis module SHALL record `analysis_run.error_code` as
+`ERR_SPEECH_BRANCH_TIMEOUT`.** **WHEN speech is abandoned AND vision `COMPLETED`, THE analysis module
+SHALL NOT copy the speech timeout onto `analysis_run.error_code` and SHALL record the speech outcome
+`ABANDONED` in `raw_output.branches.speech`.** *(Speech is a SECONDARY merge input, not a veto on a
+completed vision path — `ANALYSIS-FR-056`.)*
 
 `ANALYSIS-FR-025` **IF both branches are abandoned or failed, THEN THE analysis module SHALL route
 the case to `UNDETERMINED` and SHALL still publish `AnalysisCompleted`** (`COMMON-NFR-035`).
@@ -724,7 +729,7 @@ does not edit the file (`COMMON-NFR-040`).
 |---|---|
 | `ERR_SIDECAR_UNAVAILABLE` | Circuit open, or the call failed after retry (`ANALYSIS-FR-101`) |
 | `ERR_VISION_BRANCH_TIMEOUT` | Vision branch abandoned at the deadline |
-| `ERR_SPEECH_BRANCH_TIMEOUT` | Speech branch abandoned at the deadline |
+| `ERR_SPEECH_BRANCH_TIMEOUT` | Speech branch abandoned at the deadline while vision did not complete |
 | `ERR_ALL_LABELS_UNMAPPED` | Every candidate unmapped (`ANALYSIS-FR-034`) |
 | `ERR_NO_REMEDY_FOR_DIAGNOSIS` | Confident, non-healthy diagnosis with no active remedy (`ANALYSIS-FR-052`) |
 | `ERR_EMBEDDING_DIMENSION` | Embedding not 768-d (`ANALYSIS-FR-076`) |
@@ -806,7 +811,7 @@ One scenario per significant requirement, each mapping onto a single test method
 | A4 | `FR-020` | **Given** a case with images and audio **When** the pipeline runs **Then** both branches start before either completes and the executor is closed on exit |
 | A5 | `FR-021` | **Given** the compiled module **When** ArchUnit scans it **Then** no class references `StructuredTaskScope` and no build script enables preview features |
 | A6 | `FR-023` | **Given** `foshol.analysis.deadline=PT3S` and a speech port that sleeps 10 s **When** the pipeline runs **Then** the run completes, the speech branch is `ABANDONED`, and vision candidates are persisted |
-| A7 | `FR-024` | **Given** the scenario of A6 **Then** `analysis_run.error_code = ERR_SPEECH_BRANCH_TIMEOUT` |
+| A7 | `FR-024` | **Given** the scenario of A6 **Then** `analysis_run.error_code` is null, the decision path is unchanged by the speech timeout, and `raw_output.branches.speech` is `ABANDONED` |
 | A8 | `FR-025` | **Given** both ports sleep past the deadline **Then** `decision_path = UNDETERMINED` and `AnalysisCompleted` is published |
 | A9 | `NFR-004` | **Given** `foshol.ai.mode=replay` **When** the context starts **Then** exactly one bean of each port type exists and it is the fixture adapter |
 | A10 | `NFR-006` | **Given** a fixture at `fixtures/vision/{sha}.json` **When** the vision branch runs for that image **Then** the fixture's candidates are returned with no HTTP call |

@@ -131,4 +131,38 @@ class SidecarHttpClientTest {
         JsonNode node = http11.postMultipart("/v1/vision/classify", new byte[] {1, 2}, "leaf.bin", "potato", "corr");
         assertThat(node.path("model_id").asText()).isEqualTo("vit");
     }
+
+    @Test
+    void asrReadTimeoutIsSpeechBranchTimeout() {
+        server.createContext("/v1/asr/hang", exchange -> {
+            try {
+                Thread.sleep(5_000);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+        });
+        AnalysisSettings settings = new AnalysisSettings(
+                "live",
+                new BigDecimal("0.75"),
+                new BigDecimal("0.45"),
+                BigDecimal.ONE,
+                "MAX",
+                Duration.ofMillis(400),
+                5,
+                true,
+                "http://127.0.0.1:" + server.getAddress().getPort(),
+                Duration.ofSeconds(8),
+                Duration.ofMinutes(10),
+                "http://localhost:9000",
+                "minio",
+                "minio12345",
+                "foshol-cases");
+        SidecarHttpClient hanging = new SidecarHttpClient(settings, mapper, objectStore);
+        assertThatThrownBy(() -> hanging.postMultipartAudio("/v1/asr/hang", new byte[] {1}, "audio.bin", "corr"))
+                .isInstanceOf(SidecarFailureException.class)
+                .extracting(ex -> ((SidecarFailureException) ex).errorCode())
+                .isEqualTo(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT);
+    }
 }
