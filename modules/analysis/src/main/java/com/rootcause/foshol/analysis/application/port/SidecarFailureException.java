@@ -39,4 +39,8 @@ public class SidecarFailureException extends RuntimeException {
     public boolean expectedExplainFailure() {
         return clientError() || ErrorCodes.ERR_SIDECAR_MODEL_UNAVAILABLE.equals(errorCode);
     }
+
+    public boolean expectedSpeechDegradation() {
+        return ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT.equals(errorCode);
+    }
 }

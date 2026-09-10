@@ -30,11 +30,13 @@ import org.springframework.stereotype.Component;
 public class SidecarCallSupport {
 
     public static final String INSTANCE = "sidecar";
+    static final String ASR_ENDPOINT = "asr";
     private static final String METRIC = "foshol.ai.call";
 
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
     private final TimeLimiter timeLimiter;
+    private final TimeLimiter asrTimeLimiter;
     private final MeterRegistry meters;
     private final ExecutorService callExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -53,7 +55,7 @@ public class SidecarCallSupport {
             TimeLimiterRegistry timeLimiters,
             MeterRegistry meters,
             AnalysisSettings settings) {
-        this(circuitBreakers, retries, timeLimiters, meters, settings.aiTimeout());
+        this(circuitBreakers, retries, timeLimiters, meters, settings.aiTimeout(), settings.deadline());
     }
 
     SidecarCallSupport(
@@ -62,6 +64,16 @@ public class SidecarCallSupport {
             TimeLimiterRegistry timeLimiters,
             MeterRegistry meters,
             Duration timeout) {
+        this(circuitBreakers, retries, timeLimiters, meters, timeout, timeout);
+    }
+
+    SidecarCallSupport(
+            CircuitBreakerRegistry circuitBreakers,
+            RetryRegistry retries,
+            TimeLimiterRegistry timeLimiters,
+            MeterRegistry meters,
+            Duration timeout,
+            Duration asrTimeout) {
         this.circuitBreaker = circuitBreakers.circuitBreaker(
                 INSTANCE,
                 () -> CircuitBreakerConfig.from(circuitBreakers.getDefaultConfig())
@@ -72,12 +84,8 @@ public class SidecarCallSupport {
                 () -> RetryConfig.from(retries.getDefaultConfig())
                         .retryOnException(SidecarCallSupport::retryable)
                         .build());
-        this.timeLimiter = TimeLimiter.of(
-                INSTANCE,
-                TimeLimiterConfig.custom()
-                        .timeoutDuration(timeout)
-                        .cancelRunningFuture(true)
-                        .build());
+        this.timeLimiter = limiter(INSTANCE, timeout);
+        this.asrTimeLimiter = timeout.equals(asrTimeout) ? this.timeLimiter : limiter(INSTANCE + "-asr", asrTimeout);
         this.meters = meters;
     }
 
@@ -88,9 +96,10 @@ public class SidecarCallSupport {
 
     public <T> T execute(String endpoint, Supplier<T> call) {
         Timer.Sample sample = Timer.start(meters);
-        Supplier<T> decorated = Retry.decorateSupplier(retry, CircuitBreaker.decorateSupplier(circuitBreaker, call));
+        Supplier<T> decorated = Retry.decorateSupplier(
+                retry, CircuitBreaker.decorateSupplier(circuitBreaker, wrapAsr(endpoint, call)));
         Callable<T> limited = TimeLimiter.decorateFutureSupplier(
-                timeLimiter, () -> CompletableFuture.supplyAsync(decorated::get, callExecutor));
+                limiterFor(endpoint), () -> CompletableFuture.supplyAsync(decorated::get, callExecutor));
         try {
             T result = limited.call();
             sample.stop(timer(endpoint, "success"));
@@ -100,12 +109,15 @@ public class SidecarCallSupport {
             throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar circuit is open", ex);
         } catch (SidecarFailureException ex) {
             sample.stop(timer(endpoint, "failure"));
-            throw ex;
+            throw remapAsrTimeout(endpoint, ex);
         } catch (Exception ex) {
             sample.stop(timer(endpoint, "failure"));
             SidecarFailureException sidecar = unwrap(ex);
             if (sidecar != null) {
-                throw sidecar;
+                throw remapAsrTimeout(endpoint, sidecar);
+            }
+            if (isAsr(endpoint) && SidecarTimeouts.isTimeout(ex)) {
+                throw speechTimeout(ex);
             }
             throw new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "Sidecar call failed", ex);
         }
@@ -121,7 +133,10 @@ public class SidecarCallSupport {
 
     static boolean ignoreForCircuit(Throwable ex) {
         SidecarFailureException sidecar = unwrap(ex);
-        return sidecar != null && sidecar.expectedExplainFailure();
+        if (sidecar != null) {
+            return sidecar.expectedExplainFailure() || sidecar.expectedSpeechDegradation();
+        }
+        return SidecarTimeouts.isTimeout(ex);
     }
 
     private static boolean isTransport(Throwable ex) {
@@ -144,6 +159,52 @@ public class SidecarCallSupport {
             current = current.getCause();
         }
         return null;
+    }
+
+    private TimeLimiter limiterFor(String endpoint) {
+        return isAsr(endpoint) ? asrTimeLimiter : timeLimiter;
+    }
+
+    private static <T> Supplier<T> wrapAsr(String endpoint, Supplier<T> call) {
+        if (!isAsr(endpoint)) {
+            return call;
+        }
+        return () -> {
+            try {
+                return call.get();
+            } catch (SidecarFailureException ex) {
+                throw remapAsrTimeout(endpoint, ex);
+            } catch (RuntimeException ex) {
+                if (SidecarTimeouts.isTimeout(ex)) {
+                    throw speechTimeout(ex);
+                }
+                throw ex;
+            }
+        };
+    }
+
+    private static SidecarFailureException remapAsrTimeout(String endpoint, SidecarFailureException ex) {
+        if (!isAsr(endpoint) || ex.expectedSpeechDegradation()) {
+            return ex;
+        }
+        if (SidecarTimeouts.isTimeout(ex)) {
+            return speechTimeout(ex);
+        }
+        return ex;
+    }
+
+    private static SidecarFailureException speechTimeout(Throwable cause) {
+        return new SidecarFailureException(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT, "Sidecar ASR timed out", cause);
+    }
+
+    private static boolean isAsr(String endpoint) {
+        return ASR_ENDPOINT.equals(endpoint);
+    }
+
+    private static TimeLimiter limiter(String name, Duration timeout) {
+        return TimeLimiter.of(
+                name,
+                TimeLimiterConfig.custom().timeoutDuration(timeout).cancelRunningFuture(true).build());
     }
 
     private Timer timer(String endpoint, String outcome) {
