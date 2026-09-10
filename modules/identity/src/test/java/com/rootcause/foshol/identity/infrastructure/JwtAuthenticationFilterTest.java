@@ -19,14 +19,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 
 class JwtAuthenticationFilterTest {
 
     private final JwtService jwt =
             new JwtService("foshol-doctor", Duration.ofHours(8), "local-dev-jwt-secret-must-be-32chars");
+    private final RequestAttributeSecurityContextRepository repository = new RequestAttributeSecurityContextRepository();
     private final JwtAuthenticationFilter filter =
-            new JwtAuthenticationFilter(jwt, new SecurityProblemWriter(new ObjectMapper()));
+            new JwtAuthenticationFilter(jwt, new SecurityProblemWriter(new ObjectMapper()), repository);
 
     @AfterEach
     void clear() {
@@ -57,6 +61,7 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(response.getContentAsString()).contains(ErrorCodes.ERR_TOKEN_EXPIRED);
+        assertThat(loadedAuthentication(request)).isNull();
         verifyNoInteractions(chain);
     }
 
@@ -68,8 +73,14 @@ class JwtAuthenticationFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
         FilterChain chain = mock(FilterChain.class);
-        filter.doFilter(request, new MockHttpServletResponse(), chain);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, chain);
         assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                .extracting(a -> a.getAuthority())
+                .containsExactly("ROLE_ADMIN");
+        SecurityContext saved = repository.loadDeferredContext(request).get();
+        assertThat(saved.getAuthentication().getName()).isEqualTo(sub.toString());
+        assertThat(saved.getAuthentication().getAuthorities())
                 .extracting(a -> a.getAuthority())
                 .containsExactly("ROLE_ADMIN");
         verify(chain).doFilter(org.mockito.ArgumentMatchers.eq(request), org.mockito.ArgumentMatchers.any());
@@ -94,6 +105,11 @@ class JwtAuthenticationFilterTest {
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(response.getContentAsString()).contains(ErrorCodes.ERR_TOKEN_INVALID);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        assertThat(loadedAuthentication(request)).isNull();
         verifyNoInteractions(chain);
+    }
+
+    private Authentication loadedAuthentication(MockHttpServletRequest request) {
+        return repository.loadDeferredContext(request).get().getAuthentication();
     }
 }

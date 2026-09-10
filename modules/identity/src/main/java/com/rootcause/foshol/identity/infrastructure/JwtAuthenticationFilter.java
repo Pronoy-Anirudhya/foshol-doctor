@@ -13,7 +13,9 @@ import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,10 +24,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final SecurityProblemWriter problems;
+    private final SecurityContextRepository securityContextRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService, SecurityProblemWriter problems) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            SecurityProblemWriter problems,
+            SecurityContextRepository securityContextRepository) {
         this.jwtService = jwtService;
         this.problems = problems;
+        this.securityContextRepository = securityContextRepository;
     }
 
     @Override
@@ -42,10 +49,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Role role = parseRole(jwt.getClaim("role").asString());
             var authentication = new UsernamePasswordAuthenticationToken(
                     jwt.getSubject(), jwt, List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
             filterChain.doFilter(request, response);
         } catch (IdentityException ex) {
             SecurityContextHolder.clearContext();
+            securityContextRepository.saveContext(
+                    SecurityContextHolder.createEmptyContext(), request, response);
             problems.write(response, ex.status(), ex.errorCode(), ex.getMessage(), request);
         }
     }
