@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url http
         python-multipart==0.0.20 \
         pillow==11.2.1 \
         transformers==4.51.3 \
+        timm==1.0.15 \
         faster-whisper==1.1.1 \
         ctranslate2==4.5.0 \
         sentence-transformers==3.4.1
