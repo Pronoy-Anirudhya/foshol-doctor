@@ -1,12 +1,12 @@
 package com.rootcause.foshol.knowledge.application.query.handler;
 
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.knowledge.api.MatchedSymptom;
 import com.rootcause.foshol.knowledge.api.ScoredDisease;
 import com.rootcause.foshol.knowledge.api.SymptomMatchRequest;
 import com.rootcause.foshol.knowledge.api.SymptomMatchResult;
-import com.rootcause.foshol.knowledge.application.MatchSettings;
+import com.rootcause.foshol.knowledge.application.config.MatchSettings;
 import com.rootcause.foshol.knowledge.application.port.CropIdIndex;
 import com.rootcause.foshol.knowledge.application.port.DiseaseScoringPort;
 import com.rootcause.foshol.knowledge.application.port.KnnHit;
@@ -15,9 +15,9 @@ import com.rootcause.foshol.knowledge.application.port.SymptomCatalog;
 import com.rootcause.foshol.knowledge.application.port.SymptomPhraseVectorPort;
 import com.rootcause.foshol.knowledge.application.query.SymptomMatchQuery;
 import com.rootcause.foshol.knowledge.domain.DiseaseScore;
-import com.rootcause.foshol.knowledge.domain.FuzzyHitSpec;
+import com.rootcause.foshol.knowledge.domain.spec.FuzzyHitSpec;
 import com.rootcause.foshol.knowledge.domain.FuzzyOverlap;
-import com.rootcause.foshol.knowledge.domain.InconclusiveSpec;
+import com.rootcause.foshol.knowledge.domain.spec.InconclusiveSpec;
 import com.rootcause.foshol.knowledge.domain.KnowledgeException;
 import com.rootcause.foshol.knowledge.domain.KnowledgeTaxonomy;
 import com.rootcause.foshol.knowledge.domain.MatchLayer;
@@ -26,7 +26,7 @@ import com.rootcause.foshol.knowledge.domain.PhraseIndexEntry;
 import com.rootcause.foshol.knowledge.domain.SymptomDeduplicator;
 import com.rootcause.foshol.knowledge.domain.SymptomMatch;
 import com.rootcause.foshol.knowledge.domain.SymptomRef;
-import com.rootcause.foshol.knowledge.domain.VectorHitSpec;
+import com.rootcause.foshol.knowledge.domain.spec.VectorHitSpec;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 
 import java.math.BigDecimal;

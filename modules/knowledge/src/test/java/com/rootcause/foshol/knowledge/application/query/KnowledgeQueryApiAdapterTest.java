@@ -4,15 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.enums.Severity;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
 import com.rootcause.foshol.knowledge.api.CropView;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
-import com.rootcause.foshol.knowledge.infrastructure.KnowledgeQueryApiAdapter;
+import com.rootcause.foshol.knowledge.infrastructure.adapter.KnowledgeQueryApiAdapter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,13 +90,13 @@ class KnowledgeQueryApiAdapterTest {
                         "source",
                         1,
                         new java.math.BigDecimal("50"),
-                        com.rootcause.foshol.common.RemedyRateUnit.ML,
-                        com.rootcause.foshol.common.RemedyRateBasis.PER_DECIMAL,
+                        com.rootcause.foshol.common.enums.RemedyRateUnit.ML,
+                        com.rootcause.foshol.common.enums.RemedyRateBasis.PER_DECIMAL,
                         "note")));
         RemedyView remedy = api.listActiveRemedies(BLAST).getFirst();
         assertThat(remedy.rateAmount()).isEqualByComparingTo("50");
-        assertThat(remedy.rateUnit()).isEqualTo(com.rootcause.foshol.common.RemedyRateUnit.ML);
-        assertThat(remedy.rateBasis()).isEqualTo(com.rootcause.foshol.common.RemedyRateBasis.PER_DECIMAL);
+        assertThat(remedy.rateUnit()).isEqualTo(com.rootcause.foshol.common.enums.RemedyRateUnit.ML);
+        assertThat(remedy.rateBasis()).isEqualTo(com.rootcause.foshol.common.enums.RemedyRateBasis.PER_DECIMAL);
         assertThat(remedy.rateNotesBn()).isEqualTo("note");
     }
 

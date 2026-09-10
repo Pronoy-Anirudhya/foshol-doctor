@@ -1,6 +1,6 @@
 package com.rootcause.foshol.knowledge.application.query.handler;
 
-import com.rootcause.foshol.common.ErrorCodes;
+import com.rootcause.foshol.common.contract.ErrorCodes;
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
 import com.rootcause.foshol.knowledge.application.query.GetDiseaseRemediesQuery;
 import com.rootcause.foshol.knowledge.application.query.RemedyReadModel;

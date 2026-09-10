@@ -1,8 +1,12 @@
 package com.rootcause.foshol.knowledge.domain;
 
-import java.text.Normalizer;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
 import java.util.Locale;
 
+/**
+ * Phrase-matching normaliser. Storage NFC is {@link BanglaNormalizer#forStorage};
+ * this additionally maps punctuation to spaces and lowercases, which the matcher needs.
+ */
 public final class BanglaTextNormaliser {
 
     private BanglaTextNormaliser() {}
@@ -11,18 +15,11 @@ public final class BanglaTextNormaliser {
         if (raw == null) {
             return "";
         }
-        String nfc = Normalizer.normalize(raw, Normalizer.Form.NFC);
-        StringBuilder out = new StringBuilder(nfc.length());
-        for (int i = 0; i < nfc.length(); ) {
-            int cp = nfc.codePointAt(i);
+        String prepared = BanglaNormalizer.forMatching(raw);
+        StringBuilder out = new StringBuilder(prepared.length());
+        for (int i = 0; i < prepared.length(); ) {
+            int cp = prepared.codePointAt(i);
             i += Character.charCount(cp);
-            if (cp == 0x200C || cp == 0x200D) {
-                continue;
-            }
-            if (cp >= 0x09E6 && cp <= 0x09EF) {
-                out.append((char) ('0' + (cp - 0x09E6)));
-                continue;
-            }
             if (isPunctuationOrSymbol(cp)) {
                 out.append(' ');
                 continue;

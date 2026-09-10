@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.RemedyType;
+import com.rootcause.foshol.common.enums.RemedyType;
 import com.rootcause.foshol.knowledge.application.port.KnowledgeReadPort;
 import com.rootcause.foshol.knowledge.application.query.ListActiveRemediesQuery;
 import com.rootcause.foshol.knowledge.application.query.RemedyReadModel;
