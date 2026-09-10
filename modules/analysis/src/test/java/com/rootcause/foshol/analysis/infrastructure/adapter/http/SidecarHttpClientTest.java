@@ -3,15 +3,20 @@ package com.rootcause.foshol.analysis.infrastructure.adapter.http;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rootcause.foshol.analysis.application.AnalysisSettings;
 import com.rootcause.foshol.analysis.application.port.ExplanationResult;
 import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.SidecarClientException;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
 import com.rootcause.foshol.common.ErrorCodes;
 import com.sun.net.httpserver.HttpServer;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +58,24 @@ class SidecarHttpClientTest {
             exchange.getResponseBody().write(png);
             exchange.close();
         });
+        server.createContext("/v1/vision/classify", exchange -> {
+            String connection = String.join(",", exchange.getRequestHeaders().getOrDefault("Connection", List.of()));
+            String upgrade = String.join(",", exchange.getRequestHeaders().getOrDefault("Upgrade", List.of()));
+            if (connection.toLowerCase().contains("upgrade") || !upgrade.isBlank()) {
+                byte[] body = "upgrade not allowed".getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(426, body.length);
+                exchange.getResponseBody().write(body);
+                exchange.close();
+                return;
+            }
+            byte[] body = """
+                    {"model_id":"vit","model_version":"1","predictions":[],"inference_ms":1}
+                    """.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
         server.start();
         RestClient rest = RestClient.builder()
                 .baseUrl("http://127.0.0.1:" + server.getAddress().getPort())
@@ -84,5 +107,28 @@ class SidecarHttpClientTest {
         assertThat(result.modelVersion()).isEqualTo("1");
         assertThat(result.overlayPng()[0]).isEqualTo((byte) 0x89);
         assertThat(result.contentType()).isEqualTo("image/png");
+    }
+
+    @Test
+    void liveClientUsesHttp11AndDoesNotSendUpgrade() {
+        AnalysisSettings settings = new AnalysisSettings(
+                "live",
+                new BigDecimal("0.75"),
+                new BigDecimal("0.45"),
+                BigDecimal.ONE,
+                "MAX",
+                Duration.ofSeconds(12),
+                5,
+                true,
+                "http://127.0.0.1:" + server.getAddress().getPort(),
+                Duration.ofSeconds(8),
+                Duration.ofMinutes(10),
+                "http://localhost:9000",
+                "minio",
+                "minio12345",
+                "foshol-cases");
+        SidecarHttpClient http11 = new SidecarHttpClient(settings, mapper, objectStore);
+        JsonNode node = http11.postMultipart("/v1/vision/classify", new byte[] {1, 2}, "leaf.bin", "potato", "corr");
+        assertThat(node.path("model_id").asText()).isEqualTo("vit");
     }
 }
