@@ -14,8 +14,8 @@ public interface DiseaseJpaRepository extends JpaRepository<DiseaseEntity, UUID>
     @Query(
             """
             select d.id as id, d.cropId as cropId, d.code as code, d.nameBn as nameBn,
-                   d.nameEn as nameEn, d.descriptionBn as descriptionBn, d.severity as severity,
-                   d.healthy as healthy
+                   d.nameEn as nameEn, d.descriptionBn as descriptionBn, d.descriptionEn as descriptionEn,
+                   d.severity as severity, d.healthy as healthy
             from DiseaseEntity d
             where d.id = :id and d.deletedAt is null
             """)
@@ -24,8 +24,8 @@ public interface DiseaseJpaRepository extends JpaRepository<DiseaseEntity, UUID>
     @Query(
             """
             select d.id as id, d.cropId as cropId, d.code as code, d.nameBn as nameBn,
-                   d.nameEn as nameEn, d.descriptionBn as descriptionBn, d.severity as severity,
-                   d.healthy as healthy
+                   d.nameEn as nameEn, d.descriptionBn as descriptionBn, d.descriptionEn as descriptionEn,
+                   d.severity as severity, d.healthy as healthy
             from DiseaseEntity d
             where d.cropId = :cropId and d.deletedAt is null
             order by d.healthy asc, d.code asc

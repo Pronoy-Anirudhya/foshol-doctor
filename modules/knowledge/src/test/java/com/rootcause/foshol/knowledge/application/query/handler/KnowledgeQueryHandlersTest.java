@@ -105,6 +105,6 @@ class KnowledgeQueryHandlersTest {
 
     private static DiseaseReadModel disease(UUID cropId, String code, boolean healthy) {
         return new DiseaseReadModel(
-                UUID.randomUUID(), cropId, code, code, code, null, Severity.LOW, healthy);
+                UUID.randomUUID(), cropId, code, code, code, null, null, Severity.LOW, healthy);
     }
 }

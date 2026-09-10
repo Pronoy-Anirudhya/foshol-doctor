@@ -23,27 +23,34 @@ public final class KnowledgeWebMapper {
     }
 
     public static DiseaseResponse toDiseaseResponse(DiseaseReadModel row) {
-        boolean fallback = isBlank(row.nameEn());
+        boolean nameFallback = isBlank(row.nameEn());
+        boolean descriptionFallback = isBlank(row.descriptionEn()) && !isBlank(row.descriptionBn());
         return new DiseaseResponse(
                 row.id(),
                 row.cropId(),
                 row.code(),
                 row.nameBn(),
-                fallback ? row.nameBn() : row.nameEn(),
-                fallback,
+                nameFallback ? row.nameBn() : row.nameEn(),
+                nameFallback,
                 row.descriptionBn(),
+                descriptionFallback ? row.descriptionBn() : row.descriptionEn(),
+                descriptionFallback,
                 row.severity(),
                 row.healthy());
     }
 
     public static RemedyResponse toRemedyResponse(RemedyReadModel row) {
-        List<String> steps = row.stepsBn() == null ? List.of() : row.stepsBn();
+        List<String> stepsBn = row.stepsBn() == null ? List.of() : row.stepsBn();
+        boolean titleFallback = isBlank(row.titleEn());
+        boolean stepsFallback = isBlankList(row.stepsEn());
+        boolean dosageFallback = isBlank(row.dosageEn()) && !isBlank(row.dosageBn());
+        boolean notesFallback = isBlank(row.rateNotesEn()) && !isBlank(row.rateNotesBn());
         return new RemedyResponse(
                 row.id(),
                 row.diseaseId(),
                 row.type(),
                 row.titleBn(),
-                steps,
+                stepsBn,
                 row.dosageBn(),
                 row.phiDays(),
                 row.costTier(),
@@ -53,7 +60,15 @@ public final class KnowledgeWebMapper {
                 row.rateAmount(),
                 row.rateUnit(),
                 row.rateBasis(),
-                row.rateNotesBn());
+                row.rateNotesBn(),
+                titleFallback ? row.titleBn() : row.titleEn(),
+                titleFallback,
+                stepsFallback ? stepsBn : row.stepsEn(),
+                stepsFallback,
+                dosageFallback ? row.dosageBn() : row.dosageEn(),
+                dosageFallback,
+                notesFallback ? row.rateNotesBn() : row.rateNotesEn(),
+                notesFallback);
     }
 
     public static SymptomResponse toSymptomResponse(SymptomReadModel row) {
@@ -69,5 +84,9 @@ public final class KnowledgeWebMapper {
 
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private static boolean isBlankList(List<String> values) {
+        return values == null || values.isEmpty();
     }
 }

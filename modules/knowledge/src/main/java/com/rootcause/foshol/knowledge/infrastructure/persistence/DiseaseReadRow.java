@@ -17,6 +17,8 @@ public interface DiseaseReadRow {
 
     String getDescriptionBn();
 
+    String getDescriptionEn();
+
     Severity getSeverity();
 
     boolean getHealthy();

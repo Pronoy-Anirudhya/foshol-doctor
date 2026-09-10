@@ -636,8 +636,8 @@ diagnosis path straight to a client.
 | Record | Fields |
 |---|---|
 | `CropResponse` | `id`, `code`, `nameBn`, `nameEn`, `nameEnFallback`, `iconKey`, `displayOrder` |
-| `DiseaseResponse` | `id`, `cropId`, `code`, `nameBn`, `nameEn`, `nameEnFallback`, `descriptionBn`, `severity`, `healthy` |
-| `RemedyResponse` | `id`, `diseaseId`, `type`, `titleBn`, `stepsBn`, `dosageBn`, `phiDays`, `costTier`, `efficacy`, `sourceRef`, `displayOrder` |
+| `DiseaseResponse` | `id`, `cropId`, `code`, `nameBn`, `nameEn`, `nameEnFallback`, `descriptionBn`, `descriptionEn`, `descriptionEnFallback`, `severity`, `healthy` |
+| `RemedyResponse` | `id`, `diseaseId`, `type`, `titleBn`, `stepsBn`, `dosageBn`, `phiDays`, `costTier`, `efficacy`, `sourceRef`, `displayOrder`, `rateAmount`, `rateUnit`, `rateBasis`, `rateNotesBn`, `titleEn`, `titleEnFallback`, `stepsEn`, `stepsEnFallback`, `dosageEn`, `dosageEnFallback`, `rateNotesEn`, `rateNotesEnFallback` |
 | `SymptomResponse` | `id`, `code`, `nameBn`, `nameEn`, `nameEnFallback`, `organ` |
 
 | Endpoint | Method | Auth | 200 | 400 | 401 | 404 |

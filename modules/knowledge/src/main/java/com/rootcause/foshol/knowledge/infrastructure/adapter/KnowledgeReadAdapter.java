@@ -115,6 +115,7 @@ public class KnowledgeReadAdapter implements KnowledgeReadPort {
                 row.getNameBn(),
                 row.getNameEn(),
                 row.getDescriptionBn(),
+                row.getDescriptionEn(),
                 row.getSeverity(),
                 row.getHealthy());
     }
@@ -137,7 +138,11 @@ public class KnowledgeReadAdapter implements KnowledgeReadPort {
                 row.getRateAmount(),
                 row.getRateUnit(),
                 row.getRateBasis(),
-                row.getRateNotesBn());
+                row.getRateNotesBn(),
+                row.getTitleEn(),
+                RemedyStepsParser.parse(row.getStepsEn()),
+                row.getDosageEn(),
+                row.getRateNotesEn());
     }
 
     private static SymptomReadModel toSymptom(SymptomReadRow row) {

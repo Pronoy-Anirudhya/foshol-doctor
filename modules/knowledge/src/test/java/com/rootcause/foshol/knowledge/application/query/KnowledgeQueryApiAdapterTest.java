@@ -92,7 +92,11 @@ class KnowledgeQueryApiAdapterTest {
                         new java.math.BigDecimal("50"),
                         com.rootcause.foshol.common.enums.RemedyRateUnit.ML,
                         com.rootcause.foshol.common.enums.RemedyRateBasis.PER_DECIMAL,
-                        "note")));
+                        "note",
+                        null,
+                        null,
+                        null,
+                        null)));
         RemedyView remedy = api.listActiveRemedies(BLAST).getFirst();
         assertThat(remedy.rateAmount()).isEqualByComparingTo("50");
         assertThat(remedy.rateUnit()).isEqualTo(com.rootcause.foshol.common.enums.RemedyRateUnit.ML);
@@ -104,7 +108,7 @@ class KnowledgeQueryApiAdapterTest {
     void mapsDiseaseAndNeverNullRemedySteps() {
         when(findDiseaseById.handle(new FindDiseaseByIdQuery(BLAST)))
                 .thenReturn(Optional.of(new DiseaseReadModel(
-                        BLAST, RICE, "blast", "ব্লাস্ট", "Blast", null, Severity.LOW, false)));
+                        BLAST, RICE, "blast", "ব্লাস্ট", "Blast", null, null, Severity.LOW, false)));
         when(listActiveRemedies.handle(new ListActiveRemediesQuery(BLAST)))
                 .thenReturn(List.of(new RemedyReadModel(
                         REMEDY,
@@ -118,6 +122,10 @@ class KnowledgeQueryApiAdapterTest {
                         "LOW",
                         "source",
                         1,
+                        null,
+                        null,
+                        null,
+                        null,
                         null,
                         null,
                         null,
