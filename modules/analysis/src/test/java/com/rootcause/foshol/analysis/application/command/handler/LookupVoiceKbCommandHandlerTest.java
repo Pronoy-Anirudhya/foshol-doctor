@@ -108,6 +108,7 @@ class LookupVoiceKbCommandHandlerTest {
         assertThat(result.candidates()).hasSize(1);
         assertThat(result.candidates().getFirst().diseaseId()).isEqualTo(BLAST);
         assertThat(result.candidates().getFirst().matcher()).isEqualTo(VoiceKbMatchers.NAME);
+        assertThat(result.candidates().getFirst().nameEn()).isEqualTo("Blast");
         verify(knowledge, never()).listActiveRemedies(any());
     }
 

@@ -22,6 +22,7 @@ public final class VoiceKbCandidateMerger {
                                 hit.diseaseId(),
                                 hit.code(),
                                 hit.nameBn(),
+                                hit.nameEn(),
                                 AnalysisScale.score(hit.score()),
                                 VoiceKbMatchers.NAME));
             }

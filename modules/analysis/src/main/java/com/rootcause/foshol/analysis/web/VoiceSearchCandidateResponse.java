@@ -4,4 +4,10 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record VoiceSearchCandidateResponse(
-        UUID diseaseId, String code, String nameBn, BigDecimal score, String matcher) {}
+        UUID diseaseId,
+        String code,
+        String nameBn,
+        String nameEn,
+        boolean nameEnFallback,
+        BigDecimal score,
+        String matcher) {}

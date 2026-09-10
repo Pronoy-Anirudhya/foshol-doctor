@@ -49,7 +49,7 @@ class FaqVoiceControllerTest {
                         "blast",
                         new BigDecimal("0.9100"),
                         List.of(new VoiceKbDiseaseCandidate(
-                                BLAST, "BLAST", "ব্লাস্ট", new BigDecimal("1.000"), "NAME")),
+                                BLAST, "BLAST", "ব্লাস্ট", "Blast", new BigDecimal("1.000"), "NAME")),
                         false));
         mockMvc.perform(multipart("/api/v1/faq/voice-search")
                         .file(audio())
@@ -61,6 +61,8 @@ class FaqVoiceControllerTest {
                 .andExpect(jsonPath("$.inconclusive").value(false))
                 .andExpect(jsonPath("$.candidates[0].diseaseId").value(BLAST.toString()))
                 .andExpect(jsonPath("$.candidates[0].matcher").value("NAME"))
+                .andExpect(jsonPath("$.candidates[0].nameEn").value("Blast"))
+                .andExpect(jsonPath("$.candidates[0].nameEnFallback").value(false))
                 .andExpect(jsonPath("$.remedy").doesNotExist());
     }
 

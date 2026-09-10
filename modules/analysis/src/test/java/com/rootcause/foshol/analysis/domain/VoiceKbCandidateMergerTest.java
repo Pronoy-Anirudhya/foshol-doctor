@@ -15,12 +15,17 @@ class VoiceKbCandidateMergerTest {
     @Test
     void prefersHigherScoreAndCapsResults() {
         List<VoiceKbCandidate> merged = VoiceKbCandidateMerger.merge(
-                List.of(new DiseaseNameHit(BLAST, "BLAST", "ব্লাস্ট", new BigDecimal("0.800"))),
+                List.of(new DiseaseNameHit(BLAST, "BLAST", "ব্লাস্ট", "Blast", new BigDecimal("0.800"))),
                 List.of(
                         new VoiceKbCandidate(
-                                BROWN, "BROWN_SPOT", "বাদামি দাগ", new BigDecimal("0.900"), VoiceKbMatchers.VECTOR),
+                                BROWN,
+                                "BROWN_SPOT",
+                                "বাদামি দাগ",
+                                "Brown spot",
+                                new BigDecimal("0.900"),
+                                VoiceKbMatchers.VECTOR),
                         new VoiceKbCandidate(
-                                BLAST, "BLAST", "ব্লাস্ট", new BigDecimal("0.500"), VoiceKbMatchers.FUZZY)),
+                                BLAST, "BLAST", "ব্লাস্ট", "Blast", new BigDecimal("0.500"), VoiceKbMatchers.FUZZY)),
                 1);
         assertThat(merged).hasSize(1);
         assertThat(merged.getFirst().diseaseId()).isEqualTo(BROWN);
@@ -30,9 +35,9 @@ class VoiceKbCandidateMergerTest {
     @Test
     void nameLayerWinsTies() {
         List<VoiceKbCandidate> merged = VoiceKbCandidateMerger.merge(
-                List.of(new DiseaseNameHit(BLAST, "BLAST", "ব্লাস্ট", new BigDecimal("0.900"))),
+                List.of(new DiseaseNameHit(BLAST, "BLAST", "ব্লাস্ট", "Blast", new BigDecimal("0.900"))),
                 List.of(new VoiceKbCandidate(
-                        BLAST, "BLAST", "ব্লাস্ট", new BigDecimal("0.900"), VoiceKbMatchers.VECTOR)),
+                        BLAST, "BLAST", "ব্লাস্ট", "Blast", new BigDecimal("0.900"), VoiceKbMatchers.VECTOR)),
                 5);
         assertThat(merged).hasSize(1);
         assertThat(merged.getFirst().matcher()).isEqualTo(VoiceKbMatchers.NAME);

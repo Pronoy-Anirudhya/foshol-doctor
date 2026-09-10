@@ -89,7 +89,7 @@ public class LookupVoiceKbCommandHandler implements CommandHandler<LookupVoiceKb
             }
             List<DiseaseNameRef> catalogue = catalogue(command.cropId());
             List<DiseaseNameHit> nameHits = DiseaseNameMatcher.match(normalised, catalogue);
-            List<VoiceKbCandidate> symptomHits = symptomHits(command.cropId(), normalised, correlationId);
+            List<VoiceKbCandidate> symptomHits = symptomHits(command.cropId(), normalised, correlationId, catalogue);
             List<VoiceKbCandidate> merged =
                     VoiceKbCandidateMerger.merge(nameHits, symptomHits, VoiceKbMatchers.CANDIDATE_LIMIT);
             boolean inconclusive = merged.isEmpty();
@@ -99,7 +99,8 @@ public class LookupVoiceKbCommandHandler implements CommandHandler<LookupVoiceKb
         }
     }
 
-    private List<VoiceKbCandidate> symptomHits(UUID cropId, String normalised, String correlationId) {
+    private List<VoiceKbCandidate> symptomHits(
+            UUID cropId, String normalised, String correlationId, List<DiseaseNameRef> catalogue) {
         EmbeddingResult embedded;
         try {
             embedded = embedding.embed(new EmbeddingRequest(Uuid7.create(), normalised, correlationId));
@@ -124,14 +125,33 @@ public class LookupVoiceKbCommandHandler implements CommandHandler<LookupVoiceKb
             if (disease == null) {
                 continue;
             }
+            DiseaseNameRef catalogueHit = catalogueName(catalogue, disease.diseaseId());
+            String nameEn = catalogueHit == null ? null : catalogueHit.nameEn();
+            String nameBn = disease.nameBn();
+            if (catalogueHit != null && catalogueHit.nameBn() != null && !catalogueHit.nameBn().isBlank()) {
+                nameBn = catalogueHit.nameBn();
+            }
             hits.add(new VoiceKbCandidate(
                     disease.diseaseId(),
                     disease.code(),
-                    disease.nameBn(),
+                    nameBn,
+                    nameEn,
                     AnalysisScale.score(disease.score()),
                     matcher));
         }
         return hits;
+    }
+
+    private static DiseaseNameRef catalogueName(List<DiseaseNameRef> catalogue, UUID diseaseId) {
+        if (catalogue == null || diseaseId == null) {
+            return null;
+        }
+        for (DiseaseNameRef ref : catalogue) {
+            if (ref.id().equals(diseaseId)) {
+                return ref;
+            }
+        }
+        return null;
     }
 
     private List<DiseaseNameRef> catalogue(UUID cropId) {
@@ -148,7 +168,7 @@ public class LookupVoiceKbCommandHandler implements CommandHandler<LookupVoiceKb
         List<VoiceKbDiseaseCandidate> views = new ArrayList<>(merged.size());
         for (VoiceKbCandidate hit : merged) {
             views.add(new VoiceKbDiseaseCandidate(
-                    hit.diseaseId(), hit.code(), hit.nameBn(), hit.score(), hit.matcher()));
+                    hit.diseaseId(), hit.code(), hit.nameBn(), hit.nameEn(), hit.score(), hit.matcher()));
         }
         return List.copyOf(views);
     }
