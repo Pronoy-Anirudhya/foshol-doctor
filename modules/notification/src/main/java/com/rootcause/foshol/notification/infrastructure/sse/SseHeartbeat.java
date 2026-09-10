@@ -1,6 +1,6 @@
 package com.rootcause.foshol.notification.infrastructure.sse;
 
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;

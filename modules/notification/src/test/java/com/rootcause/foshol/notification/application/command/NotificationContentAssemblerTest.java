@@ -1,8 +1,8 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.notification.NotifyFixtures;
 import org.junit.jupiter.api.Test;
 

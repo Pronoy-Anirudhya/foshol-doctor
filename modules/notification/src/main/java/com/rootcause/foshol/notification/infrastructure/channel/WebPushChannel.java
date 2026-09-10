@@ -1,6 +1,6 @@
 package com.rootcause.foshol.notification.infrastructure.channel;
 
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import com.rootcause.foshol.notification.api.AdvisoryNotification;
 import com.rootcause.foshol.notification.api.NotificationChannel;
 import com.rootcause.foshol.notification.domain.ChannelNames;

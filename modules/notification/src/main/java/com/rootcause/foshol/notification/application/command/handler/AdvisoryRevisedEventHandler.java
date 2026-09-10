@@ -1,14 +1,14 @@
 package com.rootcause.foshol.notification.application.command.handler;
 
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.AdvisoryRevised;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.identity.api.FarmerView;
-import com.rootcause.foshol.notification.application.DeliveryService;
-import com.rootcause.foshol.notification.application.NotificationContentAssembler;
-import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.notification.application.command.DeliveryService;
+import com.rootcause.foshol.notification.application.command.NotificationContentAssembler;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
 import com.rootcause.foshol.notification.domain.Notification;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.ReviewSubmissionApi;
@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class HandleAdvisoryRevised {
+public class AdvisoryRevisedEventHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(HandleAdvisoryRevised.class);
+    private static final Logger log = LoggerFactory.getLogger(AdvisoryRevisedEventHandler.class);
 
     private final FarmerLookupApi farmers;
     private final ReviewSubmissionApi review;
@@ -32,7 +32,7 @@ public class HandleAdvisoryRevised {
     private final DeliveryService delivery;
     private final Clock clock;
 
-    public HandleAdvisoryRevised(
+    public AdvisoryRevisedEventHandler(
             FarmerLookupApi farmers,
             ReviewSubmissionApi review,
             NotificationRepository notifications,

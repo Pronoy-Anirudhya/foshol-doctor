@@ -6,15 +6,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.Uuid7;
-import com.rootcause.foshol.common.events.AdvisoryRevised;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.notification.NotifyFixtures;
-import com.rootcause.foshol.notification.application.DeliveryService;
-import com.rootcause.foshol.notification.application.NotificationContentAssembler;
-import com.rootcause.foshol.notification.application.NotificationRepository;
-import com.rootcause.foshol.notification.application.NotificationTemplates;
+import com.rootcause.foshol.notification.application.command.DeliveryService;
+import com.rootcause.foshol.notification.application.command.NotificationContentAssembler;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
+import com.rootcause.foshol.notification.application.command.NotificationTemplates;
 import com.rootcause.foshol.notification.domain.Notification;
 import com.rootcause.foshol.review.api.ReviewSubmissionApi;
 import java.time.Clock;
@@ -27,7 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HandleAdvisoryRevisedTest {
+class AdvisoryApprovedEventHandlerTest {
 
     @Mock
     private FarmerLookupApi farmers;
@@ -41,11 +41,11 @@ class HandleAdvisoryRevisedTest {
     @Mock
     private DeliveryService delivery;
 
-    private HandleAdvisoryRevised handler;
+    private AdvisoryApprovedEventHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new HandleAdvisoryRevised(
+        handler = new AdvisoryApprovedEventHandler(
                 farmers,
                 review,
                 notifications,
@@ -55,9 +55,9 @@ class HandleAdvisoryRevisedTest {
     }
 
     @Test
-    void deliversRevision() {
+    void deliversPublishedAdvisory() {
         when(farmers.findById(NotifyFixtures.FARMER)).thenReturn(Optional.of(NotifyFixtures.farmer()));
-        when(notifications.findDuplicate(any(), any(), eq(NotificationType.ADVISORY_REVISED), any()))
+        when(notifications.findDuplicate(any(), any(), eq(NotificationType.ADVISORY_PUBLISHED), any()))
                 .thenReturn(Optional.empty());
         when(review.findPublishedAdvisory(NotifyFixtures.CASE)).thenReturn(Optional.of(NotifyFixtures.advisoryView()));
         handler.handle(event());
@@ -65,15 +65,23 @@ class HandleAdvisoryRevisedTest {
     }
 
     @Test
+    void unknownFarmerWritesNothing() {
+        when(farmers.findById(NotifyFixtures.FARMER)).thenReturn(Optional.empty());
+        handler.handle(event());
+        verify(delivery, never()).deliver(any());
+        verify(notifications, never()).insert(any());
+    }
+
+    @Test
     void duplicateIsNoOp() {
         when(farmers.findById(NotifyFixtures.FARMER)).thenReturn(Optional.of(NotifyFixtures.farmer()));
-        when(notifications.findDuplicate(any(), any(), eq(NotificationType.ADVISORY_REVISED), any()))
+        when(notifications.findDuplicate(any(), any(), eq(NotificationType.ADVISORY_PUBLISHED), any()))
                 .thenReturn(Optional.of(Notification.pending(
-                        Uuid7.create(),
+                        NotifyFixtures.ADVISORY,
                         NotifyFixtures.FARMER,
                         NotifyFixtures.CASE,
                         NotifyFixtures.ADVISORY,
-                        NotificationType.ADVISORY_REVISED,
+                        NotificationType.ADVISORY_PUBLISHED,
                         "t",
                         "b",
                         java.util.Map.of(),
@@ -82,15 +90,17 @@ class HandleAdvisoryRevisedTest {
         verify(delivery, never()).deliver(any());
     }
 
-    private static AdvisoryRevised event() {
-        return new AdvisoryRevised(
+    private static AdvisoryApproved event() {
+        return new AdvisoryApproved(
                 NotifyFixtures.ADVISORY,
-                Uuid7.create(),
                 NotifyFixtures.CASE,
                 NotifyFixtures.FARMER,
                 NotifyFixtures.OFFICER,
                 "Officer A",
-                2,
+                NotifyFixtures.advisoryView().diseaseId(),
+                "d-name",
+                AdvisoryAction.APPROVED,
+                1,
                 NotifyFixtures.CORRELATION,
                 NotifyFixtures.T0);
     }

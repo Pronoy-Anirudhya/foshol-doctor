@@ -1,6 +1,6 @@
 package com.rootcause.foshol.notification.application.query;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.notification.domain.DeliveryState;
 import java.time.Instant;
 import java.util.UUID;

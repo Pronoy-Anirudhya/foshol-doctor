@@ -1,18 +1,18 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.listener;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.AdvisoryRevised;
 import com.rootcause.foshol.common.events.CaseRejected;
 import com.rootcause.foshol.common.events.KpiBreached;
 import com.rootcause.foshol.common.events.KpiWarningIssued;
 import com.rootcause.foshol.common.events.ReviewTaskTransferred;
-import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryApproved;
-import com.rootcause.foshol.notification.application.command.handler.HandleAdvisoryRevised;
-import com.rootcause.foshol.notification.application.command.handler.HandleCaseRejected;
-import com.rootcause.foshol.notification.application.command.handler.HandleKpiBreached;
-import com.rootcause.foshol.notification.application.command.handler.HandleKpiWarningIssued;
-import com.rootcause.foshol.notification.application.command.handler.HandleReviewTaskTransferred;
+import com.rootcause.foshol.notification.application.command.handler.AdvisoryApprovedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.AdvisoryRevisedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.CaseRejectedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.KpiBreachedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.KpiWarningIssuedEventHandler;
+import com.rootcause.foshol.notification.application.command.handler.ReviewTaskTransferredEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -21,20 +21,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReviewEventListener {
 
-    private final HandleAdvisoryApproved approved;
-    private final HandleAdvisoryRevised revised;
-    private final HandleCaseRejected rejected;
-    private final HandleKpiWarningIssued kpiWarning;
-    private final HandleKpiBreached kpiBreached;
-    private final HandleReviewTaskTransferred transferred;
+    private final AdvisoryApprovedEventHandler approved;
+    private final AdvisoryRevisedEventHandler revised;
+    private final CaseRejectedEventHandler rejected;
+    private final KpiWarningIssuedEventHandler kpiWarning;
+    private final KpiBreachedEventHandler kpiBreached;
+    private final ReviewTaskTransferredEventHandler transferred;
 
     public ReviewEventListener(
-            HandleAdvisoryApproved approved,
-            HandleAdvisoryRevised revised,
-            HandleCaseRejected rejected,
-            HandleKpiWarningIssued kpiWarning,
-            HandleKpiBreached kpiBreached,
-            HandleReviewTaskTransferred transferred) {
+            AdvisoryApprovedEventHandler approved,
+            AdvisoryRevisedEventHandler revised,
+            CaseRejectedEventHandler rejected,
+            KpiWarningIssuedEventHandler kpiWarning,
+            KpiBreachedEventHandler kpiBreached,
+            ReviewTaskTransferredEventHandler transferred) {
         this.approved = approved;
         this.revised = revised;
         this.rejected = rejected;

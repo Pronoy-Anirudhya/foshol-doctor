@@ -1,8 +1,8 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.listener;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
-import com.rootcause.foshol.notification.application.command.handler.HandleCaseStatusChanged;
+import com.rootcause.foshol.notification.application.command.handler.CaseStatusChangedEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class IntakeEventListener {
 
-    private final HandleCaseStatusChanged handler;
+    private final CaseStatusChangedEventHandler handler;
 
-    public IntakeEventListener(HandleCaseStatusChanged handler) {
+    public IntakeEventListener(CaseStatusChangedEventHandler handler) {
         this.handler = handler;
     }
 

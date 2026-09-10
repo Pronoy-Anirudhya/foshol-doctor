@@ -2,8 +2,8 @@ package com.rootcause.foshol.notification.infrastructure.channel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.notification.api.AdvisoryNotification;
 import com.rootcause.foshol.notification.domain.ChannelNames;
 import java.util.Map;

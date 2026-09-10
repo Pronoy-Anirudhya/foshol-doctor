@@ -1,4 +1,4 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.port;
 
 import java.util.UUID;
 import java.time.Instant;

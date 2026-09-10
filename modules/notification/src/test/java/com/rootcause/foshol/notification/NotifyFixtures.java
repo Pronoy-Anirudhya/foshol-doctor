@@ -1,10 +1,10 @@
 package com.rootcause.foshol.notification;
 
-import com.rootcause.foshol.common.AdvisoryAction;
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.notification.api.AdvisoryNotification;
 import com.rootcause.foshol.review.api.AdvisoryView;

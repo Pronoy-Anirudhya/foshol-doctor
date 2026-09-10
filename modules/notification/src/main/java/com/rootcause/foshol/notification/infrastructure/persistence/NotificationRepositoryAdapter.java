@@ -1,7 +1,7 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.persistence;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
 import com.rootcause.foshol.notification.domain.Notification;
 import java.util.List;
 import java.util.Map;

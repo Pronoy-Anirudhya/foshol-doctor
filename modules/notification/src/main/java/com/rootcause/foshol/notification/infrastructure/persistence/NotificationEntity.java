@@ -1,6 +1,6 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.persistence;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.notification.domain.DeliveryState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

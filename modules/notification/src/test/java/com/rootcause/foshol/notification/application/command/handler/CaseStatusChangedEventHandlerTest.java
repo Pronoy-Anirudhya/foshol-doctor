@@ -8,16 +8,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.notification.NotifyFixtures;
-import com.rootcause.foshol.notification.application.DeliveryService;
-import com.rootcause.foshol.notification.application.NotificationContentAssembler;
-import com.rootcause.foshol.notification.application.NotificationRepository;
-import com.rootcause.foshol.notification.application.NotificationTemplates;
-import com.rootcause.foshol.notification.application.OfficerQueueNudgePort;
+import com.rootcause.foshol.notification.application.command.DeliveryService;
+import com.rootcause.foshol.notification.application.command.NotificationContentAssembler;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
+import com.rootcause.foshol.notification.application.command.NotificationTemplates;
+import com.rootcause.foshol.notification.application.port.OfficerQueueNudgePort;
 import com.rootcause.foshol.notification.domain.Notification;
 import java.time.Clock;
 import java.time.ZoneOffset;
@@ -29,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HandleCaseStatusChangedTest {
+class CaseStatusChangedEventHandlerTest {
 
     @Mock
     private FarmerLookupApi farmers;
@@ -43,11 +43,11 @@ class HandleCaseStatusChangedTest {
     @Mock
     private OfficerQueueNudgePort nudge;
 
-    private HandleCaseStatusChanged handler;
+    private CaseStatusChangedEventHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new HandleCaseStatusChanged(
+        handler = new CaseStatusChangedEventHandler(
                 farmers,
                 notifications,
                 new NotificationContentAssembler(new NotificationTemplates()),

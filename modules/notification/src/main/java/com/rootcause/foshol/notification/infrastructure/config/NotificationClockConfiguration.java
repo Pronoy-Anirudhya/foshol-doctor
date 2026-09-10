@@ -1,4 +1,4 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.config;
 
 import java.time.Clock;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

@@ -1,4 +1,4 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.command;
 
 import org.springframework.stereotype.Component;
 

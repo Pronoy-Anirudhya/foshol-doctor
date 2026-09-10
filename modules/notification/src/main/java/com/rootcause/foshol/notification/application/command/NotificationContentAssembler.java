@@ -1,6 +1,6 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.command;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.RejectionView;

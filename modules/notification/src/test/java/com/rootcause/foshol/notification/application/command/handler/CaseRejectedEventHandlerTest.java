@@ -7,15 +7,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.RejectionReason;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.enums.RejectionReason;
 import com.rootcause.foshol.common.events.CaseRejected;
 import com.rootcause.foshol.identity.api.FarmerLookupApi;
 import com.rootcause.foshol.notification.NotifyFixtures;
-import com.rootcause.foshol.notification.application.DeliveryService;
-import com.rootcause.foshol.notification.application.NotificationContentAssembler;
-import com.rootcause.foshol.notification.application.NotificationRepository;
-import com.rootcause.foshol.notification.application.NotificationTemplates;
+import com.rootcause.foshol.notification.application.command.DeliveryService;
+import com.rootcause.foshol.notification.application.command.NotificationContentAssembler;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
+import com.rootcause.foshol.notification.application.command.NotificationTemplates;
 import com.rootcause.foshol.notification.domain.Notification;
 import com.rootcause.foshol.review.api.ReviewSubmissionApi;
 import java.time.Clock;
@@ -29,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HandleCaseRejectedTest {
+class CaseRejectedEventHandlerTest {
 
     @Mock
     private FarmerLookupApi farmers;
@@ -43,11 +43,11 @@ class HandleCaseRejectedTest {
     @Mock
     private DeliveryService delivery;
 
-    private HandleCaseRejected handler;
+    private CaseRejectedEventHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new HandleCaseRejected(
+        handler = new CaseRejectedEventHandler(
                 farmers,
                 review,
                 notifications,
@@ -65,7 +65,7 @@ class HandleCaseRejectedTest {
         handler.handle(event());
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(delivery).deliver(captor.capture());
-        assertThat(captor.getValue().bodyBn()).isEqualTo(com.rootcause.foshol.common.BanglaNormalizer.forStorage(NotifyFixtures.FIXTURE_MESSAGE));
+        assertThat(captor.getValue().bodyBn()).isEqualTo(com.rootcause.foshol.common.util.BanglaNormalizer.forStorage(NotifyFixtures.FIXTURE_MESSAGE));
         assertThat(captor.getValue().advisoryId()).isNull();
         assertThat(captor.getValue().payload().get("reasonCode")).isEqualTo(RejectionReason.BLURRY_IMAGE.name());
     }

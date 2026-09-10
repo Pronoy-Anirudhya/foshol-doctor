@@ -1,6 +1,6 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.port;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import com.rootcause.foshol.notification.domain.Notification;
 import java.util.List;
 import java.util.Optional;

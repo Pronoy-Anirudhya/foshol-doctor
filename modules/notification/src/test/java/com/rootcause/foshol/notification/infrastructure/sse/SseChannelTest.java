@@ -2,8 +2,8 @@ package com.rootcause.foshol.notification.infrastructure.sse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.notification.NotifyFixtures;
 import com.rootcause.foshol.notification.domain.ChannelNames;
 import java.io.IOException;

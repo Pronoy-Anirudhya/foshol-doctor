@@ -2,9 +2,9 @@ package com.rootcause.foshol.notification.application.query.handler;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.NotificationType;
-import com.rootcause.foshol.common.Uuid7;
-import com.rootcause.foshol.notification.application.NotificationRepository;
+import com.rootcause.foshol.common.enums.NotificationType;
+import com.rootcause.foshol.common.util.Uuid7;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsPage;
 import com.rootcause.foshol.notification.application.query.FarmerNotificationsQuery;
 import com.rootcause.foshol.notification.domain.DeliveryState;

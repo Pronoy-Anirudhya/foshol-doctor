@@ -1,16 +1,16 @@
 package com.rootcause.foshol.notification.application.command.handler;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.events.ReviewTaskTransferred;
-import com.rootcause.foshol.notification.application.OfficerQueueNudgePort;
+import com.rootcause.foshol.notification.application.port.OfficerQueueNudgePort;
 import org.springframework.stereotype.Service;
 
 @Service
-public class HandleReviewTaskTransferred {
+public class ReviewTaskTransferredEventHandler {
 
     private final OfficerQueueNudgePort nudge;
 
-    public HandleReviewTaskTransferred(OfficerQueueNudgePort nudge) {
+    public ReviewTaskTransferredEventHandler(OfficerQueueNudgePort nudge) {
         this.nudge = nudge;
     }
 

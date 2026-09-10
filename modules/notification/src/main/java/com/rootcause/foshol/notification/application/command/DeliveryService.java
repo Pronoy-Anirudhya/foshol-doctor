@@ -1,9 +1,10 @@
-package com.rootcause.foshol.notification.application;
+package com.rootcause.foshol.notification.application.command;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.notification.api.AdvisoryNotification;
 import com.rootcause.foshol.notification.api.NotificationChannel;
 import com.rootcause.foshol.notification.api.NotificationPort;
+import com.rootcause.foshol.notification.application.port.NotificationRepository;
 import com.rootcause.foshol.notification.domain.Notification;
 import java.time.Clock;
 import java.util.LinkedHashMap;

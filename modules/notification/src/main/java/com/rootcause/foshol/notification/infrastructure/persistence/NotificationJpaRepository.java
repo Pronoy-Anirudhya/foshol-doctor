@@ -1,6 +1,6 @@
-package com.rootcause.foshol.notification.infrastructure;
+package com.rootcause.foshol.notification.infrastructure.persistence;
 
-import com.rootcause.foshol.common.NotificationType;
+import com.rootcause.foshol.common.enums.NotificationType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

@@ -1,15 +1,15 @@
 package com.rootcause.foshol.notification.application.command.handler;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.events.KpiBreached;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class HandleKpiBreached {
+public class KpiBreachedEventHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(HandleKpiBreached.class);
+    private static final Logger log = LoggerFactory.getLogger(KpiBreachedEventHandler.class);
 
     public void handle(KpiBreached event) {
         CorrelationId.set(event.correlationId());
