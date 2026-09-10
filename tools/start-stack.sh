@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start Postgres + MinIO, then boot the Spring API until /actuator/health is UP.
 # Default profiles: local,demo (datasource + replay fixtures, no sidecar required).
-# LIVE vision (ViT sidecar + Spring local): ./tools/start-live.sh
+# LIVE vision (ViT or EfficientNet sidecar + Spring local): ./tools/start-live.sh [vit|visionary]
 # (local still seeds identities; do not add demo — it forces replay.)
 set -euo pipefail
 

@@ -1,17 +1,43 @@
 #!/usr/bin/env bash
-# Start the LIVE stack: Postgres, MinIO, the ViT+ASR+LaBSE sidecar, then Spring (profile local).
+# Start the LIVE stack: Postgres, MinIO, one vision backbone + ASR + LaBSE, then Spring (profile local).
 # Replay/demo remains: ./tools/start-stack.sh
 #
-# First run builds the sidecar image (torch) and downloads ViT, Whisper, and LaBSE
-# weights into ~/.cache/huggingface. Later runs reuse the cache.
+# Usage:
+#   ./tools/start-live.sh              # ViT (default)
+#   ./tools/start-live.sh vit
+#   ./tools/start-live.sh visionary    # EfficientNet-B3; never loaded together with ViT
+#
+# First run builds the sidecar image (torch) and downloads the selected vision model,
+# Whisper, and LaBSE weights into ~/.cache/huggingface. Later runs reuse the cache.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ $# -gt 1 ]]; then
+  echo "usage: $0 [vit|visionary]" >&2
+  exit 1
+fi
+
+BACKEND="${1:-vit}"
+case "$BACKEND" in
+  vit)
+    export FOSHOL_SIDECAR_VISION_BACKEND=vit
+    export FOSHOL_AI_VISION_RICE_MODEL_ID=wambugu71/crop_leaf_diseases_vit
+    export FOSHOL_AI_VISION_RICE_MODEL_REVISION=7d5b32bcd6f83a2f57e7e0346358fad276296877
+    ;;
+  visionary)
+    export FOSHOL_SIDECAR_VISION_BACKEND=visionary
+    export FOSHOL_AI_VISION_RICE_MODEL_ID=VisionaryQuant/5_Crop_Disease_Detection
+    export FOSHOL_AI_VISION_RICE_MODEL_REVISION=63080391f7d2bdb331ab356b0d1d9b4b603b3946
+    ;;
+  *)
+    echo "usage: $0 [vit|visionary]" >&2
+    exit 1
+    ;;
+esac
+
 export FOSHOL_AI_MODE=live
-export FOSHOL_AI_VISION_RICE_MODEL_ID="${FOSHOL_AI_VISION_RICE_MODEL_ID:-wambugu71/crop_leaf_diseases_vit}"
-export FOSHOL_AI_VISION_RICE_MODEL_REVISION="${FOSHOL_AI_VISION_RICE_MODEL_REVISION:-7d5b32bcd6f83a2f57e7e0346358fad276296877}"
 export FOSHOL_AI_VISION_CROP_ROUTES="${FOSHOL_AI_VISION_CROP_ROUTES:-rice=rice,tomato=rice,potato=rice,corn=rice,wheat=rice}"
 export FOSHOL_SIDECAR_TORCH_THREADS="${FOSHOL_SIDECAR_TORCH_THREADS:-4}"
 export HF_HUB_OFFLINE=0
@@ -58,7 +84,7 @@ export FOSHOL_MINIO_ACCESS_KEY FOSHOL_MINIO_SECRET_KEY
 
 mkdir -p "${HOME}/.cache/huggingface"
 
-echo "starting postgres, minio, and LIVE sidecar (mode=${FOSHOL_AI_MODE} model=${FOSHOL_AI_VISION_RICE_MODEL_ID})"
+echo "starting postgres, minio, and LIVE sidecar (mode=${FOSHOL_AI_MODE} backend=${FOSHOL_SIDECAR_VISION_BACKEND} model=${FOSHOL_AI_VISION_RICE_MODEL_ID})"
 docker compose --profile ai up -d --build postgres minio sidecar
 
 echo -n "waiting for postgres"
@@ -75,7 +101,7 @@ if ! docker compose exec -T postgres pg_isready -U foshol -d foshol >/dev/null 2
   exit 1
 fi
 
-echo -n "waiting for sidecar ${SIDECAR_URL}/health (first run downloads ViT, Whisper, and LaBSE weights)"
+echo -n "waiting for sidecar ${SIDECAR_URL}/health (first run downloads vision, Whisper, and LaBSE weights)"
 deadline=$((SECONDS + SIDECAR_TIMEOUT))
 until curl -sf "${SIDECAR_URL}/health" >/dev/null 2>&1; do
   if (( SECONDS >= deadline )); then
