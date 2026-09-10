@@ -1,6 +1,6 @@
 package com.rootcause.foshol.intake.application.command.handler;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.application.command.ChangeCaseStatusCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;

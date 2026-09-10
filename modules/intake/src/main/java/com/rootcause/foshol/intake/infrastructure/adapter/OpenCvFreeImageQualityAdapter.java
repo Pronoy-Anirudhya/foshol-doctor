@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.adapter;
 
 import com.rootcause.foshol.intake.application.port.ImageQualityPort;
 import com.rootcause.foshol.intake.domain.vo.ImageMetrics;

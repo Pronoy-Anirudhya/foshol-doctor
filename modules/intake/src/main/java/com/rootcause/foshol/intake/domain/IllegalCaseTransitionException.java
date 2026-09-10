@@ -1,7 +1,7 @@
 package com.rootcause.foshol.intake.domain;
 
 import com.rootcause.foshol.intake.domain.vo.CaseId;
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 
 public class IllegalCaseTransitionException extends RuntimeException {
 

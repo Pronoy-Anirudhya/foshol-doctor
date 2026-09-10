@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.persistence;
 
 import java.time.Instant;
 import java.util.Optional;

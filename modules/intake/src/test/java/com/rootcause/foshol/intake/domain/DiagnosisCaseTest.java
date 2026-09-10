@@ -3,9 +3,9 @@ package com.rootcause.foshol.intake.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.common.events.CaseStatusChanged;
 import com.rootcause.foshol.intake.domain.vo.CaseId;
 import com.rootcause.foshol.intake.domain.vo.ImageId;

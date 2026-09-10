@@ -5,9 +5,9 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import com.rootcause.foshol.intake.application.command.RecordAnalysisOutcomeCommand;
 import com.rootcause.foshol.intake.application.port.DiagnosisCaseRepository;
 import com.rootcause.foshol.intake.domain.CaseImage;

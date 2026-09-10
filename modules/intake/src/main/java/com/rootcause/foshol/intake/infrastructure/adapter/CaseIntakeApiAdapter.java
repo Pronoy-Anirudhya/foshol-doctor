@@ -1,13 +1,13 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.adapter;
 
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
-import com.rootcause.foshol.intake.application.StaffRegionAccess;
+import com.rootcause.foshol.intake.application.query.StaffRegionAccess;
 import com.rootcause.foshol.intake.application.command.RecordFieldMetricsCommand;
 import com.rootcause.foshol.intake.application.command.RecordTranscriptCommand;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;

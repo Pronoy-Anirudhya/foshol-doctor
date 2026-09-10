@@ -1,10 +1,10 @@
 package com.rootcause.foshol.intake.application.query.handler;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.common.cqrs.QueryHandler;
-import com.rootcause.foshol.intake.application.IntakeException;
-import com.rootcause.foshol.intake.application.StaffRegionAccess;
+import com.rootcause.foshol.intake.domain.IntakeException;
+import com.rootcause.foshol.intake.application.query.StaffRegionAccess;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import com.rootcause.foshol.intake.application.query.CaseDetailQuery;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;

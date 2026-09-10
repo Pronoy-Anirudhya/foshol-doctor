@@ -1,8 +1,8 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.listener;
 
 import static org.mockito.Mockito.verify;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 import com.rootcause.foshol.common.events.CaseSubmitted;

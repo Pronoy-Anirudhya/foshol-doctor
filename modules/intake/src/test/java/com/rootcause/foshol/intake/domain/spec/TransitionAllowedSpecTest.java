@@ -2,7 +2,7 @@ package com.rootcause.foshol.intake.domain.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

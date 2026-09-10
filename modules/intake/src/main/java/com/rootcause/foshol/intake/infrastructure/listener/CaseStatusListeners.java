@@ -1,7 +1,7 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.listener;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.AnalysisCompleted;

@@ -1,6 +1,6 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.persistence;
 
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import com.rootcause.foshol.intake.application.port.ImageStorePort;
 import com.rootcause.foshol.intake.application.port.ObjectStorePort;
 import com.rootcause.foshol.intake.domain.vo.Sha256;

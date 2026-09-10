@@ -1,6 +1,6 @@
-package com.rootcause.foshol.intake.application;
+package com.rootcause.foshol.intake.application.query;
 
-import com.rootcause.foshol.common.Role;
+import com.rootcause.foshol.common.enums.Role;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.application.port.CaseQueryPort;
 import java.util.UUID;

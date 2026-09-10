@@ -1,10 +1,10 @@
 package com.rootcause.foshol.intake.api;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;
 import java.math.BigDecimal;

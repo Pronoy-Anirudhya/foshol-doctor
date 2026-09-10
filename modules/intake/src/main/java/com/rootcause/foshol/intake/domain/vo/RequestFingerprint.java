@@ -1,7 +1,7 @@
 package com.rootcause.foshol.intake.domain.vo;
 
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;

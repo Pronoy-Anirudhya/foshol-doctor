@@ -1,6 +1,6 @@
 package com.rootcause.foshol.intake.application.port;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import com.rootcause.foshol.intake.application.query.CaseDetailView;
 import com.rootcause.foshol.intake.application.query.FarmerCaseRow;
 import com.rootcause.foshol.intake.application.query.PageResult;

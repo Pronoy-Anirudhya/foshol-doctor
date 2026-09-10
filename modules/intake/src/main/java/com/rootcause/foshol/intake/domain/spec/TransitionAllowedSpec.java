@@ -1,6 +1,6 @@
 package com.rootcause.foshol.intake.domain.spec;
 
-import com.rootcause.foshol.common.CaseStatus;
+import com.rootcause.foshol.common.enums.CaseStatus;
 import java.util.Set;
 
 public final class TransitionAllowedSpec {

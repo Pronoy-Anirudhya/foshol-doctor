@@ -1,7 +1,7 @@
 package com.rootcause.foshol.intake.application.query;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.DecisionPath;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.DecisionPath;
 import java.time.Instant;
 import java.util.UUID;
 

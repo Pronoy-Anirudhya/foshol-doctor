@@ -1,8 +1,8 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.web;
 
-import com.rootcause.foshol.common.CorrelationId;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.intake.application.IntakeException;
+import com.rootcause.foshol.common.util.CorrelationId;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.intake.domain.IntakeException;
 import com.rootcause.foshol.intake.domain.AudioNotFoundException;
 import com.rootcause.foshol.intake.domain.CaseNotFoundException;
 import com.rootcause.foshol.intake.domain.ImageNotFoundException;
@@ -89,14 +89,7 @@ public class IntakeExceptionHandler {
 
     private String messageBn(Object reason) {
         String http = reason == null ? "" : reason.toString();
-        QualityReason mapped = switch (http) {
-            case "UNDEREXPOSED" -> QualityReason.TOO_DARK;
-            case "OVEREXPOSED" -> QualityReason.TOO_BRIGHT;
-            case "BLURRY" -> QualityReason.BLURRY;
-            case "TOO_SMALL" -> QualityReason.TOO_SMALL;
-            case "NOT_A_CROP" -> QualityReason.NOT_A_CROP;
-            default -> QualityReason.UNREADABLE;
-        };
+        QualityReason mapped = QualityReason.fromHttpReason(http);
         Locale locale = LocaleContextHolder.getLocale();
         if (locale == null || locale.getLanguage().isBlank()) {
             locale = Locale.forLanguageTag("bn");

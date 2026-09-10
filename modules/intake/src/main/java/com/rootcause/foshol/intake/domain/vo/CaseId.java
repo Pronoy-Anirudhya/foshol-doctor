@@ -1,6 +1,6 @@
 package com.rootcause.foshol.intake.domain.vo;
 
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.util.Uuid7;
 import java.util.Objects;
 import java.util.UUID;
 

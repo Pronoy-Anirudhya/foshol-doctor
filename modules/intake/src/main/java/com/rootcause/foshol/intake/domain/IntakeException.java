@@ -1,4 +1,4 @@
-package com.rootcause.foshol.intake.application;
+package com.rootcause.foshol.intake.domain;
 
 public class IntakeException extends RuntimeException {
 

@@ -1,10 +1,10 @@
-package com.rootcause.foshol.intake.infrastructure;
+package com.rootcause.foshol.intake.infrastructure.persistence;
 
-import com.rootcause.foshol.common.CaseStatus;
-import com.rootcause.foshol.common.CropQuantityUnit;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.MetricsSource;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import com.rootcause.foshol.intake.domain.CaseAudio;
 import com.rootcause.foshol.intake.domain.CaseImage;
 import com.rootcause.foshol.intake.domain.DiagnosisCase;
