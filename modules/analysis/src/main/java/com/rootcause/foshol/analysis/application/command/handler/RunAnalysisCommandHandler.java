@@ -58,6 +58,7 @@ import com.rootcause.foshol.knowledge.api.ScoredDisease;
 import com.rootcause.foshol.knowledge.api.SymptomMatchApi;
 import com.rootcause.foshol.knowledge.api.SymptomMatchRequest;
 import com.rootcause.foshol.knowledge.api.SymptomMatchResult;
+import com.rootcause.foshol.knowledge.api.SymptomRefView;
 import com.rootcause.foshol.common.cqrs.CommandHandler;
 
 import java.math.BigDecimal;
@@ -658,8 +659,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         List<CandidateView> out = new ArrayList<>();
         int rank = 1;
         for (MappedCandidate c : candidates) {
-            String name = knowledge.findDiseaseById(c.diseaseId()).map(DiseaseView::nameBn).orElse(c.diseaseCode());
-            out.add(new CandidateView(c.diseaseId(), c.diseaseCode(), name, c.confidence(), rank, source));
+            Optional<DiseaseView> disease = knowledge.findDiseaseById(c.diseaseId());
+            String nameBn = disease.map(DiseaseView::nameBn).orElse(c.diseaseCode());
+            String nameEn = disease.map(DiseaseView::nameEn).orElse(null);
+            out.add(CandidateView.of(
+                    c.diseaseId(), c.diseaseCode(), nameBn, nameEn, c.confidence(), rank, source));
             rank++;
         }
         return out;
@@ -689,16 +693,18 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                 matched.put(s.symptomId(), s);
             }
         }
+        Map<UUID, SymptomRefView> catalogue = new LinkedHashMap<>();
+        for (SymptomRefView ref : knowledge.listSymptoms()) {
+            catalogue.put(ref.id(), ref);
+        }
         List<SymptomView> out = new ArrayList<>();
         for (CaseSymptom s : symptoms) {
             MatchedSymptom m = matched.get(s.symptomId());
-            out.add(new SymptomView(
-                    s.symptomId(),
-                    m == null ? s.symptomId().toString() : m.code(),
-                    m == null ? "" : m.nameBn(),
-                    s.score(),
-                    s.source(),
-                    s.matcher()));
+            SymptomRefView ref = catalogue.get(s.symptomId());
+            String code = m != null ? m.code() : (ref != null ? ref.code() : s.symptomId().toString());
+            String nameBn = m != null ? m.nameBn() : (ref != null ? ref.nameBn() : "");
+            String nameEn = ref == null ? null : ref.nameEn();
+            out.add(SymptomView.of(s.symptomId(), code, nameBn, nameEn, s.score(), s.source(), s.matcher()));
         }
         return out;
     }
