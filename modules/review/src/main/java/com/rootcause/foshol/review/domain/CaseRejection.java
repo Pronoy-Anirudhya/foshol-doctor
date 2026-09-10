@@ -1,7 +1,8 @@
 package com.rootcause.foshol.review.domain;
 
-import com.rootcause.foshol.common.BanglaNormalizer;
-import com.rootcause.foshol.common.RejectionReason;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.util.BanglaNormalizer;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -25,13 +26,13 @@ public final class CaseRejection {
             Instant createdAt) {
         String normalised = BanglaNormalizer.forStorage(messageBn);
         if (normalised == null || normalised.isBlank()) {
-            throw new ReviewException(com.rootcause.foshol.common.ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection message must be non-blank.");
+            throw new ReviewException(ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection message must be non-blank.");
         }
         if (normalised.length() > MAX_MESSAGE_CHARS) {
-            throw new ReviewException(com.rootcause.foshol.common.ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection message must be at most 500 characters.");
+            throw new ReviewException(ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection message must be at most 500 characters.");
         }
         if (reasonCode == null) {
-            throw new ReviewException(com.rootcause.foshol.common.ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection reason is required.");
+            throw new ReviewException(ErrorCodes.ERR_ADVISORY_REQUIRES_REMEDY, 400, "Rejection reason is required.");
         }
         this.id = id;
         this.caseId = caseId;

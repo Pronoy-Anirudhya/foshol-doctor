@@ -1,8 +1,8 @@
 package com.rootcause.foshol.review.application.query;
 
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.ReviewState;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
 import com.rootcause.foshol.common.events.CaseImageRef;

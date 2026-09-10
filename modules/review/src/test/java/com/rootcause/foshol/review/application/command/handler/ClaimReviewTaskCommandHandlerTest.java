@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
-import com.rootcause.foshol.review.application.ReviewDistrictGuard;
-import com.rootcause.foshol.review.application.ReviewKpiCalendar;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
+import com.rootcause.foshol.review.application.command.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.command.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskResult;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
@@ -46,7 +46,7 @@ class ClaimReviewTaskCommandHandlerTest {
     private OfficerQueueProjectionPort queue;
 
     @Mock
-    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+    private com.rootcause.foshol.review.application.command.ReviewDistrictGuard districtGuard;
 
     private ClaimReviewTaskCommandHandler handler;
 

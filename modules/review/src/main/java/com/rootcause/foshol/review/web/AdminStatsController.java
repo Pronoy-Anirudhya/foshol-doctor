@@ -1,7 +1,7 @@
 package com.rootcause.foshol.review.web;
 
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.application.query.AdminCasePeriod;
 import com.rootcause.foshol.review.application.query.AdminCasesQuery;

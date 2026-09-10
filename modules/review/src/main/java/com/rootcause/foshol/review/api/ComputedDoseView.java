@@ -1,8 +1,8 @@
 package com.rootcause.foshol.review.api;
 
-import com.rootcause.foshol.common.FieldAreaUnit;
-import com.rootcause.foshol.common.RemedyRateBasis;
-import com.rootcause.foshol.common.RemedyRateUnit;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.RemedyRateBasis;
+import com.rootcause.foshol.common.enums.RemedyRateUnit;
 import java.math.BigDecimal;
 
 public record ComputedDoseView(

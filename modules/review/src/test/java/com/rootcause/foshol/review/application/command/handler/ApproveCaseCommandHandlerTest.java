@@ -9,9 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
-import com.rootcause.foshol.common.AdvisoryAction;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
@@ -68,7 +68,7 @@ class ApproveCaseCommandHandlerTest {
     private ApplicationEventPublisher events;
 
     @Mock
-    private com.rootcause.foshol.review.application.ReviewDistrictGuard districtGuard;
+    private com.rootcause.foshol.review.application.command.ReviewDistrictGuard districtGuard;
 
     private ApproveCaseCommandHandler handler;
 

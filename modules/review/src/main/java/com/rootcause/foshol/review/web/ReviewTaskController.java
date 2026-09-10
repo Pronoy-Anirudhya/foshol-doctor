@@ -4,7 +4,7 @@ import com.rootcause.foshol.common.cqrs.CommandBus;
 import com.rootcause.foshol.common.cqrs.QueryBus;
 import com.rootcause.foshol.review.api.AdvisoryView;
 import com.rootcause.foshol.review.api.RejectionView;
-import com.rootcause.foshol.review.application.BulkReviewService;
+import com.rootcause.foshol.review.application.command.BulkReviewService;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
 import com.rootcause.foshol.review.application.command.ApproveCaseResult;
 import com.rootcause.foshol.review.application.command.ClaimReviewTaskCommand;

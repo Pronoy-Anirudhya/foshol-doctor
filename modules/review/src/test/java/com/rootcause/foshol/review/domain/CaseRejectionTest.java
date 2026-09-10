@@ -3,8 +3,8 @@ package com.rootcause.foshol.review.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.util.Uuid7;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 

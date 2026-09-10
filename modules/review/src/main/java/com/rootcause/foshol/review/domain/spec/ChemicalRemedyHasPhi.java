@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.domain.spec;
 
-import com.rootcause.foshol.common.RemedyType;
+import com.rootcause.foshol.common.enums.RemedyType;
 import com.rootcause.foshol.knowledge.api.RemedyView;
 import java.util.List;
 import java.util.Map;

@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.domain.spec;
 
-import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.enums.ReviewState;
 import com.rootcause.foshol.review.domain.ReviewTask;
 
 public final class TaskIsTerminal {

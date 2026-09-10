@@ -3,9 +3,9 @@ package com.rootcause.foshol.review.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;

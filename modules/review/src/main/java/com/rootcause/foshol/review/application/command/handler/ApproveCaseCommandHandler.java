@@ -1,19 +1,19 @@
 package com.rootcause.foshol.review.application.command.handler;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
-import com.rootcause.foshol.common.AdvisoryAction;
-import com.rootcause.foshol.common.ConfigKeys;
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
+import com.rootcause.foshol.common.contract.ConfigKeys;
+import com.rootcause.foshol.common.util.CorrelationId;
 import com.rootcause.foshol.common.events.AdvisoryApproved;
 import com.rootcause.foshol.common.events.CandidateView;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
 import com.rootcause.foshol.knowledge.api.RemedyView;
-import com.rootcause.foshol.review.application.ReviewDistrictGuard;
-import com.rootcause.foshol.review.application.AdvisoryViewMapper;
+import com.rootcause.foshol.review.application.command.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.query.AdvisoryViewMapper;
 import com.rootcause.foshol.review.application.command.AdvisoryActionDeriver;
 import com.rootcause.foshol.review.application.command.ApproveCaseCommand;
 import com.rootcause.foshol.review.application.command.ApproveCaseResult;

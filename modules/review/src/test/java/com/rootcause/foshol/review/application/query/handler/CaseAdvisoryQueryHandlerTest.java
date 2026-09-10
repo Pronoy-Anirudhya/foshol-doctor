@@ -4,15 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.RejectionReason;
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.RejectionReason;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
-import com.rootcause.foshol.review.application.Actor;
+import com.rootcause.foshol.review.application.command.Actor;
 import com.rootcause.foshol.review.application.port.AdvisoryRepository;
 import com.rootcause.foshol.review.application.port.CaseRejectionRepository;
 import com.rootcause.foshol.review.application.query.CaseAdvisoryQuery;
@@ -86,7 +86,7 @@ class CaseAdvisoryQueryHandlerTest {
                 "rice",
                 "DHK01",
                 "DHK",
-                com.rootcause.foshol.common.CaseStatus.REJECTED,
+                com.rootcause.foshol.common.enums.CaseStatus.REJECTED,
                 null,
                 null,
                 null,
@@ -95,10 +95,10 @@ class CaseAdvisoryQueryHandlerTest {
                 "c",
                 Instant.parse("2026-01-01T00:00:00Z"),
                 java.math.BigDecimal.ONE,
-                com.rootcause.foshol.common.FieldAreaUnit.DECIMAL,
+                com.rootcause.foshol.common.enums.FieldAreaUnit.DECIMAL,
                 null,
                 null,
-                com.rootcause.foshol.common.MetricsSource.FORM)));
+                com.rootcause.foshol.common.enums.MetricsSource.FORM)));
         CaseAdvisoryQueryHandler handler =
                 new CaseAdvisoryQueryHandler(advisories, rejections, cases, knowledge, officers);
         CaseAdvisoryResult result =

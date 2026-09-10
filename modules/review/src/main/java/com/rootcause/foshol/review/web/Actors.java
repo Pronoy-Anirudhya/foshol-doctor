@@ -1,7 +1,7 @@
 package com.rootcause.foshol.review.web;
 
-import com.rootcause.foshol.common.Role;
-import com.rootcause.foshol.review.application.Actor;
+import com.rootcause.foshol.common.enums.Role;
+import com.rootcause.foshol.review.application.command.Actor;
 import java.util.UUID;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,12 +12,12 @@ public final class Actors {
 
     public static Actor from(Authentication authentication) {
         UUID id = UUID.fromString(authentication.getName());
-        String role = authentication.getAuthorities().stream()
+        Role role = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
-                .map(a -> a.substring("ROLE_".length()))
+                .filter(a -> a.startsWith(Role.AUTHORITY_PREFIX))
+                .map(Role::fromAuthority)
                 .findFirst()
                 .orElseThrow();
-        return new Actor(id, Role.valueOf(role));
+        return new Actor(id, role);
     }
 }

@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query.handler;
 
-import com.rootcause.foshol.common.ConfigKeys;
+import com.rootcause.foshol.common.contract.ConfigKeys;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.query.AdminStatsQuery;

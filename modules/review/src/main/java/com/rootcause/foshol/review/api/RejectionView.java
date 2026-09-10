@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.api;
 
-import com.rootcause.foshol.common.RejectionReason;
+import com.rootcause.foshol.common.enums.RejectionReason;
 import java.time.Instant;
 import java.util.UUID;
 

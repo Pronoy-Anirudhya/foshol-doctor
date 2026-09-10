@@ -6,8 +6,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewTaskRepository;
@@ -45,8 +45,8 @@ class ReleaseReviewTaskCommandHandlerTest {
         ReleaseReviewTaskCommandHandler handler = new ReleaseReviewTaskCommandHandler(
                 tasks,
                 queue,
-                mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class),
-                com.rootcause.foshol.review.application.ReviewKpiCalendar.alwaysOpenUtc(),
+                mock(com.rootcause.foshol.review.application.command.ReviewDistrictGuard.class),
+                com.rootcause.foshol.review.application.command.ReviewKpiCalendar.alwaysOpenUtc(),
                 Clock.fixed(t0.plusSeconds(1), ZoneOffset.UTC),
                 Duration.ofMinutes(15));
         handler.handle(new ReleaseReviewTaskCommand(task.id(), officer));

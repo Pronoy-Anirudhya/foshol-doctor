@@ -6,14 +6,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.ReviewState;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.enums.ReviewState;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.ReviewTaskTransferred;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.review.ReviewFixtures;
-import com.rootcause.foshol.review.application.ReviewDistrictGuard;
+import com.rootcause.foshol.review.application.command.ReviewDistrictGuard;
 import com.rootcause.foshol.review.application.command.TransferReviewTaskCommand;
 import com.rootcause.foshol.review.application.port.OfficerQueueProjectionPort;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;

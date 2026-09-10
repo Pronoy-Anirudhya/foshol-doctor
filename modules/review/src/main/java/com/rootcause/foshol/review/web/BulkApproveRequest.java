@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.web;
 
-import com.rootcause.foshol.common.AdvisoryAction;
+import com.rootcause.foshol.common.enums.AdvisoryAction;
 import java.util.List;
 import java.util.UUID;
 

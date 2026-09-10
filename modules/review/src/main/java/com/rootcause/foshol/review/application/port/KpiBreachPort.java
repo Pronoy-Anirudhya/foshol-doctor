@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.port;
 
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.review.domain.KpiBreach;
 import java.time.Instant;
 import java.util.List;

@@ -6,8 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.rootcause.foshol.analysis.api.AnalysisApi;
-import com.rootcause.foshol.common.ErrorCodes;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.contract.ErrorCodes;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
@@ -81,7 +81,7 @@ class ReviseAdvisoryCommandHandlerTest {
                 task.caseId(),
                 ReviewFixtures.DISEASE_D,
                 ReviewFixtures.OFFICER_A,
-                com.rootcause.foshol.common.AdvisoryAction.APPROVED,
+                com.rootcause.foshol.common.enums.AdvisoryAction.APPROVED,
                 null,
                 List.of(),
                 ReviewFixtures.T0);
@@ -110,7 +110,7 @@ class ReviseAdvisoryCommandHandlerTest {
                 knowledge,
                 officers,
                 cases,
-                org.mockito.Mockito.mock(com.rootcause.foshol.review.application.ReviewDistrictGuard.class),
+                org.mockito.Mockito.mock(com.rootcause.foshol.review.application.command.ReviewDistrictGuard.class),
                 events,
                 Clock.fixed(ReviewFixtures.T0.plusSeconds(5), ZoneOffset.UTC),
                 Duration.ofMinutes(15));

@@ -1,10 +1,10 @@
 package com.rootcause.foshol.review;
 
 import com.rootcause.foshol.analysis.api.AnalysisView;
-import com.rootcause.foshol.common.AiMode;
-import com.rootcause.foshol.common.CandidateSource;
-import com.rootcause.foshol.common.DecisionPath;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CandidateSource;
+import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.AnalysisCompleted;
 import com.rootcause.foshol.common.events.AnalysisFailed;
 import com.rootcause.foshol.common.events.CandidateView;
@@ -12,8 +12,8 @@ import com.rootcause.foshol.identity.api.FarmerView;
 import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.knowledge.api.DiseaseView;
 import com.rootcause.foshol.knowledge.api.RemedyView;
-import com.rootcause.foshol.common.RemedyType;
-import com.rootcause.foshol.common.Severity;
+import com.rootcause.foshol.common.enums.RemedyType;
+import com.rootcause.foshol.common.enums.Severity;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.command;
 
-import com.rootcause.foshol.common.ReviewState;
+import com.rootcause.foshol.common.enums.ReviewState;
 import java.time.Instant;
 import java.util.UUID;
 

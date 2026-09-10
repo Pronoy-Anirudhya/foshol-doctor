@@ -1,8 +1,8 @@
 package com.rootcause.foshol.review.api;
 
-import com.rootcause.foshol.common.RemedyRateBasis;
-import com.rootcause.foshol.common.RemedyRateUnit;
-import com.rootcause.foshol.common.RemedyType;
+import com.rootcause.foshol.common.enums.RemedyRateBasis;
+import com.rootcause.foshol.common.enums.RemedyRateUnit;
+import com.rootcause.foshol.common.enums.RemedyType;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;

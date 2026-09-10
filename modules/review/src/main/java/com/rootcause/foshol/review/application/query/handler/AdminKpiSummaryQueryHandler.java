@@ -1,6 +1,6 @@
 package com.rootcause.foshol.review.application.query.handler;
 
-import com.rootcause.foshol.common.KpiKind;
+import com.rootcause.foshol.common.enums.KpiKind;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
 import com.rootcause.foshol.review.application.port.KpiBreachPort;
 import com.rootcause.foshol.review.application.query.AdminKpiSummaryQuery;

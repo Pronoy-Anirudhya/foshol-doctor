@@ -5,11 +5,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.rootcause.foshol.common.KpiKind;
-import com.rootcause.foshol.common.Uuid7;
+import com.rootcause.foshol.common.enums.KpiKind;
+import com.rootcause.foshol.common.util.Uuid7;
 import com.rootcause.foshol.common.events.KpiBreached;
 import com.rootcause.foshol.common.events.KpiWarningIssued;
-import com.rootcause.foshol.review.application.ReviewKpiCalendar;
+import com.rootcause.foshol.review.application.command.ReviewKpiCalendar;
 import com.rootcause.foshol.review.application.port.KpiBreachPort;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort;
 import com.rootcause.foshol.review.application.port.ReviewQueryPort.QueueTaskRow;
