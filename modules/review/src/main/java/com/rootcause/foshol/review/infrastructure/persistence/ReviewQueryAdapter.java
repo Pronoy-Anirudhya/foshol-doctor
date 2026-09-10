@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +31,7 @@ public class ReviewQueryAdapter implements ReviewQueryPort {
 
     private final JdbcTemplate jdbc;
 
-    public ReviewQueryAdapter(@ReadOnlyDataSource DataSource dataSource) {
+    public ReviewQueryAdapter(@Qualifier("reviewReadOnlyDataSource") @ReadOnlyDataSource DataSource dataSource) {
         this.jdbc = new JdbcTemplate(dataSource);
     }
 

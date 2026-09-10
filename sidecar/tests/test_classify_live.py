@@ -157,6 +157,21 @@ def test_backend_mismatch_is_refused():
     assert EFFICIENTNET_LABELS[16] == "Wheat___Yellow_Rust"
 
 
+def test_efficientnet_head_matches_timm_checkpoint_keys():
+    pytest.importorskip("timm")
+    import timm
+    import torch.nn as nn
+
+    model = timm.create_model("efficientnet_b3", pretrained=False)
+    in_features = model.classifier.in_features
+    model.classifier = nn.Sequential(nn.Linear(in_features, 17))
+    keys = model.state_dict().keys()
+    assert "conv_stem.weight" in keys
+    assert "classifier.0.weight" in keys
+    assert "features.0.0.weight" not in keys
+    assert "classifier.1.weight" not in keys
+
+
 @pytest.fixture
 def visionary_env(monkeypatch):
     monkeypatch.setenv("FOSHOL_AI_MODE", "live")

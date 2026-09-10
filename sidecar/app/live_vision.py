@@ -188,8 +188,9 @@ def _load_transformers_runtime(spec: ModelSpec, torch_threads: int) -> Transform
 def _load_efficientnet_runtime(spec: ModelSpec, torch_threads: int) -> EfficientNetRuntime:
     import torch
     import torch.nn as nn
+    import timm
     from huggingface_hub import hf_hub_download
-    from torchvision import models, transforms
+    from torchvision import transforms
 
     torch.set_num_threads(max(torch_threads, 1))
     weight_path = hf_hub_download(
@@ -197,9 +198,11 @@ def _load_efficientnet_runtime(spec: ModelSpec, torch_threads: int) -> Efficient
         filename=EFFICIENTNET_WEIGHT_FILE,
         revision=spec.model_version,
     )
-    model = models.efficientnet_b3(weights=None)
-    in_features = model.classifier[1].in_features
-    model.classifier[1] = nn.Linear(in_features, EFFICIENTNET_NUM_CLASSES)
+    # Checkpoint is a timm EfficientNet-B3 state_dict (conv_stem / blocks / classifier.0),
+    # not torchvision (features / classifier.1).
+    model = timm.create_model("efficientnet_b3", pretrained=False)
+    in_features = model.classifier.in_features
+    model.classifier = nn.Sequential(nn.Linear(in_features, EFFICIENTNET_NUM_CLASSES))
     state = torch.load(weight_path, map_location="cpu", weights_only=True)
     model.load_state_dict(state)
     model.eval()
