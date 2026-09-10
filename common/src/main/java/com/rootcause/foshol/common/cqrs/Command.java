@@ -1,6 +1,6 @@
 package com.rootcause.foshol.common.cqrs;
 
-import com.rootcause.foshol.common.CorrelationId;
+import com.rootcause.foshol.common.util.CorrelationId;
 
 public interface Command {
 
