@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -29,7 +30,9 @@ public class JdbcAnalysisReadRepository implements AnalysisReadRepository {
     private final JdbcTemplate jdbc;
     private final KnowledgeQueryApi knowledge;
 
-    public JdbcAnalysisReadRepository(@ReadOnlyDataSource DataSource dataSource, KnowledgeQueryApi knowledge) {
+    public JdbcAnalysisReadRepository(
+            @Qualifier("analysisReadOnlyDataSource") @ReadOnlyDataSource DataSource dataSource,
+            KnowledgeQueryApi knowledge) {
         this.jdbc = new JdbcTemplate(dataSource);
         this.knowledge = knowledge;
     }
