@@ -9,6 +9,8 @@ import com.rootcause.foshol.analysis.application.port.ObjectStorePort;
 import com.rootcause.foshol.analysis.application.port.SidecarFailureException;
 import com.rootcause.foshol.common.CorrelationId;
 import java.io.IOException;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,11 @@ public class SidecarHttpClient {
     private final ObjectStorePort objectStore;
 
     public SidecarHttpClient(AnalysisSettings settings, ObjectMapper mapper, ObjectStorePort objectStore) {
-        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory();
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(settings.aiTimeout());
         this.restClient = RestClient.builder()
                 .baseUrl(settings.aiBaseUrl())

@@ -2,6 +2,7 @@ package com.rootcause.foshol.analysis.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -231,6 +232,7 @@ class RunAnalysisCommandHandlerTest {
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
         verify(persistence).saveNewRun(run.capture(), any(), any());
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().errorCode()).isNull();
         verify(events).publishCompleted(any(AnalysisCompleted.class));
         verify(events, never()).publishFailed(any());
     }
@@ -250,7 +252,7 @@ class RunAnalysisCommandHandlerTest {
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
         verify(persistence).saveNewRun(run.capture(), any(), any());
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
-        assertThat(run.getValue().errorCode()).isEqualTo(ErrorCodes.ERR_SIDECAR_UNDECODABLE);
+        assertThat(run.getValue().errorCode()).isNull();
         verify(events).publishCompleted(any(AnalysisCompleted.class));
         verify(events, never()).publishFailed(any());
     }
@@ -282,11 +284,32 @@ class RunAnalysisCommandHandlerTest {
         when(explainability.explain(any()))
                 .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
         handler.handle(command(audio));
+        assertThat(Thread.currentThread().isInterrupted()).isFalse();
         ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
         verify(persistence).saveNewRun(run.capture(), any(), any());
         assertThat(run.getValue().errorCode()).isEqualTo(ErrorCodes.ERR_SPEECH_BRANCH_TIMEOUT);
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
         verify(events).publishCompleted(any());
+    }
+
+    @Test
+    void unexpectedSpeechFailureStillPersistsWithoutInterruptingCaller() {
+        stubHappyVision();
+        CaseAudioRef audio = new CaseAudioRef(UUID.randomUUID(), "audio.wav", 1000, null);
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(audio)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(objectStore.read(any())).thenReturn("fixture:asr:demo".getBytes());
+        when(speech.transcribe(any())).thenThrow(new IllegalStateException("speech boom"));
+        when(explainability.explain(any()))
+                .thenReturn(new ExplanationResult("m", "v", new byte[] {1}, "image/png", 1));
+        handler.handle(command(audio));
+        assertThat(Thread.currentThread().isInterrupted()).isFalse();
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        verify(events).publishCompleted(any(AnalysisCompleted.class));
+        verify(events, never()).publishFailed(any());
+        verify(knowledge, atLeastOnce()).findDiseaseById(DISEASE);
     }
 
     @Test
