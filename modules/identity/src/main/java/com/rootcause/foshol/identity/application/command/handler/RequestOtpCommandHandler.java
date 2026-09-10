@@ -75,7 +75,7 @@ public class RequestOtpCommandHandler implements CommandHandler<RequestOtpComman
         }
         String mode = (devCode == null || devCode.isBlank()) ? "SMS" : "DEV_FIXED";
         if (farmers.findByPhoneHash(phoneHash).isEmpty()) {
-            return new RequestOtpResult((int) otpTtl.toSeconds(), mode);
+            throw new IdentityException(ErrorCodes.ERR_FARMER_NOT_FOUND, 404, "Farmer was not found.");
         }
         challenges.consumeOpenChallenges(phoneHash, now);
         UUID id = Uuid7.create();
