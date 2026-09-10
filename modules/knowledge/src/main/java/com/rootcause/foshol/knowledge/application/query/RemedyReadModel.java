@@ -22,4 +22,8 @@ public record RemedyReadModel(
         BigDecimal rateAmount,
         RemedyRateUnit rateUnit,
         RemedyRateBasis rateBasis,
-        String rateNotesBn) {}
+        String rateNotesBn,
+        String titleEn,
+        List<String> stepsEn,
+        String dosageEn,
+        String rateNotesEn) {}

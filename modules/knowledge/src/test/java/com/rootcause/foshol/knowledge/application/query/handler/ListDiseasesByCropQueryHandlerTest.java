@@ -23,9 +23,9 @@ class ListDiseasesByCropQueryHandlerTest {
         UUID blast = UUID.fromString("01800000-0000-7000-8000-000000000103");
         UUID healthy = UUID.fromString("01800000-0000-7000-8000-000000000106");
         DiseaseReadModel sick =
-                new DiseaseReadModel(blast, crop, "blast", "Blast", "Blast", null, Severity.LOW, false);
+                new DiseaseReadModel(blast, crop, "blast", "Blast", "Blast", null, null, Severity.LOW, false);
         DiseaseReadModel well =
-                new DiseaseReadModel(healthy, crop, "healthy", "Healthy", "Healthy", null, Severity.NONE, true);
+                new DiseaseReadModel(healthy, crop, "healthy", "Healthy", "Healthy", null, null, Severity.NONE, true);
         when(reads.listDiseasesByCrop(crop)).thenReturn(List.of(sick, well));
         ListDiseasesByCropQueryHandler handler = new ListDiseasesByCropQueryHandler(reads);
         assertThat(handler.handle(new ListDiseasesByCropQuery(crop)))

@@ -22,4 +22,12 @@ public record RemedyResponse(
         BigDecimal rateAmount,
         RemedyRateUnit rateUnit,
         RemedyRateBasis rateBasis,
-        String rateNotesBn) {}
+        String rateNotesBn,
+        String titleEn,
+        boolean titleEnFallback,
+        List<String> stepsEn,
+        boolean stepsEnFallback,
+        String dosageEn,
+        boolean dosageEnFallback,
+        String rateNotesEn,
+        boolean rateNotesEnFallback) {}

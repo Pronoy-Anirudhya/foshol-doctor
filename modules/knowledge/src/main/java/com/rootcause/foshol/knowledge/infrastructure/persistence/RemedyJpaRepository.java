@@ -13,7 +13,8 @@ public interface RemedyJpaRepository extends JpaRepository<RemedyEntity, UUID> {
                    r.stepsBn as stepsBn, r.dosageBn as dosageBn, r.phiDays as phiDays,
                    r.costTier as costTier, r.efficacy as efficacy, r.sourceRef as sourceRef,
                    r.displayOrder as displayOrder, r.rateAmount as rateAmount, r.rateUnit as rateUnit,
-                   r.rateBasis as rateBasis, r.rateNotesBn as rateNotesBn
+                   r.rateBasis as rateBasis, r.rateNotesBn as rateNotesBn, r.titleEn as titleEn,
+                   r.stepsEn as stepsEn, r.dosageEn as dosageEn, r.rateNotesEn as rateNotesEn
             from RemedyEntity r
             where r.diseaseId = :diseaseId and r.active = true and r.deletedAt is null
             order by r.displayOrder asc, r.id asc

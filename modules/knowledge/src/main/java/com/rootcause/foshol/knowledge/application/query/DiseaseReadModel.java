@@ -10,5 +10,6 @@ public record DiseaseReadModel(
         String nameBn,
         String nameEn,
         String descriptionBn,
+        String descriptionEn,
         Severity severity,
         boolean healthy) {}

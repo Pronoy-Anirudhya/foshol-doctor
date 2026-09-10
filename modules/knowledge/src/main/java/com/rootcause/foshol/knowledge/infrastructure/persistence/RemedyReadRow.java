@@ -37,4 +37,12 @@ public interface RemedyReadRow {
     RemedyRateBasis getRateBasis();
 
     String getRateNotesBn();
+
+    String getTitleEn();
+
+    String getStepsEn();
+
+    String getDosageEn();
+
+    String getRateNotesEn();
 }

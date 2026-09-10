@@ -11,5 +11,7 @@ public record DiseaseResponse(
         String nameEn,
         boolean nameEnFallback,
         String descriptionBn,
+        String descriptionEn,
+        boolean descriptionEnFallback,
         Severity severity,
         boolean healthy) {}

@@ -45,10 +45,14 @@ public class FaqVoiceController {
     private static VoiceSearchResponse toResponse(VoiceKbLookupResult result) {
         List<VoiceSearchCandidateResponse> candidates = new ArrayList<>();
         for (VoiceKbDiseaseCandidate candidate : result.candidates()) {
+            boolean fallback = candidate.nameEn() == null || candidate.nameEn().isBlank();
+            String english = fallback ? candidate.nameBn() : candidate.nameEn();
             candidates.add(new VoiceSearchCandidateResponse(
                     candidate.diseaseId(),
                     candidate.code(),
                     candidate.nameBn(),
+                    english,
+                    fallback,
                     candidate.score(),
                     candidate.matcher()));
         }

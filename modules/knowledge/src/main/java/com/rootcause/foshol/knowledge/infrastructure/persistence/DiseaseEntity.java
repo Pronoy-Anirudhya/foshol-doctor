@@ -34,6 +34,9 @@ public class DiseaseEntity {
     @Column(name = "description_bn")
     private String descriptionBn;
 
+    @Column(name = "description_en")
+    private String descriptionEn;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 12)
     private Severity severity;
@@ -68,6 +71,10 @@ public class DiseaseEntity {
 
     public String getDescriptionBn() {
         return descriptionBn;
+    }
+
+    public String getDescriptionEn() {
+        return descriptionEn;
     }
 
     public Severity getSeverity() {

@@ -10,6 +10,11 @@ import java.util.Set;
 
 public final class DiseaseNameMatcher {
 
+    private static final BigDecimal TOKEN_SIMILARITY_MIN = new BigDecimal("0.75");
+    private static final BigDecimal JACCARD_MIN = new BigDecimal("0.55");
+    private static final int PREFIX_MIN = 2;
+    private static final int HASANTA = 0x09CD;
+
     private DiseaseNameMatcher() {}
 
     public static List<DiseaseNameHit> match(String transcriptBn, List<DiseaseNameRef> diseases) {
@@ -26,7 +31,11 @@ public final class DiseaseNameMatcher {
             BigDecimal score = score(disease, normalisedTranscript, transcriptTokens);
             if (score.compareTo(VoiceKbMatchers.NAME_OVERLAP_MIN) >= 0) {
                 hits.add(new DiseaseNameHit(
-                        disease.id(), disease.code(), disease.nameBn(), AnalysisScale.score(score)));
+                        disease.id(),
+                        disease.code(),
+                        disease.nameBn(),
+                        disease.nameEn(),
+                        AnalysisScale.score(score)));
             }
         }
         return List.copyOf(hits);
@@ -49,11 +58,22 @@ public final class DiseaseNameMatcher {
         }
         int hits = 0;
         for (String token : phraseTokens) {
-            if (transcriptTokens.contains(token)) {
+            if (fuzzyHit(token, transcriptTokens)) {
                 hits++;
             }
         }
-        return BigDecimal.valueOf(hits).divide(BigDecimal.valueOf(phraseTokens.size()), 10, AnalysisScale.ROUNDING);
+        BigDecimal coverage =
+                BigDecimal.valueOf(hits).divide(BigDecimal.valueOf(phraseTokens.size()), 10, AnalysisScale.ROUNDING);
+        int union = phraseTokens.size() + transcriptTokens.size() - hits;
+        if (union <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal jaccard =
+                BigDecimal.valueOf(hits).divide(BigDecimal.valueOf(union), 10, AnalysisScale.ROUNDING);
+        if (jaccard.compareTo(JACCARD_MIN) < 0) {
+            return BigDecimal.ZERO;
+        }
+        return coverage;
     }
 
     static BigDecimal contained(String phrase, String transcript) {
@@ -63,11 +83,66 @@ public final class DiseaseNameMatcher {
         return transcript.contains(phrase) ? BigDecimal.ONE : BigDecimal.ZERO;
     }
 
+    static boolean fuzzyHit(String phraseToken, Set<String> transcriptTokens) {
+        for (String transcriptToken : transcriptTokens) {
+            if (tokensMatch(phraseToken, transcriptToken)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean tokensMatch(String left, String right) {
+        if (left == null || right == null || left.isBlank() || right.isBlank()) {
+            return false;
+        }
+        if (tokensMatchCore(left, right)) {
+            return true;
+        }
+        String strippedLeft = stripLeadingHa(left);
+        String strippedRight = stripLeadingHa(right);
+        return tokensMatchCore(strippedLeft, right)
+                || tokensMatchCore(left, strippedRight)
+                || tokensMatchCore(strippedLeft, strippedRight);
+    }
+
+    private static boolean tokensMatchCore(String left, String right) {
+        if (left.isBlank() || right.isBlank()) {
+            return false;
+        }
+        if (left.equals(right)) {
+            return true;
+        }
+        if (left.length() >= PREFIX_MIN && right.length() >= PREFIX_MIN
+                && (left.startsWith(right) || right.startsWith(left) || left.endsWith(right) || right.endsWith(left))) {
+            return true;
+        }
+        return similarity(left, right).compareTo(TOKEN_SIMILARITY_MIN) >= 0;
+    }
+
+    private static String stripLeadingHa(String token) {
+        if (token.isEmpty() || token.codePointAt(0) != 0x09B9) {
+            return token;
+        }
+        int i = Character.charCount(token.codePointAt(0));
+        if (i < token.length()) {
+            int next = token.codePointAt(i);
+            if (isBengaliVowelSign(next)) {
+                i += Character.charCount(next);
+            }
+        }
+        return i >= token.length() ? token : token.substring(i);
+    }
+
+    private static boolean isBengaliVowelSign(int cp) {
+        return (cp >= 0x09BE && cp <= 0x09CC) || (cp >= 0x0981 && cp <= 0x0983);
+    }
+
     static String normalise(String raw) {
         if (raw == null || raw.isBlank()) {
             return "";
         }
-        String folded = BanglaNormalizer.forMatching(raw).toLowerCase(Locale.ROOT);
+        String folded = foldAsr(BanglaNormalizer.forMatching(raw)).toLowerCase(Locale.ROOT);
         StringBuilder out = new StringBuilder(folded.length());
         for (int i = 0; i < folded.length(); ) {
             int cp = folded.codePointAt(i);
@@ -92,6 +167,83 @@ public final class DiseaseNameMatcher {
             }
         }
         return tokens;
+    }
+
+    static String foldAsr(String input) {
+        StringBuilder out = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); ) {
+            int cp = input.codePointAt(i);
+            i += Character.charCount(cp);
+            if (cp == HASANTA) {
+                if (i < input.length()) {
+                    int next = input.codePointAt(i);
+                    if (isBengaliConsonant(next)) {
+                        i += Character.charCount(next);
+                    }
+                }
+                continue;
+            }
+            if (cp == 0x09BC) {
+                continue;
+            }
+            out.appendCodePoint(foldLetter(cp));
+        }
+        return out.toString();
+    }
+
+    private static int foldLetter(int cp) {
+        if (cp == 0x09B6 || cp == 0x09B7) {
+            return 0x09B8;
+        }
+        if (cp == 0x09A3) {
+            return 0x09A8;
+        }
+        if (cp == 0x09DC) {
+            return 0x09A1;
+        }
+        if (cp == 0x09DD) {
+            return 0x09A2;
+        }
+        if (cp == 0x09DF) {
+            return 0x09AF;
+        }
+        return cp;
+    }
+
+    private static boolean isBengaliConsonant(int cp) {
+        return (cp >= 0x0995 && cp <= 0x09B9) || (cp >= 0x09DC && cp <= 0x09DF);
+    }
+
+    static BigDecimal similarity(String left, String right) {
+        int max = Math.max(left.length(), right.length());
+        if (max == 0) {
+            return BigDecimal.ONE;
+        }
+        int distance = levenshtein(left, right);
+        return BigDecimal.valueOf(max - distance)
+                .divide(BigDecimal.valueOf(max), 10, AnalysisScale.ROUNDING);
+    }
+
+    private static int levenshtein(String left, String right) {
+        int n = left.length();
+        int m = right.length();
+        int[] previous = new int[m + 1];
+        int[] current = new int[m + 1];
+        for (int j = 0; j <= m; j++) {
+            previous[j] = j;
+        }
+        for (int i = 1; i <= n; i++) {
+            current[0] = i;
+            char a = left.charAt(i - 1);
+            for (int j = 1; j <= m; j++) {
+                int cost = a == right.charAt(j - 1) ? 0 : 1;
+                current[j] = Math.min(Math.min(current[j - 1] + 1, previous[j] + 1), previous[j - 1] + cost);
+            }
+            int[] swap = previous;
+            previous = current;
+            current = swap;
+        }
+        return previous[m];
     }
 
     private static boolean isPunctuationOrSymbol(int cp) {

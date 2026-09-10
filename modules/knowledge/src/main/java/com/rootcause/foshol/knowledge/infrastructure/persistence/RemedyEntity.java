@@ -76,6 +76,19 @@ public class RemedyEntity {
     @Column(name = "rate_notes_bn")
     private String rateNotesBn;
 
+    @Column(name = "title_en", length = 200)
+    private String titleEn;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "steps_en")
+    private String stepsEn;
+
+    @Column(name = "dosage_en")
+    private String dosageEn;
+
+    @Column(name = "rate_notes_en")
+    private String rateNotesEn;
+
     protected RemedyEntity() {}
 
     public UUID getId() {
@@ -144,5 +157,21 @@ public class RemedyEntity {
 
     public String getRateNotesBn() {
         return rateNotesBn;
+    }
+
+    public String getTitleEn() {
+        return titleEn;
+    }
+
+    public String getStepsEn() {
+        return stepsEn;
+    }
+
+    public String getDosageEn() {
+        return dosageEn;
+    }
+
+    public String getRateNotesEn() {
+        return rateNotesEn;
     }
 }
