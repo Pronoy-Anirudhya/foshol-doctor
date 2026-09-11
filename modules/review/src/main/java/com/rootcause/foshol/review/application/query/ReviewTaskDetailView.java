@@ -1,7 +1,11 @@
 package com.rootcause.foshol.review.application.query;
 
 import com.rootcause.foshol.common.enums.AiMode;
+import com.rootcause.foshol.common.enums.CaseStatus;
+import com.rootcause.foshol.common.enums.CropQuantityUnit;
 import com.rootcause.foshol.common.enums.DecisionPath;
+import com.rootcause.foshol.common.enums.FieldAreaUnit;
+import com.rootcause.foshol.common.enums.MetricsSource;
 import com.rootcause.foshol.common.enums.ReviewState;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.events.CaseAudioRef;
@@ -48,11 +52,28 @@ public record ReviewTaskDetailView(
         String transcriptBn,
         BigDecimal asrConfidence,
         String gradcamObjectKey,
+        boolean hasGradcam,
         List<CaseImageRef> images,
         CaseAudioRef audio,
         UUID parentCaseId,
         List<RemedyRefView> suggestedRemedies,
+        UUID suggestedDiseaseId,
         UUID claimedBy,
+        Instant claimedAt,
         Instant claimExpiresAt,
         AdvisoryView publishedAdvisory,
-        int version) {}
+        int version,
+        UUID cropId,
+        CaseStatus caseStatus,
+        String noteBn,
+        BigDecimal fieldArea,
+        FieldAreaUnit fieldAreaUnit,
+        BigDecimal cropQuantity,
+        CropQuantityUnit cropQuantityUnit,
+        MetricsSource metricsSource,
+        List<String> unmappedLabels,
+        String visionModelId,
+        String visionModelVersion,
+        int latencyMs,
+        String errorCode,
+        String officerName) {}

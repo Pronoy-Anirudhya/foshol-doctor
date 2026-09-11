@@ -9,6 +9,7 @@ import com.rootcause.foshol.common.util.DoseCalculator;
 import com.rootcause.foshol.common.events.CandidateView;
 import com.rootcause.foshol.common.enums.ReviewState;
 import com.rootcause.foshol.identity.api.OfficerLookupApi;
+import com.rootcause.foshol.identity.api.OfficerView;
 import com.rootcause.foshol.intake.api.CaseIntakeApi;
 import com.rootcause.foshol.intake.api.CaseSummary;
 import com.rootcause.foshol.knowledge.api.KnowledgeQueryApi;
@@ -122,6 +123,7 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
         CatalogueTextEnricher enricher = new CatalogueTextEnricher(knowledge);
         Named crop = enricher.crop(row.cropCode(), row.cropNameBn());
         Named disease = enricher.disease(row.topDiseaseId(), row.topDiseaseNameBn());
+        String gradcamKey = analysis == null ? null : analysis.gradcamObjectKey();
         return new ReviewTaskDetailView(
                 row.caseId(),
                 row.reviewTaskId(),
@@ -155,15 +157,39 @@ public class ReviewTaskDetailQueryHandler implements QueryHandler<ReviewTaskDeta
                 analysis == null || analysis.symptoms() == null ? List.of() : analysis.symptoms(),
                 analysis == null ? null : analysis.transcriptBn(),
                 analysis == null ? null : analysis.asrConfidence(),
-                analysis == null ? null : analysis.gradcamObjectKey(),
+                gradcamKey,
+                gradcamKey != null && !gradcamKey.isBlank(),
                 summary == null || summary.images() == null ? List.of() : summary.images(),
                 summary == null ? null : summary.audio(),
                 summary == null ? null : summary.parentCaseId(),
                 suggestedRemedies,
+                suggested,
                 task.officerId(),
+                task.claimedAt(),
                 task.claimExpiresAt(claimTtl),
                 published,
-                task.version());
+                task.version(),
+                summary == null ? null : summary.cropId(),
+                summary == null ? null : summary.status(),
+                summary == null ? null : summary.noteBn(),
+                summary == null ? null : summary.fieldArea(),
+                summary == null ? null : summary.fieldAreaUnit(),
+                summary == null ? null : summary.cropQuantity(),
+                summary == null ? null : summary.cropQuantityUnit(),
+                summary == null ? null : summary.metricsSource(),
+                analysis == null || analysis.unmappedLabels() == null ? List.of() : analysis.unmappedLabels(),
+                analysis == null ? null : analysis.visionModelId(),
+                analysis == null ? null : analysis.visionModelVersion(),
+                analysis == null ? 0 : analysis.latencyMs(),
+                analysis == null ? null : analysis.errorCode(),
+                officerName(task.officerId()));
+    }
+
+    private String officerName(UUID officerId) {
+        if (officerId == null) {
+            return null;
+        }
+        return officers.findById(officerId).map(OfficerView::name).orElse("");
     }
 
     static RemedyRefView toSuggestedRef(RemedyView remedy, CaseSummary summary) {

@@ -155,7 +155,7 @@ class ReviewTaskDetailQueryHandlerTest {
                 List.of(),
                 null,
                 null,
-                null,
+                "cases/" + CASE + "/gradcam/" + Uuid7.create() + ".png",
                 List.of(),
                 "m",
                 "v",
@@ -188,6 +188,9 @@ class ReviewTaskDetailQueryHandlerTest {
 
         ReviewTaskDetailView detail = handler().handle(new ReviewTaskDetailQuery(TASK, OFFICER_A));
 
+        assertThat(detail.hasGradcam()).isTrue();
+        assertThat(detail.gradcamObjectKey()).startsWith("cases/" + CASE + "/gradcam/");
+        assertThat(detail.suggestedDiseaseId()).isEqualTo(DISEASE);
         assertThat(detail.cropNameEn()).isEqualTo("Rice");
         assertThat(detail.cropNameEnFallback()).isFalse();
         assertThat(detail.topDiseaseNameEn()).isEqualTo("Blast");
