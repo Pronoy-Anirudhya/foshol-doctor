@@ -580,6 +580,11 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
                     primaryRawLabel,
                     command.correlationId()));
             if (overlay == null || overlay.overlayPng() == null) {
+                log.warn(
+                        "gradcam overlay missing caseId={} correlationId={} errorCode={}",
+                        command.caseId(),
+                        command.correlationId(),
+                        ErrorCodes.ERR_SIDECAR_MODEL_UNAVAILABLE);
                 return null;
             }
             String key = "cases/" + command.caseId() + "/gradcam/" + primary.imageId() + ".png";
@@ -588,7 +593,8 @@ public class RunAnalysisCommandHandler implements CommandHandler<RunAnalysisComm
         } catch (RuntimeException ex) {
             SidecarFailureException sidecar = findSidecar(ex);
             log.warn(
-                    "gradcam failed correlationId={} errorCode={}",
+                    "gradcam failed caseId={} correlationId={} errorCode={}",
+                    command.caseId(),
                     command.correlationId(),
                     sidecar == null ? ex.getClass().getSimpleName() : sidecar.errorCode(),
                     ex);

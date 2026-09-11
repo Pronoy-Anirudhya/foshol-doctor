@@ -2,6 +2,7 @@ package com.rootcause.foshol.analysis.application.command.handler;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -144,6 +145,40 @@ class RunAnalysisCommandHandlerTest {
         assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
         verify(events).publishCompleted(any(AnalysisCompleted.class));
         verify(speech, never()).transcribe(any());
+        verify(objectStore)
+                .write(eq("cases/" + CASE_ID + "/gradcam/" + IMAGE_A + ".png"), eq(new byte[] {1, 2, 3}), eq("image/png"));
+        assertThat(run.getValue().gradcamObjectKey()).isEqualTo("cases/" + CASE_ID + "/gradcam/" + IMAGE_A + ".png");
+    }
+
+    @Test
+    void explainThrowLeavesGradcamNullAndCompletes() {
+        stubHappyVision();
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(explainability.explain(any()))
+                .thenThrow(new SidecarFailureException(ErrorCodes.ERR_SIDECAR_UNAVAILABLE, "down"));
+        handler.handle(command(null));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().gradcamObjectKey()).isNull();
+        verify(objectStore, never()).write(any(), any(), any());
+        verify(events).publishCompleted(any(AnalysisCompleted.class));
+    }
+
+    @Test
+    void explainNullLeavesGradcamNullAndCompletes() {
+        stubHappyVision();
+        when(intake.findById(CASE_ID)).thenReturn(Optional.of(summary(null)));
+        when(persistence.hasCompletedRun(CASE_ID)).thenReturn(false);
+        when(explainability.explain(any())).thenReturn(null);
+        handler.handle(command(null));
+        ArgumentCaptor<AnalysisRun> run = ArgumentCaptor.forClass(AnalysisRun.class);
+        verify(persistence).saveNewRun(run.capture(), any(), any());
+        assertThat(run.getValue().decisionPath()).isEqualTo(DecisionPath.PRIMARY);
+        assertThat(run.getValue().gradcamObjectKey()).isNull();
+        verify(objectStore, never()).write(any(), any(), any());
+        verify(events).publishCompleted(any(AnalysisCompleted.class));
     }
 
     @Test
