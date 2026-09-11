@@ -7,34 +7,34 @@
   "fallback_used": false,
   "fallback_reason": null,
   "architecture": "efficientnet_b3",
-  "image_sha256": "102a5ac283a47f57a5ff25affef238a4aa2e262bea9960f50526866d05eca51b",
+  "image_sha256": "9adaed1c6d1638392c69644ca3232b8142e14f4d43bc57daeb7c40368f0b3e89",
   "predictions": [
     {
       "raw_label": "Wheat___Brown_Rust",
-      "confidence": 0.3989,
+      "confidence": 0.5026,
       "rank": 1
     },
     {
-      "raw_label": "Sugarcane__Red_Rot",
-      "confidence": 0.3516,
+      "raw_label": "Wheat___Yellow_Rust",
+      "confidence": 0.4282,
       "rank": 2
     },
     {
-      "raw_label": "Wheat___Yellow_Rust",
-      "confidence": 0.1598,
+      "raw_label": "Sugarcane__Bacterial_Blight",
+      "confidence": 0.0507,
       "rank": 3
     },
     {
-      "raw_label": "Sugarcane__Bacterial_Blight",
-      "confidence": 0.0366,
+      "raw_label": "Rice___Leaf_Blast",
+      "confidence": 0.0052,
       "rank": 4
     },
     {
       "raw_label": "Rice___Brown_Spot",
-      "confidence": 0.0135,
+      "confidence": 0.0047,
       "rank": 5
     }
   ],
-  "inference_ms": 156,
-  "correlation_id": "439a0cfb-c480-40a9-b605-1ed58b2519a8"
+  "inference_ms": 130,
+  "correlation_id": "332c3afc-316e-4a78-9621-2db3f5dadfbc"
 }

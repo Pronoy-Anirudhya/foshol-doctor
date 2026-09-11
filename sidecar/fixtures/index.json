@@ -30,39 +30,52 @@
     "note": "DEMO 16 kHz tone; paired with a Bangla symptom transcript fixture"
   },
   "e33c67cdb8132995a330b1df145529af9cbbad9bc59724d4028ee30f6339a59a": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "01-rice-blast-primary.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:45Z"
   },
   "5c96c604bc82f79ba57835bd2ce1e28de0211a58bc1ac9002e9be4bcb57fc41b": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "02-rice-brown-spot-ambiguous.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:45Z"
   },
   "102a5ac283a47f57a5ff25affef238a4aa2e262bea9960f50526866d05eca51b": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "03-rice-brown-spot-primary.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:46Z"
   },
   "fb4148c706e84e2f589541832ae41ced55e25e12478212654be5766c003b3eeb": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "04-tomato-early-blight.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:47Z"
   },
   "b071b0f888a2274bf0915ec252b28f166a44f88a3a68102abd1e447defb93a68": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "05-potato-late-blight.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:47Z"
   },
   "ec23a9575e8e4b25f75d167a5a0be56f44e1796d368250c625ca85f71f3c9e4e": {
-    "endpoint": "/v1/vision/classify",
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
     "source": "06-rice-healthy.jpg",
-    "recorded_at": "2026-09-07T20:00:00Z",
-    "note": "DEMO field photograph (Wikimedia Commons); replay fixture keyed by SHA-256"
+    "recorded_at": "2026-09-11T22:04:48Z"
+  },
+  "9adaed1c6d1638392c69644ca3232b8142e14f4d43bc57daeb7c40368f0b3e89": {
+    "endpoint": "/v1/vision/explain",
+    "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+    "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
+    "source": "07-blurry-reject.jpg",
+    "recorded_at": "2026-09-11T22:04:49Z"
   }
 }

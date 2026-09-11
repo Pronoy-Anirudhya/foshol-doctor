@@ -1,25 +1,40 @@
 {
   "mode": "LIVE",
   "crop_code": "tomato",
-  "model_id": "Daksh159/plant-disease-mobilenetv2",
-  "model_version": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+  "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
   "model_role": "primary",
   "fallback_used": false,
   "fallback_reason": null,
-  "architecture": "mobilenetv2",
+  "architecture": "efficientnet_b3",
   "image_sha256": "fb4148c706e84e2f589541832ae41ced55e25e12478212654be5766c003b3eeb",
   "predictions": [
     {
-      "raw_label": "Tomato___Early_blight",
-      "confidence": 0.86,
+      "raw_label": "Wheat___Healthy",
+      "confidence": 0.737,
       "rank": 1
     },
     {
-      "raw_label": "Tomato___healthy",
-      "confidence": 0.06,
+      "raw_label": "Potato___Early_Blight",
+      "confidence": 0.1731,
       "rank": 2
+    },
+    {
+      "raw_label": "Wheat___Brown_Rust",
+      "confidence": 0.0193,
+      "rank": 3
+    },
+    {
+      "raw_label": "Wheat___Yellow_Rust",
+      "confidence": 0.0188,
+      "rank": 4
+    },
+    {
+      "raw_label": "Corn___Common_Rust",
+      "confidence": 0.0181,
+      "rank": 5
     }
   ],
-  "inference_ms": 12,
-  "correlation_id": "demo"
+  "inference_ms": 80,
+  "correlation_id": "a488e5ad-5c24-44a8-a605-0db7d328a381"
 }
