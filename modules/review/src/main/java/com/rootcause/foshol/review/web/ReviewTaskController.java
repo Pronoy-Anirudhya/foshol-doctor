@@ -15,7 +15,6 @@ import com.rootcause.foshol.review.application.command.ReleaseReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.TransferReviewTaskCommand;
 import com.rootcause.foshol.review.application.command.BulkOperationResult;
 import com.rootcause.foshol.review.application.query.ReviewTaskDetailQuery;
-import com.rootcause.foshol.review.application.query.ReviewTaskDetailView;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -40,16 +39,19 @@ public class ReviewTaskController {
     private final QueryBus queries;
     private final CommandBus commands;
     private final BulkReviewService bulk;
+    private final ReviewCaseDetailMapper caseDetail;
 
-    public ReviewTaskController(QueryBus queries, CommandBus commands, BulkReviewService bulk) {
+    public ReviewTaskController(
+            QueryBus queries, CommandBus commands, BulkReviewService bulk, ReviewCaseDetailMapper caseDetail) {
         this.queries = queries;
         this.commands = commands;
         this.bulk = bulk;
+        this.caseDetail = caseDetail;
     }
 
     @GetMapping("/{taskId}")
-    public ReviewTaskDetailView get(@PathVariable UUID taskId, Authentication authentication) {
-        return queries.handle(new ReviewTaskDetailQuery(taskId, ReviewAuth.subjectId(authentication)));
+    public ReviewCaseDetailResponse get(@PathVariable UUID taskId, Authentication authentication) {
+        return caseDetail.map(queries.handle(new ReviewTaskDetailQuery(taskId, ReviewAuth.subjectId(authentication))));
     }
 
     @PostMapping("/{taskId}/claim")
