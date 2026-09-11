@@ -1,25 +1,40 @@
 {
   "mode": "LIVE",
   "crop_code": "rice",
-  "model_id": "kssrikar4/Rice-Leaf-Disease-Classification",
-  "model_version": "02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26",
+  "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+  "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
   "model_role": "primary",
   "fallback_used": false,
   "fallback_reason": null,
-  "architecture": "swin",
+  "architecture": "efficientnet_b3",
   "image_sha256": "5c96c604bc82f79ba57835bd2ce1e28de0211a58bc1ac9002e9be4bcb57fc41b",
   "predictions": [
     {
-      "raw_label": "Brown Spot",
-      "confidence": 0.6,
+      "raw_label": "Wheat___Brown_Rust",
+      "confidence": 0.5702,
       "rank": 1
     },
     {
-      "raw_label": "Leaf Blast",
-      "confidence": 0.28,
+      "raw_label": "Wheat___Yellow_Rust",
+      "confidence": 0.2128,
       "rank": 2
+    },
+    {
+      "raw_label": "Sugarcane__Red_Rot",
+      "confidence": 0.1628,
+      "rank": 3
+    },
+    {
+      "raw_label": "Rice___Brown_Spot",
+      "confidence": 0.0226,
+      "rank": 4
+    },
+    {
+      "raw_label": "Sugarcane__Bacterial_Blight",
+      "confidence": 0.0079,
+      "rank": 5
     }
   ],
-  "inference_ms": 12,
-  "correlation_id": "demo"
+  "inference_ms": 131,
+  "correlation_id": "b7201d0d-b18a-4ef1-8399-2358e29730b6"
 }

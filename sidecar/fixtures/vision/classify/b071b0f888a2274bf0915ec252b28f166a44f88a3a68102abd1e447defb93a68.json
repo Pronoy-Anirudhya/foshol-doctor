@@ -1,25 +1,40 @@
 {
   "mode": "LIVE",
   "crop_code": "potato",
-  "model_id": "Daksh159/plant-disease-mobilenetv2",
-  "model_version": "d3fb2afc90da83086eff06e9088a889b6c43d4a6",
+  "model_id": "VisionaryQuant/5_Crop_Disease_Detection",
+  "model_version": "63080391f7d2bdb331ab356b0d1d9b4b603b3946",
   "model_role": "primary",
   "fallback_used": false,
   "fallback_reason": null,
-  "architecture": "mobilenetv2",
+  "architecture": "efficientnet_b3",
   "image_sha256": "b071b0f888a2274bf0915ec252b28f166a44f88a3a68102abd1e447defb93a68",
   "predictions": [
     {
-      "raw_label": "Potato___Late_blight",
-      "confidence": 0.84,
+      "raw_label": "Corn___Common_Rust",
+      "confidence": 0.9484,
       "rank": 1
     },
     {
-      "raw_label": "Potato___Early_blight",
-      "confidence": 0.09,
+      "raw_label": "Corn___Healthy",
+      "confidence": 0.0183,
       "rank": 2
+    },
+    {
+      "raw_label": "Potato___Late_Blight",
+      "confidence": 0.0109,
+      "rank": 3
+    },
+    {
+      "raw_label": "Potato___Early_Blight",
+      "confidence": 0.0088,
+      "rank": 4
+    },
+    {
+      "raw_label": "Rice___Neck_Blast",
+      "confidence": 0.0024,
+      "rank": 5
     }
   ],
-  "inference_ms": 12,
-  "correlation_id": "demo"
+  "inference_ms": 148,
+  "correlation_id": "9c7a9a1b-336d-48c4-9774-a3602702989a"
 }

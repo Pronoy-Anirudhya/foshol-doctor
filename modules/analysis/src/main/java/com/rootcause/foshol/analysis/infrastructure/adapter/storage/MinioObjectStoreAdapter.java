@@ -78,6 +78,7 @@ public class MinioObjectStoreAdapter implements ObjectStorePort {
     @Override
     public PresignedUrl presign(String objectKey, Duration ttl) {
         try {
+            ensureBucket();
             int seconds = (int) Math.max(1, ttl.toSeconds());
             String url = minio.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)

@@ -84,6 +84,28 @@ class SseChannelTest {
         assertThat(chattogram.payloads).isEmpty();
     }
 
+    @Test
+    void heartbeatRemovesDisconnectedEmitter() {
+        SseSubscriptionRegistry registry =
+                new SseSubscriptionRegistry(Clock.fixed(NotifyFixtures.T0, ZoneOffset.UTC));
+        registry.attach(NotifyFixtures.FARMER, Role.FARMER, null, null, new DeadEmitter());
+        assertThat(registry.count(NotifyFixtures.FARMER)).isEqualTo(1);
+        registry.heartbeat();
+        assertThat(registry.count(NotifyFixtures.FARMER)).isZero();
+    }
+
+    static final class DeadEmitter extends SseEmitter {
+        DeadEmitter() {
+            super(Long.MAX_VALUE);
+        }
+
+        @Override
+        public synchronized void send(SseEventBuilder builder) throws IOException {
+            throw new org.springframework.web.context.request.async.AsyncRequestNotUsableException(
+                    "Servlet container error notification for disconnected client");
+        }
+    }
+
     static final class CapturingEmitter extends SseEmitter {
         private final List<String> payloads = new ArrayList<>();
 

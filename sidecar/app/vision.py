@@ -33,6 +33,8 @@ EXPLAIN_METHOD = {
     "swin": "gradcam",
     "siglip2": "attention-pool",
     "mobilenetv2": "gradcam",
+    "efficientnet_b3": "gradcam",
+    "vit": "gradcam",
 }
 
 
