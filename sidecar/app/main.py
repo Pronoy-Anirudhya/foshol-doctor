@@ -18,7 +18,7 @@ from app.asr import install_live_asr, transcribe_live, transcribe_live_unavailab
 from app.config import REGISTRY_ROLES, Settings, get_settings
 from app.embed import embed_live, embed_live_unavailable, embed_replay, install_live_embed
 from app.errors import ERR_SIDECAR_BAD_REQUEST, SidecarError, bad_request, busy, warming_up
-from app.live_vision import classify_live, install_live_vision
+from app.live_vision import classify_live, explain_live, install_live_vision
 from app.replay import FixtureStore
 from app.schemas import EmbedRequest
 from app.vision import classify_live_unavailable, classify_replay, explain_live_unavailable, explain_replay
@@ -54,6 +54,7 @@ class AppState:
         self.labels: dict[str, list[str]] = {role: [] for role in REGISTRY_ROLES}
         self.vision_runtime = None
         self.classify_cache = None
+        self.explain_cache = None
         self.asr_runtime = None
         self.asr_cache = None
         self.embed_runtime = None
@@ -336,6 +337,7 @@ async def explain(
     data = await image.read()
     if alpha is not None and not 0.0 <= alpha <= 1.0:
         raise bad_request("alpha must be between 0.0 and 1.0")
+    inference_ms = 0
     async with gated(state):
         if state.settings.is_replay:
             png, headers = explain_replay(
@@ -347,15 +349,26 @@ async def explain(
                 target_label,
             )
         else:
-            explain_live_unavailable()
-            raise AssertionError("unreachable")
+            if state.vision_runtime is None or state.explain_cache is None:
+                explain_live_unavailable()
+                raise AssertionError("unreachable")
+            png, headers, inference_ms = explain_live(
+                state.settings,
+                state.vision_runtime,
+                state.explain_cache,
+                data,
+                crop_code,
+                model_role,
+                target_label,
+                alpha,
+            )
     _log_line(
         correlation_id=request.state.correlation_id,
         endpoint="/v1/vision/explain",
         mode=state.settings.mode_header,
         model_id=headers.get("X-Foshol-Model-Id", "-"),
         status=200,
-        inference_ms=0,
+        inference_ms=inference_ms,
     )
     return Response(content=png, media_type="image/png", headers=headers)
 
