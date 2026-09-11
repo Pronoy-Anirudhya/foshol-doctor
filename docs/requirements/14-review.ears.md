@@ -704,7 +704,10 @@ sidecar-kill demo, when both appear within a minute of each other.)*
 `REVIEW-UX-002` **THE review module SHALL return, on the task detail response, the decision path, the
 top-1 and top-2 confidences, the margin, the full ranked candidate list, the extracted symptoms, the
 transcript and the Grad-CAM object key**, sourced from `AnalysisApi.findByCaseId`, so the console can
-draw the confidence bars and the overlay without a second module call.
+draw the confidence bars and the overlay without a second module call. **THE HTTP body SHALL also
+carry the OpenAPI `ReviewCaseDetail` envelope** (`task`, `case`, `analysis`, `suggestedDiseaseId`,
+`suggestedRemedies`, `priorAdvisory`) with `analysis.hasGradcam` true if and only if
+`gradcamObjectKey` is non-null. Overlay PNG bytes remain `GET /api/v1/cases/{caseId}/gradcam`.
 
 `REVIEW-UX-003` **THE review module SHALL return `isResubmission` and, when present, the parent case
 id on task detail**, so the officer can see that they previously asked this farmer for a better
@@ -720,7 +723,7 @@ Base path `/api/v1`. All responses are JSON; all errors are RFC 9457 problem doc
 | Method | Path | Request | Response | Authorisation | Errors beyond `401` |
 |---|---|---|---|---|---|
 | `GET` | `/review/queue` | `state` (`PENDING`\|`CLAIMED`\|`ALL`, default `PENDING`), `mine`, `page`, `size` | `200`, page of `OfficerQueueRow` | `OFFICER` or `ADMIN` — rows for the caller's district only (`REVIEW-FR-048`) | `400` `ERR_QUEUE_SORT_NOT_SUPPORTED` |
-| `GET` | `/review/tasks/{id}` | — | `200`, `ReviewTaskDetailView` | `OFFICER`, `ADMIN` | `404` `ERR_REVIEW_TASK_NOT_FOUND` |
+| `GET` | `/review/tasks/{id}` | — | `200`, OpenAPI `ReviewCaseDetail` plus flat `ReviewTaskDetailView` fields | `OFFICER`, `ADMIN` | `404` `ERR_REVIEW_TASK_NOT_FOUND` |
 | `POST` | `/review/tasks/{id}/claim` | empty body | `200`, `ReviewTaskDetailView` with `claimExpiresAt` | any `OFFICER` or `ADMIN` | `409` `ERR_CLAIM_CONFLICT`, `ERR_TASK_TERMINAL` |
 | `POST` | `/review/tasks/{id}/release` | empty body | `204` | **the claim holder only** | `409` `ERR_CLAIM_NOT_HELD`, `ERR_TASK_TERMINAL` |
 | `POST` | `/review/tasks/{id}/approve` | `{diseaseId, remedyIds[], officerNoteBn?}` | `201` + `Location: /api/v1/cases/{caseId}/advisory`, `AdvisoryView` | **the claim holder only** | `400` `ERR_ADVISORY_REQUIRES_REMEDY`, `ERR_REMEDY_DISEASE_MISMATCH`, `ERR_REMEDY_PHI_MISSING`; `409` `ERR_CLAIM_NOT_HELD`, `ERR_TASK_TERMINAL`, `ERR_CLAIM_CONFLICT` |
@@ -747,9 +750,17 @@ the matching `*Fallback` flag (`COMMON-NFR-038`). English is resolved at read ti
 
 `ReviewTaskDetailView` — every `OfficerQueueRow` field, plus `analysisMode` (`REVIEW-UX-004`),
 `top1Confidence`, `top2Confidence`, `margin`, `candidates[]`, `symptoms[]`, `transcriptBn`,
-`asrConfidence`, `gradcamObjectKey`, `images[]` with presigned URLs (`COMMON-SEC-016`), `audio`,
-`parentCaseId`, `suggestedRemedies[]` (`REVIEW-FR-057`), `claimedBy`, `claimExpiresAt`
-(`claimedAt + foshol.review.claim.ttl`), and `publishedAdvisory` when one exists.
+`asrConfidence`, `gradcamObjectKey`, `hasGradcam` (true iff `gradcamObjectKey` is non-null),
+`images[]` with presigned URLs (`COMMON-SEC-016`), `audio`,
+`parentCaseId`, `suggestedRemedies[]` (`REVIEW-FR-057`), `suggestedDiseaseId`, `claimedBy`,
+`claimExpiresAt` (`claimedAt + foshol.review.claim.ttl`), and `publishedAdvisory` when one exists.
+
+`GET /review/tasks/{id}` JSON is that flat view **and** the OpenAPI `ReviewCaseDetail` envelope:
+`task` (`ReviewTask`), `case` (`CaseDetail`, image ids without object keys), `analysis`
+(`AnalysisDetail` including `hasGradcam` and `thresholds`), `suggestedDiseaseId`,
+`suggestedRemedies`, `priorAdvisory` (same object as `publishedAdvisory`). The officer console
+loads overlay bytes from `GET /api/v1/cases/{caseId}/gradcam` when `analysis.hasGradcam` is true.
+
 `AdvisoryView` includes `diseaseNameEn` / `diseaseNameEnFallback`. `RemedyRefView` includes
 `titleEn`, `titleEnFallback`, `stepsEn`, `stepsEnFallback`, `dosageEn`, `dosageEnFallback`,
 `rateNotesEn`, `rateNotesEnFallback`. Task `candidates[]` / `symptoms[]` carry the same

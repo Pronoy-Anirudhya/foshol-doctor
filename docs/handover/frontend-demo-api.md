@@ -505,22 +505,31 @@ Optional `state`: `PENDING` \| `CLAIMED` \| `DONE` \| `REJECTED`.
   },
   "case": { },
   "farmerName": "Demo Farmer",
-  "analysis": { },
+  "analysis": {
+    "hasGradcam": true,
+    "thresholds": { "high": 0.75, "low": 0.45 }
+  },
   "suggestedDiseaseId": "01800000-0000-7000-8000-000000000103",
   "suggestedRemedies": [ ],
-  "priorAdvisory": null
+  "priorAdvisory": null,
+  "hasGradcam": true,
+  "gradcamObjectKey": "cases/01a07caa-d991-7bae-9f48-5cc9a972cde8/gradcam/018f….png"
 }
 ```
 
 `case` is `CaseDetail` (includes `fieldArea`, `fieldAreaUnit`, optional crop quantity, and
-`metricsSource`); `analysis` is `AnalysisDetail` (thresholds for the wow-factor bars). Prefill
+`metricsSource`); `analysis` is `AnalysisDetail` (thresholds for the wow-factor bars, and
+`hasGradcam`). Prefill
 the editor from `suggestedDiseaseId` + `suggestedRemedies`; the officer may change them.
 `suggestedRemedies` are for the **rank-1** disease only — analysis `candidates` remain on the payload
 for context. When a remedy has human-owned rate columns and the case has field area, each suggested
 remedy may include `computedDose` `{ amount, unit, basis, fromArea, fromAreaUnit }`; rates are often
 null in demo seed data until content-owner C15. `priorAdvisory` is set on resubmissions.
 
-Images: same **302** content URL as the farmer, using ids from `case.images`. Grad-CAM: `/gradcam`.
+Images: same **302** content URL as the farmer, using ids from `case.images`. Grad-CAM: when
+`analysis.hasGradcam` is true, `GET /api/v1/cases/{caseId}/gradcam` — **302** presigned PNG. Follow
+the redirect **without** the API JWT (`WEB-SEC-003`). Hide the overlay toggle when `hasGradcam` is
+false (`WEB-FR-212`).
 
 ### 8.3 Claim / release
 
