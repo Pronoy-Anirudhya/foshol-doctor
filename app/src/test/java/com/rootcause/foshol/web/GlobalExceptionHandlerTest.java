@@ -50,11 +50,30 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.status").value(400));
     }
 
+    @Test
+    void disconnectedAsyncClientDoesNotBecomeInternalProblem() throws Exception {
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new GoneController())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+        mvc.perform(get("/gone"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
+    }
+
     @RestController
     static class BoomController {
         @GetMapping("/boom")
         void boom() {
             throw new RuntimeException("secret-stack leaked");
+        }
+    }
+
+    @RestController
+    static class GoneController {
+        @GetMapping("/gone")
+        void gone() throws Exception {
+            throw new org.springframework.web.context.request.async.AsyncRequestNotUsableException(
+                    "Servlet container error notification for disconnected client");
         }
     }
 

@@ -16,6 +16,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -50,10 +51,41 @@ public class GlobalExceptionHandler {
         return problem(status, code, detail, request);
     }
 
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void disconnectedClient(AsyncRequestNotUsableException ex) {
+        log.debug("Client disconnected correlationId={}", CorrelationId.current());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> unhandled(Exception ex, HttpServletRequest request) {
+        if (isDisconnectedClient(ex)) {
+            log.debug("Client disconnected correlationId={}", CorrelationId.current());
+            return null;
+        }
         log.error("Unhandled exception correlationId={}", CorrelationId.current(), ex);
         return problem(500, ErrorCodes.ERR_INTERNAL, SAFE_INTERNAL, request);
+    }
+
+    private static boolean isDisconnectedClient(Throwable ex) {
+        for (Throwable current = ex; current != null; current = current.getCause()) {
+            if (current instanceof AsyncRequestNotUsableException) {
+                return true;
+            }
+            String name = current.getClass().getSimpleName();
+            if ("ClientAbortException".equals(name) || "EofException".equals(name)) {
+                return true;
+            }
+            if (current instanceof java.io.IOException) {
+                String message = current.getMessage();
+                if (message != null
+                        && (message.contains("Broken pipe")
+                                || message.contains("Connection reset")
+                                || message.contains("An established connection was aborted"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static ResponseEntity<Map<String, Object>> problem(

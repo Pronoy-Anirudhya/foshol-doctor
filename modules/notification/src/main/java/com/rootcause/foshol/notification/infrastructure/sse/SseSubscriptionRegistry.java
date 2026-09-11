@@ -65,32 +65,20 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscr
         }
         emitter.onCompletion(() -> remove(sub));
         emitter.onTimeout(() -> {
-            try {
-                emitter.send(SseEmitter.event().name(EVENT_RECONNECT).data("{}", MediaType.APPLICATION_JSON));
-            } catch (IOException ignored) {
-                // closing anyway
-            }
+            send(sub, SseEmitter.event().name(EVENT_RECONNECT).data("{}", MediaType.APPLICATION_JSON));
             emitter.complete();
             remove(sub);
         });
         emitter.onError(ex -> remove(sub));
         if (lastEventId != null && !lastEventId.isBlank()) {
-            try {
-                emitter.send(SseEmitter.event().name(EVENT_RESYNC).data("{}", MediaType.APPLICATION_JSON));
-            } catch (IOException ex) {
-                remove(sub);
-            }
+            send(sub, SseEmitter.event().name(EVENT_RESYNC).data("{}", MediaType.APPLICATION_JSON));
         }
         return sub;
     }
 
     public void heartbeat() {
         for (SseSubscription sub : all()) {
-            try {
-                sub.emitter().send(SseEmitter.event().comment("heartbeat").id(Long.toString(sub.nextId())));
-            } catch (IOException ex) {
-                remove(sub);
-            }
+            send(sub, SseEmitter.event().comment("heartbeat").id(Long.toString(sub.nextId())));
         }
     }
 
@@ -105,15 +93,13 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscr
             if (sub.role() != Role.FARMER) {
                 continue;
             }
-            try {
-                sub.emitter()
-                        .send(SseEmitter.event()
-                                .name(eventName)
-                                .id(notification.notificationId().toString())
-                                .data(data, MediaType.APPLICATION_JSON));
+            if (send(
+                    sub,
+                    SseEmitter.event()
+                            .name(eventName)
+                            .id(notification.notificationId().toString())
+                            .data(data, MediaType.APPLICATION_JSON))) {
                 any = true;
-            } catch (IOException ex) {
-                remove(sub);
             }
         }
         return any;
@@ -131,15 +117,12 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscr
             if (!wanted.isBlank() && sub.districtCode() != null && !wanted.equals(sub.districtCode())) {
                 continue;
             }
-            try {
-                sub.emitter()
-                        .send(SseEmitter.event()
-                                .name(EVENT_QUEUE)
-                                .id(Long.toString(sub.nextId()))
-                                .data(data, MediaType.APPLICATION_JSON));
-            } catch (IOException ex) {
-                remove(sub);
-            }
+            send(
+                    sub,
+                    SseEmitter.event()
+                            .name(EVENT_QUEUE)
+                            .id(Long.toString(sub.nextId()))
+                            .data(data, MediaType.APPLICATION_JSON));
         }
     }
 
@@ -159,15 +142,12 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscr
             if (sub.role() != Role.OFFICER && sub.role() != Role.ADMIN) {
                 continue;
             }
-            try {
-                sub.emitter()
-                        .send(SseEmitter.event()
-                                .name(EVENT_KPI)
-                                .id(Long.toString(sub.nextId()))
-                                .data(data, MediaType.APPLICATION_JSON));
-            } catch (IOException ex) {
-                remove(sub);
-            }
+            send(
+                    sub,
+                    SseEmitter.event()
+                            .name(EVENT_KPI)
+                            .id(Long.toString(sub.nextId()))
+                            .data(data, MediaType.APPLICATION_JSON));
         }
     }
 
@@ -179,6 +159,38 @@ public class SseSubscriptionRegistry implements OfficerQueueNudgePort, SseSubscr
 
     public int count(UUID subjectId) {
         return bySubject.getOrDefault(subjectId, new CopyOnWriteArrayList<>()).size();
+    }
+
+    private boolean send(SseSubscription sub, SseEmitter.SseEventBuilder event) {
+        try {
+            sub.emitter().send(event);
+            return true;
+        } catch (Exception ex) {
+            if (clientGone(ex) || ex instanceof IllegalStateException) {
+                remove(sub);
+                return false;
+            }
+            if (ex instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            remove(sub);
+            return false;
+        }
+    }
+
+    static boolean clientGone(Throwable ex) {
+        for (Throwable current = ex; current != null; current = current.getCause()) {
+            if (current instanceof IOException) {
+                return true;
+            }
+            String name = current.getClass().getSimpleName();
+            if ("AsyncRequestNotUsableException".equals(name)
+                    || "ClientAbortException".equals(name)
+                    || "EofException".equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void remove(SseSubscription sub) {
