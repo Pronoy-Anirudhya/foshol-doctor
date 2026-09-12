@@ -1,4 +1,9 @@
-FROM python:3.12-slim
+# Pin the Debian release explicitly. `python:3.12-slim` moved from bookworm to trixie
+# (glibc 2.41), and on linux/amd64 glibc 2.41 refuses the executable stack that
+# ctranslate2 4.5.0's bundled libctranslate2.so requests, so `import ctranslate2`
+# fails with ImportError and the LIVE sidecar exits. aarch64 wheels are unaffected,
+# which is why this only shows up on an x86_64 VM.
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 
@@ -25,14 +30,24 @@ RUN pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url http
 COPY --chown=foshol:foshol app /app/app
 COPY --chown=foshol:foshol fixtures /app/fixtures
 
+# LIVE mode always means the Visionary model: backend `visionary` with
+# VisionaryQuant/5_Crop_Disease_Detection at the revision V112__visionaryquant_label_map.sql
+# keys on. A revision mismatch resolves every prediction to UNDETERMINED, silently.
+#
+# LIVE vision loads only vision.rice.primary, so every crop routes to the rice family. The
+# fallback and solanaceae ids below are config-validated but never loaded in LIVE.
+#
+# HF_HUB_OFFLINE=1 means the weights must already be present (baked, or in a mounted volume);
+# a cache miss fails loudly at startup instead of silently downloading. docker-compose.yml
+# still pins replay/vit explicitly for laptop use, so that path is unchanged.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    FOSHOL_AI_MODE=replay \
-    FOSHOL_SIDECAR_VISION_BACKEND=vit \
+    FOSHOL_AI_MODE=live \
+    FOSHOL_SIDECAR_VISION_BACKEND=visionary \
     FOSHOL_SIDECAR_FIXTURE_DIR=/app/fixtures \
-    FOSHOL_AI_VISION_CROP_ROUTES=rice=rice,tomato=solanaceae,potato=solanaceae \
-    FOSHOL_AI_VISION_RICE_MODEL_ID=kssrikar4/Rice-Leaf-Disease-Classification \
-    FOSHOL_AI_VISION_RICE_MODEL_REVISION=02a6e6ea1b5da9b0458b12c4ec8bccd0582a4f26 \
+    FOSHOL_AI_VISION_CROP_ROUTES=rice=rice,tomato=rice,potato=rice,corn=rice,wheat=rice \
+    FOSHOL_AI_VISION_RICE_MODEL_ID=VisionaryQuant/5_Crop_Disease_Detection \
+    FOSHOL_AI_VISION_RICE_MODEL_REVISION=63080391f7d2bdb331ab356b0d1d9b4b603b3946 \
     FOSHOL_AI_VISION_RICE_FALLBACK_MODEL_ID=prithivMLmods/Rice-Leaf-Disease \
     FOSHOL_AI_VISION_RICE_FALLBACK_MODEL_REVISION=170d10e070c308e0e5337690d67371825591f35b \
     FOSHOL_AI_VISION_SOLANACEAE_MODEL_ID=Daksh159/plant-disease-mobilenetv2 \
