@@ -48,3 +48,9 @@ common/build/
 modules/*/build/
 buildSrc/build/
 .DS_Store
+
+# Exported Docker image tarballs (multi-GB build output, never committed)
+docker-image/*
+!docker-image/README.md
+!docker-image/PUSH.md
+!docker-image/DEPLOY-COMPOSE.md

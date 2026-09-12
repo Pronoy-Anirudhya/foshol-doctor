@@ -25,3 +25,6 @@ deploy/certs
 docs
 *.md
 !gradle/wrapper/gradle-wrapper.jar
+
+# Exported image tarballs must never enter a build context
+docker-image
