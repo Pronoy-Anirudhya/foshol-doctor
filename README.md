@@ -31,9 +31,21 @@ This section is the DevOps contract for a virtual machine. It is **not** the lap
 
 ### 1. Use this Compose file
 
+With the pre-built images loaded (see [§8](#8-pre-built-images)):
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --wait
+```
+
+To build from source on the VM instead, add `--build`:
+
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build --wait
 ```
+
+`--build` rebuilds `app` and `sidecar` and **discards whatever you loaded from a tarball**. Omit it
+when deploying the handover bundle. `docker compose -f docker-compose.dev.yml config --images` shows
+which four images will actually be used.
 
 - File: [`docker-compose.dev.yml`](docker-compose.dev.yml)
 - Project name: `foshol-dev` (does not collide with the local Compose project)
@@ -77,6 +89,14 @@ environment:
 `dev` is not `local`. `foshol.auth.otp.dev-code` must not be set (`COMMON-SEC-003`). There are no
 seeded farmer/officer/admin logins. Create identities through the API (or load them by an
 out-of-band process you own).
+
+The handover bundle documents an **opt-in** departure from this for demo VMs —
+`SPRING_FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/seed` plus
+`FOSHOL_AUTH_OTP_DEV_CODE=123456`, which gives `officer`/`password` and a working farmer OTP. It is
+a deliberate deviation, not the contract: the bcrypt of `password` is public in this repository, so
+never enable it on a farmer-facing deployment. Flyway cannot add or remove seed migrations from an
+existing history, so the choice is fixed at first boot. See
+[`docker-image/DEPLOY-COMPOSE.md`](docker-image/DEPLOY-COMPOSE.md) §5.
 
 ### 3. Create `.env` on the VM
 
@@ -130,28 +150,49 @@ blocks the images even when the URLs are correct.
 | `TRANSFORMERS_OFFLINE` | `0` | `1` in lock-step with `HF_HUB_OFFLINE` |
 | `FOSHOL_SIDECAR_TORCH_THREADS` | `4` | `4` unless you size the VM otherwise |
 
-Optional: `APP_HOST_PORT` (default `8080`).
+With the `:0.0.1-baked` sidecar image the weights ship inside the image, so set both offline flags
+to `1` from the start and the VM needs no Hugging Face access at all.
+
+Optional: `APP_HOST_PORT` (default `8080`), `FOSHOL_APP_IMAGE`, `FOSHOL_SIDECAR_IMAGE`.
 
 ### 4. What the VM sidecar is pinned to
 
-Not configurable from `.env`. Hard-coded in `docker-compose.dev.yml`:
+`docker-compose.dev.yml` sets these explicitly, and [`sidecar/Dockerfile`](sidecar/Dockerfile) now
+carries the same values as its **image defaults** — so LIVE mode always means the Visionary model,
+even for a bare `docker run`:
 
 - `FOSHOL_AI_MODE=live`
 - `FOSHOL_SIDECAR_VISION_BACKEND=visionary`
 - Model `VisionaryQuant/5_Crop_Disease_Detection` @ `63080391f7d2bdb331ab356b0d1d9b4b603b3946`
 - Crop routes: `rice=rice,tomato=rice,potato=rice,corn=rice,wheat=rice`
 
-ASR (Bangla Whisper) and LaBSE embeddings still load. First boot downloads weights into the
-`huggingface-cache` volume. Sidecar health has `start_period: 600s`. `--wait` will block until
-`/health` is ready, or fail after that window.
+The revision must match [`V112__visionaryquant_label_map.sql`](app/src/main/resources/db/migration/V112__visionaryquant_label_map.sql).
+A mismatch resolves every prediction to `UNDETERMINED` silently, through a designed path.
+
+LIVE vision loads only `vision.rice.primary`, which is why every crop routes to the rice family.
+ASR (Bangla Whisper) and LaBSE embeddings still load; the fallback and solanaceae ids are
+config-validated but never loaded.
+
+Sidecar health has `start_period: 600s`. `--wait` blocks until `/health` is ready, or fails after
+that window. `/health` reporting `DEGRADED` with HTTP 200 is the **expected** LIVE steady state:
+3 of 5 roles load, so `degraded_reasons` is never empty.
+
+**Two boot costs worth knowing.** With the plain `sidecar` image, first boot downloads ~4.8 GB of
+weights into the `huggingface-cache` volume, and *every* boot re-runs the CTranslate2 int8
+conversion — roughly 260s — because `_ensure_ct2_model`
+([`sidecar/app/asr.py`](sidecar/app/asr.py)) skips it only when `ct2/model.bin` **and**
+`ct2/tokenizer.json` both exist, and neither the Whisper repo nor the converter produces a
+`tokenizer.json`. faster-whisper then falls back to fetching `openai/whisper-tiny` through a Rust
+path that ignores `HF_HUB_OFFLINE`. The `:0.0.1-baked` image variant ([§8](#8-pre-built-images))
+ships both the weights and that sentinel file, so it boots offline in about a minute.
 
 Labels with no taxonomy row stay unmapped and route to `UNDETERMINED` (still queued for an officer).
 
 ### 5. Boot, verify, stop
 
 ```bash
-# from the repository root, with .env present
-docker compose -f docker-compose.dev.yml up -d --build --wait
+# from the repository root, with .env present and the images loaded
+docker compose -f docker-compose.dev.yml up -d --wait
 
 curl -sf http://127.0.0.1:8080/actuator/health
 curl -sf http://<vm-address>:9000/minio/health/live     # presign target must be reachable
@@ -193,8 +234,9 @@ Images: `app` from [`app/Dockerfile`](app/Dockerfile) (JDK 25 build → JRE 25),
 [`sidecar/Dockerfile`](sidecar/Dockerfile). Postgres is `pgvector/pgvector:pg17`. MinIO image pin
 matches the local Compose file.
 
-The VM needs Docker, outbound HTTPS on first sidecar boot (Hugging Face), and enough RAM/CPU for
-PyTorch + Spring on one host. JDK 25 on the VM host is **not** required; the app image contains it.
+The VM needs Docker and enough RAM/CPU for PyTorch + Spring on one host — allow **≥ 10 GB RAM** and
+4 vCPU. JDK 25 on the VM host is **not** required; the app image contains it. Outbound HTTPS is
+needed on first sidecar boot only, and not at all with the `:0.0.1-baked` sidecar image.
 
 ### 7. Safety constraints that apply in `dev`
 
@@ -204,6 +246,30 @@ PyTorch + Spring on one host. JDK 25 on the VM host is **not** required; the app
   update to `model_label_map`.
 - Do not author dosages, Bangla symptom phrases, or disease copy. See
   [`docs/requirements/CONTENT-OWNERS.md`](docs/requirements/CONTENT-OWNERS.md).
+
+### 8. Pre-built images
+
+`app` and `sidecar` are named in Compose, so a pre-built image loaded from a tarball is used as-is
+and nothing is compiled on the VM:
+
+```yaml
+app:      image: ${FOSHOL_APP_IMAGE:-foshol-doctor-app:0.0.1}
+sidecar:  image: ${FOSHOL_SIDECAR_IMAGE:-foshol-doctor-sidecar:0.0.1}
+```
+
+| Image | Notes |
+|---|---|
+| `foshol-doctor-app:0.0.1` | the API |
+| `foshol-doctor-sidecar:0.0.1` | LIVE + Visionary; downloads weights on first boot |
+| `foshol-doctor-sidecar:0.0.1-baked` | same plus the model cache — offline, fast restarts. Set `FOSHOL_SIDECAR_IMAGE` to select it |
+| `pgvector/pgvector:pg17`, `minio/minio:…` | public upstream, pulled by Compose |
+
+Only the two application images are private and need transferring. Build sources for the baked
+variant and for the single-container alternative live in [`deploy/aio/`](deploy/aio/); exported
+tarballs and the DevOps guides live in `docker-image/`
+([`DEPLOY-COMPOSE.md`](docker-image/DEPLOY-COMPOSE.md) for this four-container stack,
+[`README.md`](docker-image/README.md) for the all-in-one container,
+[`PUSH.md`](docker-image/PUSH.md) for registry upload). The tarballs themselves are gitignored.
 
 ---
 
@@ -320,6 +386,8 @@ foshol-doctor/
 ├── sidecar/                  Python FastAPI process
 ├── tools/                    laptop scripts (start-stack, start-live, call-api, eval)
 ├── deploy/                   local Caddyfile + mkcert material (not used on the VM)
+│   └── aio/                  all-in-one image sources + baked-sidecar variant
+├── docker-image/             exported image tarballs (gitignored) + DevOps guides
 ├── docs/requirements/        EARS specs — source of truth
 ├── docs/adr/                 contested decisions
 ├── docs/openapi/             foshol-api.yaml — frontend contract
