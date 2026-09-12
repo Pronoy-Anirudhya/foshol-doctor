@@ -39,9 +39,14 @@ docker compose -f docker-compose.dev.yml up -d --build --wait
 - Project name: `foshol-dev` (does not collide with the local Compose project)
 - Services: `postgres`, `minio`, `sidecar`, `app`
 - Network: internal bridge `foshol`
-- Published port: **only** `${APP_HOST_PORT:-8080}:8080` (the API)
-- Postgres, MinIO and the sidecar are **not** published to the host; the app reaches them by Docker
-  DNS (`postgres:5432`, `http://minio:9000`, `http://sidecar:8000`)
+- Published ports: `${APP_HOST_PORT:-8080}:8080` (the API), plus `9000` and `9001` (MinIO S3 API
+  and console)
+- Postgres and the sidecar are **not** published to the host; the app reaches them by Docker DNS
+  (`postgres:5432`, `http://sidecar:8000`)
+- MinIO's `9000` **must** be published and reachable by the browser. The API never proxies object
+  bytes: it issues a presigned URL, and a presigned URL is signed over its `Host` header, so the
+  host inside it cannot be rewritten afterwards. Get this wrong and every case photo fails to load
+  while the API itself looks perfectly healthy. See [§3](#3-create-env-on-the-vm).
 
 Do **not** run `docker compose up` without `-f docker-compose.dev.yml` on the VM. That starts the
 laptop file (`docker-compose.yml`: bind mounts, Caddy, sidecar behind profile `ai`).
@@ -93,13 +98,13 @@ Do not commit `.env`. Do not copy Docker-internal URLs into the laptop [`.env.ex
 | `FOSHOL_MINIO_ACCESS_KEY` | MinIO root user |
 | `FOSHOL_MINIO_SECRET_KEY` | MinIO root password |
 
-**Connectivity (required — Docker DNS names, not localhost)**
+**Connectivity (required — Docker DNS names for internal hops; `MINIO_ENDPOINT` is the exception)**
 
 | Variable | Maps to | VM value |
 |---|---|---|
 | `DB_URL` | `spring.datasource.url` and `foshol.datasource.read-only.url` | `jdbc:postgresql://postgres:5432/foshol` |
 | `SIDECAR_BASE_URL` | `foshol.ai.base-url` | `http://sidecar:8000` |
-| `MINIO_ENDPOINT` | `foshol.storage.endpoint` | `http://minio:9000` |
+| `MINIO_ENDPOINT` | `foshol.storage.endpoint` | `http://<vm-address>:9000` — **not** `http://minio:9000` |
 | `FOSHOL_DB_USER` | `spring.datasource.username` / `POSTGRES_USER` | `foshol` |
 | `SPRING_PROFILES_ACTIVE` | Spring | `dev` (Compose also pins this) |
 
@@ -107,6 +112,15 @@ The JVM does not parse `.env` itself. Compose injects the file into the `app` co
 (`env_file: .env`). [`application-dev.properties`](app/src/main/resources/application-dev.properties)
 resolves `${DB_URL}`, `${SIDECAR_BASE_URL}`, `${MINIO_ENDPOINT}`, `${FOSHOL_DB_PASSWORD}`. Java code
 is unchanged.
+
+`MINIO_ENDPOINT` is the one value that is **not** a Docker DNS name. It is the origin the app signs
+presigned URLs against, so it is the host the *browser* must resolve — use the VM's own address and
+MinIO's API port `9000`. `9001` is the console and does not serve presigned objects. A Docker-internal
+name such as `http://minio:9000` leaves the browser with `ERR_NAME_NOT_RESOLVED` on every image, and
+because the host is covered by the SigV4 signature it cannot be patched in transit; changing it means
+re-presigning. Keep this value in step with the frontend's `MEDIA_OBJECT_STORE_ORIGIN`, which
+allow-lists the same origin in its CSP `img-src`, `media-src` and `connect-src` — a mismatch there
+blocks the images even when the URLs are correct.
 
 **Sidecar download policy**
 
@@ -140,12 +154,26 @@ Labels with no taxonomy row stay unmapped and route to `UNDETERMINED` (still que
 docker compose -f docker-compose.dev.yml up -d --build --wait
 
 curl -sf http://127.0.0.1:8080/actuator/health
+curl -sf http://<vm-address>:9000/minio/health/live     # presign target must be reachable
 docker compose -f docker-compose.dev.yml ps
 docker compose -f docker-compose.dev.yml logs -f app sidecar
 ```
 
 The API is ready when `app` is healthy. Flyway applies `classpath:db/migration` on first empty
 volume (schema + reference knowledge). It does **not** apply `db/seed`.
+
+Verify the media path end to end once a case exists — a healthy API does not prove it. With a farmer
+or officer JWT in `$TOKEN`:
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://<vm-address>:8080/api/v1/cases/<caseId>/images/<imageId>/url"
+```
+
+The returned `url` must begin `http://<vm-address>:9000/foshol-cases/…`. Fetch it with **no**
+`Authorization` header — a presigned URL carries its own credentials, and adding a bearer makes MinIO
+answer `400 InvalidRequest`. `403 SignatureDoesNotMatch` means `MINIO_ENDPOINT` disagrees with the
+host you requested.
 
 ```bash
 docker compose -f docker-compose.dev.yml stop          # keep volumes
@@ -191,6 +219,11 @@ Farmer / officer ──HTTPS──▶ API :8080 (Spring Modulith)
                                 ├── S3 API ──▶ MinIO (foshol-cases)
                                 └── HTTP ──▶ sidecar :8000  (vision, ASR, embeddings)
 ```
+
+The browser fetches case photos, audio and Grad-CAM overlays **directly from MinIO** over presigned
+URLs the API issues after an ownership check (`COMMON-SEC-016`). The bucket is never public and MinIO
+credentials never leave the API, so MinIO's S3 port has to be reachable by clients as well as by the
+app.
 
 Case pipeline:
 
