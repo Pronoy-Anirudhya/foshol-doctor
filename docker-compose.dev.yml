@@ -28,6 +28,12 @@ services:
       MINIO_ROOT_USER: ${FOSHOL_MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${FOSHOL_MINIO_SECRET_KEY}
       MINIO_API_CORS_ALLOW_ORIGIN: "*"
+    # 9000 is the S3 API and must be reachable by the browser: a presigned URL is signed over
+    # its Host header, so MINIO_ENDPOINT has to name this published origin (not the "minio"
+    # service name) or the browser cannot resolve it at all. 9001 is only the console.
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
       interval: 5s
