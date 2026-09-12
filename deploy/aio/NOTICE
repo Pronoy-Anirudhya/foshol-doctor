@@ -1,0 +1,24 @@
+Foshol Doctor all-in-one image — third-party components
+=======================================================
+
+This image redistributes the following, unmodified:
+
+  MinIO Object Storage   AGPL-3.0-or-later   https://github.com/minio/minio
+                         binary taken from quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+  MinIO Client (mc)      AGPL-3.0-or-later   https://github.com/minio/mc
+  PostgreSQL 17          PostgreSQL License  https://www.postgresql.org
+  pgvector               PostgreSQL License  https://github.com/pgvector/pgvector
+  Eclipse Temurin JRE 25 GPL-2.0 + Classpath Exception
+  Debian bookworm base, Python 3.12 and the PyPI packages listed in
+  /opt/foshol/build-manifest.txt, under their respective licences.
+
+MinIO is AGPL-3.0. It runs as a separate program invoked over the network; the Spring
+application is not derived from it. Redistributing this image outside the organisation
+means redistributing MinIO — have counsel confirm before external distribution.
+
+Model weights baked into /opt/foshol/hf-cache are licensed by their respective authors
+on the Hugging Face Hub and were downloaded unmodified at the revisions pinned in
+/opt/foshol/sidecar.env. No model in this image was trained or fine-tuned by this
+project.
+
+Agricultural content in the database is DEMO ONLY and is not production agronomy.
