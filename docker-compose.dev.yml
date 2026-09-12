@@ -45,6 +45,10 @@ services:
       - foshol
 
   sidecar:
+    # Named so a pre-built image loaded with `docker load` is used as-is. Compose builds only
+    # when the tag is absent locally, or when you pass --build. Use the :0.0.1-baked tag to
+    # get the model cache in the image and skip the first-boot Hugging Face download.
+    image: ${FOSHOL_SIDECAR_IMAGE:-foshol-doctor-sidecar:0.0.1}
     build:
       context: ./sidecar
     restart: unless-stopped
@@ -83,6 +87,9 @@ services:
       - foshol
 
   app:
+    # Named so a pre-built image loaded with `docker load` is used as-is. Compose builds only
+    # when the tag is absent locally, or when you pass --build.
+    image: ${FOSHOL_APP_IMAGE:-foshol-doctor-app:0.0.1}
     build:
       context: .
       dockerfile: app/Dockerfile
