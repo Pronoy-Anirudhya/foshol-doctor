@@ -1,4 +1,8 @@
-FROM eclipse-temurin:25-jdk AS build
+# The build stage runs on the BUILD platform: a bootJar is bytecode and resources with no
+# native code, so it is architecture-independent. This keeps a cross-architecture build
+# (for example linux/amd64 from an arm64 machine) from running Gradle under emulation.
+# On a native build BUILDPLATFORM == TARGETPLATFORM, so nothing changes.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25-jdk AS build
 
 WORKDIR /src
 
